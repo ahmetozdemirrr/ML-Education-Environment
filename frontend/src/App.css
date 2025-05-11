@@ -1,0 +1,415 @@
+/* --- General Styles --- */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  background-color: #e9ebee;
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* --- Ana Konteyner (Flexbox Düzeni) --- */
+.app-container {
+  display: flex;
+  padding: 20px;
+  gap: 20px;
+  min-height: calc(100vh - 40px);
+  box-sizing: border-box;
+  align-items: flex-start;
+}
+
+/* --- Sütunlar --- */
+.left-column,
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 0 0 300px;
+  max-width: 300px;
+}
+
+.right-column {
+  gap: 25px;
+}
+
+/* === Model ve Dataset Liste Elemanları İçin Ortak Stil === */
+.model-item,
+.dataset-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 10px 3px 0;
+  position: relative;
+}
+
+.model-label-container,
+.dataset-label-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex-grow: 1;
+  padding: 4px 0px 4px 20px;
+  margin-right: 5px;
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+.model-label-container:hover,
+.dataset-label-container:hover {
+   background-color: rgba(255, 255, 255, 0.08);
+}
+
+.model-label-container input[type="checkbox"],
+.dataset-label-container input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.model-name,
+.dataset-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+}
+
+.info-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 5px;
+}
+
+.info-icon {
+  cursor: help;
+  color: #a0aec0;
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: color 0.2s ease;
+  user-select: none;
+}
+.info-icon:hover {
+  color: #e2e8f0;
+}
+
+/* Tooltip - Portal İçin Sadeleştirilmiş Stil */
+.tooltip {
+  background-color: #1f2937;
+  color: #f3f4f6;
+  padding: 10px 14px;
+  border-radius: 6px;
+  width: 260px;
+  max-width: 300px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  white-space: normal;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  z-index: 1100;
+  position: fixed;
+}
+
+/* --- Genel Panel Stilleri --- */
+.panel {
+  border-radius: 6px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+  padding: 0;
+}
+
+/* --- Yan Paneller (Models, Datasets, Settings) --- */
+.models-panel,
+.datasets-panel,
+.settings-panel {
+  background-color: #4a5568;
+  color: #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px;
+}
+
+.models-panel {
+  max-height: 45vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.settings-panel {
+  max-height: 40vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.datasets-panel {
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.panel h2 {
+  margin: 0;
+  padding: 15px 20px 12px 20px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  border-bottom: 1px solid #718096;
+}
+.models-panel h2,
+.datasets-panel h2,
+.settings-panel h2 {
+  color: #cbd5e0;
+  position: sticky;
+  top: 0;
+  background-color: #4a5568;
+  z-index: 10;
+}
+
+/* Liste Stilleri */
+.models-panel ul,
+.datasets-panel ul,
+.settings-list {
+  list-style: none;
+  padding: 0 0 10px 0;
+  margin: 0;
+}
+.models-panel ul, .datasets-panel ul {
+    padding-bottom: 10px;
+    padding-right: 5px;
+    &::-webkit-scrollbar { width: 8px; }
+    &::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+    &::-webkit-scrollbar-thumb { background-color: rgba(160, 174, 192, 0.6); border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
+    &::-webkit-scrollbar-thumb:hover { background-color: rgba(160, 174, 192, 0.8); }
+    scrollbar-width: thin;
+    scrollbar-color: rgba(160, 174, 192, 0.6) rgba(255, 255, 255, 0.05);
+}
+.settings-list {
+  padding: 10px 20px 15px 20px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #a0aec0;
+  font-size: 0.85rem;
+}
+.radio-group input[type="radio"] {
+  margin: 0;
+  width: 15px;
+  height: 15px;
+  accent-color: #a0aec0;
+}
+
+.panel li {
+  margin-bottom: 1px;
+}
+
+/* Yan Panel Checkboxları */
+.models-panel input[type="checkbox"],
+.datasets-panel input[type="checkbox"] {
+  margin-right: 10px;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  accent-color: #a0aec0;
+  flex-shrink: 0;
+}
+
+/* --- Global Settings Panel İç Stilleri --- */
+/* ... (Mevcut Global Settings Stilleri aynı kalır) ... */
+.setting-group { margin-bottom: 18px; }
+.setting-group:last-child { margin-bottom: 5px; }
+.setting-group-title { display: flex; align-items: center; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; color: #cbd5e0; }
+.setting-group-title input[type="checkbox"] + span { cursor: pointer; margin-left: 0; }
+.setting-group-title.full-width { margin-bottom: 10px; }
+.setting-group-title input[type="checkbox"] { margin-right: 8px; width: 15px; height: 15px; accent-color: #a0aec0; cursor: pointer; flex-shrink: 0; }
+.setting-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-left: 5px; transition: opacity 0.2s ease-out, max-height 0.3s ease-out; overflow: hidden; }
+.setting-item.indented { padding-left: 25px; margin-top: 5px; }
+.setting-item.hidden { max-height: 0; opacity: 0; margin-top: 0; padding-top: 0; padding-bottom: 0; pointer-events: none; }
+.setting-item.visible { max-height: 40px; opacity: 1; }
+.setting-item label { white-space: nowrap; font-size: 0.85rem; color: #a0aec0; flex-shrink: 0; }
+.setting-item input[type="number"] { padding: 5px 8px; border: 1px solid #718096; background-color: #edf2f7; color: #2d3748; border-radius: 4px; font-size: 0.85rem; width: 75px; text-align: right; }
+.setting-item input:disabled { background-color: #718096; color: #a0aec0; cursor: not-allowed; opacity: 0.7; }
+
+
+/* --- Orta Panel (Simulation Screen) --- */
+.simulation-panel {
+  flex: 3 1 auto;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  color: #374151;
+  border-radius: 6px;
+  padding: 0;
+  align-self: stretch;
+  overflow: hidden;
+  position: relative;
+}
+.simulation-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px 0 20px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.simulation-panel-header h2 {
+  margin: 0;
+  padding: 0 0 12px 0;
+  border-bottom: none;
+  color: #374151;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.fullscreen-button {
+  background: none; border: none; padding: 5px; margin: 0 0 10px 15px; cursor: pointer; color: #6b7280; border-radius: 4px; line-height: 1; transition: background-color 0.2s ease, color 0.2s ease; }
+.fullscreen-button:hover { background-color: #f3f4f6; color: #374151; }
+.fullscreen-button svg { display: block; }
+.simulation-panel-content { padding: 20px; flex-grow: 1; overflow-y: auto; }
+.simulation-panel-content p { color: #6b7280; margin-top: 0; margin-bottom: 20px; }
+.loading-indicator { padding: 20px; text-align: center; font-style: italic; color: #6b7280; }
+.simulation-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px 25px; width: 100%; text-align: left; margin-top: 15px; font-size: 0.85rem; padding-top: 15px; border-top: 1px solid #e5e7eb; }
+.simulation-summary h4 { margin-top: 0; margin-bottom: 8px; color: #4b5563; font-size: 0.9rem; font-weight: 600; padding-bottom: 0px; }
+.simulation-summary ul { text-align: left; margin: 0; padding-left: 0; list-style: none; font-size: 0.85em; }
+.simulation-summary li { margin-bottom: 5px; color: #374151; }
+.simulation-summary small { color: #6b7280; font-style: italic; }
+.simulation-summary > div > pre {
+  font-size: 0.8em !important; text-align: left !important; background: #f3f4f6 !important; padding: 10px !important; border-radius: 4px; white-space: pre-wrap; word-break: break-all; max-height: 150px; overflow-y: auto; color: #1f2937; border: 1px solid #e5e7eb; margin-top: 5px;
+}
+.simulation-summary > div:last-child { grid-column: 1 / -1; }
+
+/* Configured Instances List Stilleri */
+.configured-instances-list {
+    list-style: none; padding-left: 0; margin-top: 5px; max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 4px; padding: 5px; background-color: #f9fafb;
+}
+.config-item {
+    background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.85rem;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; /* İkonlar için flex-wrap önemli */
+}
+.config-item:last-child { margin-bottom: 0; }
+.config-item-name { /* Model adı ve instance no'yu sarmak için */
+    flex-grow: 1; /* Mümkün olduğunca yer kaplasın */
+    margin-right: 10px; /* Aksiyon butonlarından boşluk */
+}
+.config-item-name > span { font-weight: 500; color: #374151; }
+
+/* YENİ: Konfigürasyon aksiyon butonları için */
+.config-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Butonlar arası boşluk */
+    flex-shrink: 0; /* Butonların küçülmesini engelle */
+}
+.config-action-button {
+    background: none;
+    border: none;
+    color: #6b7280; /* İkon rengi */
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    font-size: 1rem; /* İkon boyutu için */
+    line-height: 1;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.config-action-button:hover {
+    background-color: #f3f4f6; /* Hafif arka plan */
+    color: #374151; /* Koyu renk */
+}
+.edit-button:hover { color: #4f46e5; } /* Düzenle ikonu için özel hover rengi */
+.delete-button:hover { color: #ef4444; } /* Silme ikonu için özel hover rengi */
+
+
+.config-details { font-size: 0.9em; flex-basis: 100%; margin-top: 8px; }
+.config-details summary { cursor: pointer; font-weight: 500; color: #4f46e5; display: inline-block; padding: 2px 0; }
+.config-details pre {
+    margin-top: 5px; padding: 8px !important; font-size: 0.95em !important; max-height: 150px !important; background-color: #f3f4f6 !important; border: 1px solid #e5e7eb !important; color: #1f2937 !important; white-space: pre-wrap; word-break: break-all; overflow-y: auto; border-radius: 4px;
+}
+
+/* --- Sağ Sütun Altındaki Aksiyon Butonları --- */
+.action-buttons-bottom {
+  display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; padding: 0 5px 5px 5px;
+}
+.action-buttons-bottom button {
+  width: 100%; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: background-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.action-buttons-bottom button:hover:not(:disabled) { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+.action-buttons-bottom button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #9ca3af; }
+
+.train-button { background-color: #00B7EB; color: white; }
+.train-button:hover:not(:disabled) { background-color: #009ac9; }
+.evaluate-button { background-color: #32CD32; color: white; }
+.evaluate-button:hover:not(:disabled) { background-color: #28a745; }
+
+/* YENİ: Reset Workspace Butonu Stili */
+.reset-button {
+  background-color: #ef4444; /* Kırmızı tonu */
+  color: white;
+}
+.reset-button:hover:not(:disabled) {
+  background-color: #dc2626; /* Daha koyu kırmızı */
+}
+
+
+/* --- Pop-up Stilleri (Parameter & Confirmation) --- */
+/* ... (Mevcut Popup Stilleri aynı kalır) ... */
+.popup-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(17, 24, 39, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
+.popup-content { background-color: #ffffff; padding: 25px 30px 30px 30px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); position: relative; min-width: 450px; max-width: 550px; max-height: 85vh; overflow-y: auto; color: #1f2937; }
+.popup-content h3 { margin-top: 0; margin-bottom: 20px; color: #111827; text-align: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 15px; font-size: 1.2rem; font-weight: 600; }
+.popup-close-button { position: absolute; top: 12px; right: 12px; background: transparent; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; line-height: 1; cursor: pointer; color: #9ca3af; transition: background-color 0.2s ease, color 0.2s ease; }
+.popup-close-button:hover { background-color: #f3f4f6; color: #4b5563; }
+.popup-content h4 { font-size: 1rem; font-weight: 600; color: #374151; margin-top: 20px; margin-bottom: 12px; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
+.popup-content h4:first-of-type { margin-top: 0; }
+.existing-configs-info { font-size: 0.8rem; color: #6b7280; background-color: #f3f4f6; padding: 5px 10px; border-radius: 4px; margin-bottom: 15px; text-align: center; }
+.param-list { display: flex; flex-direction: column; gap: 16px; }
+.param-item { display: grid; grid-template-columns: minmax(150px, auto) 1fr; align-items: center; gap: 15px; }
+.param-item label { white-space: nowrap; font-weight: 500; font-size: 0.9rem; color: #4b5563; text-align: right; }
+.param-item input[type="number"], .param-item input[type="text"], .param-item select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background-color: #f9fafb; color: #1f2937; width: 100%; box-sizing: border-box; }
+.param-item select { cursor: pointer; }
+.param-item input::placeholder { color: #9ca3af; }
+.slider-container { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; width: 100%; }
+.slider-container input[type="range"] { width: 100%; cursor: pointer; height: 6px; accent-color: #4f46e5; }
+.slider-value { font-weight: 600; font-size: 0.9rem; color: #4f46e5; min-width: 30px; text-align: right; }
+.metrics-section-popup { margin-top: 20px; }
+.metrics-checkboxes-popup { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px 12px; padding-left: 5px; }
+.metric-label-popup { display: flex; align-items: center; font-size: 0.85rem; cursor: pointer; background-color: #f9fafb; padding: 6px 10px; border-radius: 5px; border: 1px solid #e5e7eb; transition: background-color 0.15s ease, border-color 0.15s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #374151; }
+.metric-label-popup:hover { background-color: #f3f4f6; border-color: #d1d5db; }
+.metric-label-popup input[type="checkbox"] { margin-right: 8px; width: 14px; height: 14px; accent-color: #4f46e5; flex-shrink: 0; }
+.metrics-section-popup small { font-size: 0.85rem; color: #6b7280; font-style: italic; display: block; padding-left: 5px; margin-top: 5px; }
+.popup-ok-button { background-color: #4f46e5; color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; display: block; width: 100%; margin-top: 25px; font-weight: 600; font-size: 0.95rem; transition: background-color 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.popup-ok-button:hover { background-color: #4338ca; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+
+.confirmation-overlay { z-index: 1010; background-color: rgba(17, 24, 39, 0.75); position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.confirmation-content { background-color: #ffffff; padding: 30px 35px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); text-align: center; max-width: 400px; color: #1f2937; }
+.confirmation-content h4 { margin-top: 0; margin-bottom: 10px; font-size: 1.2rem; color: #111827; border-bottom: none; padding-bottom: 0; }
+.confirmation-content p { margin-bottom: 25px; color: #4b5563; line-height: 1.6; }
+.confirmation-content p strong { color: #374151; font-weight: 600; }
+.confirmation-buttons { display: flex; justify-content: center; gap: 15px; }
+.confirmation-buttons button { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: background-color 0.2s ease, box-shadow 0.2s ease; min-width: 120px; }
+.confirm-yes-button { background-color: #4f46e5; color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.confirm-yes-button:hover { background-color: #4338ca; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+.confirm-no-button { background-color: #e5e7eb; color: #374151; border: 1px solid #d1d5db; }
+.confirm-no-button:hover { background-color: #d1d5db; }
+
+
+/* Fullscreen specific style */
+.simulation-panel:fullscreen { background-color: #ffffff; padding: 0; border: none; overflow: hidden; }
+.simulation-panel:fullscreen .simulation-panel-header { background-color: #ffffff; padding: 15px 20px 0 20px; border-bottom: 1px solid #e5e7eb; position: sticky; top:0; z-index: 1;}
+.simulation-panel:fullscreen .simulation-panel-content { height: calc(100% - 58px); padding: 20px; overflow-y: auto; }

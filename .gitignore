@@ -1,0 +1,16 @@
+/node_modules
+/build
+/dist
+
+*.log
+
+project_datasets/datasets
+
+.tmp
+.temp
+*.tmp
+*.swp
+*~
+.eslintcache
+.stylelintcache
+.prettiercache
