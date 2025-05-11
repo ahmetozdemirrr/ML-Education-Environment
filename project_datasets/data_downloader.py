@@ -15,7 +15,7 @@ from sklearn.datasets import fetch_openml
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.model_selection import train_test_split
 
-def save_dataframe_to_csv(df, filename, target_dir="./datasets"):
+def save_dataframe_to_csv(df, filename, target_dir="./project_datasets/datasets"):
     """DataFrame'i belirtilen dizine CSV olarak kaydeder."""
     filepath = os.path.join(target_dir, filename)
     df.to_csv(filepath, index=False)
