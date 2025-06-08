@@ -22,19 +22,19 @@ def _find_dataset_filepath_in_processor(dataset_id: str, data_dir: str) -> Optio
     return None
 
 
+"""
+    Dataseti yükler, X ve y olarak ayırır.
+    Global ayarlara göre train/test split uygular.
+    Özellik ölçeklendirmeyi (StandardScaler) train/test split sonrası doğru şekilde uygular.
+    Cross-validation seçiliyse, tüm veriyi (ölçeklenmemiş X ve ölçeklenmemiş y) döndürür,
+    çünkü ölçeklendirme Pipeline içinde her katlamada yapılmalıdır.
+"""
 def load_and_prepare_data(
     dataset_id: str,
     data_dir: str,
     global_settings: Dict[str, Any]
 ) -> Dict[str, Any]:
     
-    """
-    Dataseti yükler, X ve y olarak ayırır.
-    Global ayarlara göre train/test split uygular.
-    Özellik ölçeklendirmeyi (StandardScaler) train/test split sonrası doğru şekilde uygular.
-    Cross-validation seçiliyse, tüm veriyi (ölçeklenmemiş X ve ölçeklenmemiş y) döndürür,
-    çünkü ölçeklendirme Pipeline içinde her katlamada yapılmalıdır.
-    """
     print(f"Dataset işleniyor: {dataset_id}. Global Ayarlar: {global_settings}")
     
     filepath = _find_dataset_filepath_in_processor(dataset_id, data_dir)

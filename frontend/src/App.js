@@ -440,7 +440,6 @@ function App()
       setIsLoading(false); 
       return;
     }
-
     const requests = [];
 
     // Her bir konfigürasyon ve her bir dataset için istek oluştur
