@@ -140,12 +140,12 @@ code {
 }
 
 .models-panel {
-  max-height: 45vh;
+  max-height: 50vh; /* 45vh'den 50vh'ye artırıldı */
   overflow-y: auto;
   flex-shrink: 0;
 }
 .settings-panel {
-  max-height: 40vh;
+  max-height: 55vh; /* 40vh'den 55vh'ye artırıldı */
   overflow-y: auto;
   flex-shrink: 0;
 }
@@ -194,10 +194,12 @@ code {
   padding: 10px 20px 15px 20px;
 }
 
+/* Radio Group Stilleri - DÜZELTİLDİ */
 .radio-group {
   display: flex;
-  gap: 15px;
+  gap: 10px; /* 15px'den 10px'ye düşürüldü */
   align-items: center;
+  flex-wrap: wrap; /* Uzun metinler için wrap eklendi */
 }
 .radio-group label {
   display: flex;
@@ -205,12 +207,15 @@ code {
   gap: 5px;
   color: #a0aec0;
   font-size: 0.85rem;
+  white-space: nowrap; /* Metin kırılmasını engelle */
+  min-width: fit-content; /* Minimum genişlik içeriğe göre ayarla */
 }
 .radio-group input[type="radio"] {
   margin: 0;
   width: 15px;
   height: 15px;
   accent-color: #a0aec0;
+  flex-shrink: 0; /* Radio button'ın küçülmesini engelle */
 }
 
 .panel li {
@@ -228,19 +233,35 @@ code {
   flex-shrink: 0;
 }
 
-/* --- Global Settings Panel İç Stilleri --- */
-/* ... (Mevcut Global Settings Stilleri aynı kalır) ... */
+/* --- Global Settings Panel İç Stilleri - DÜZELTİLDİ --- */
 .setting-group { margin-bottom: 18px; }
 .setting-group:last-child { margin-bottom: 5px; }
 .setting-group-title { display: flex; align-items: center; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; color: #cbd5e0; }
 .setting-group-title input[type="checkbox"] + span { cursor: pointer; margin-left: 0; }
 .setting-group-title.full-width { margin-bottom: 10px; }
 .setting-group-title input[type="checkbox"] { margin-right: 8px; width: 15px; height: 15px; accent-color: #a0aec0; cursor: pointer; flex-shrink: 0; }
-.setting-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-left: 5px; transition: opacity 0.2s ease-out, max-height 0.3s ease-out; overflow: hidden; }
+
+/* Setting Item Stilleri - DÜZELTİLDİ */
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px; /* 10px'den 8px'ye düşürüldü */
+  padding-left: 5px;
+  transition: opacity 0.2s ease-out, max-height 0.3s ease-out;
+  overflow: hidden;
+  min-height: 32px; /* Minimum yükseklik eklendi */
+}
 .setting-item.indented { padding-left: 25px; margin-top: 5px; }
 .setting-item.hidden { max-height: 0; opacity: 0; margin-top: 0; padding-top: 0; padding-bottom: 0; pointer-events: none; }
-.setting-item.visible { max-height: 40px; opacity: 1; }
-.setting-item label { white-space: nowrap; font-size: 0.85rem; color: #a0aec0; flex-shrink: 0; }
+.setting-item.visible { max-height: 70px; /* 40px'den 70px'ye artırıldı radio group için */; opacity: 1; }
+.setting-item label {
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: #a0aec0;
+  flex-shrink: 0;
+  min-width: fit-content; /* Eklendi */
+}
 .setting-item input[type="number"] { padding: 5px 8px; border: 1px solid #718096; background-color: #edf2f7; color: #2d3748; border-radius: 4px; font-size: 0.85rem; width: 75px; text-align: right; }
 .setting-item input:disabled { background-color: #718096; color: #a0aec0; cursor: not-allowed; opacity: 0.7; }
 

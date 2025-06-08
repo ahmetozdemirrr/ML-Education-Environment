@@ -1,4 +1,4 @@
-/* ./frontend/src/GlobalSettingsPanel.js */
+/* ./frontend/src/GlobalSettingsPanel.js - Fixed version */
 
 import React from 'react';
 import './App.css';
@@ -8,11 +8,21 @@ function GlobalSettingsPanel({ settings, onChange }) {
     const { name, checked } = event.target;
     onChange(name, checked);
 
+    // Mutual exclusive logic: sadece biri seçilebilir
     if (name === 'useCrossValidation' && checked) {
       onChange('useTrainTestSplit', false);
     }
     if (name === 'useTrainTestSplit' && checked) {
       onChange('useCrossValidation', false);
+    }
+
+    // Eğer ikisi de kapalıysa, Train/Test Split'i otomatik aç
+    if (!checked) {
+      setTimeout(() => {
+        if (!settings.useCrossValidation && !settings.useTrainTestSplit) {
+          onChange('useTrainTestSplit', true);
+        }
+      }, 0);
     }
   };
 
@@ -20,6 +30,8 @@ function GlobalSettingsPanel({ settings, onChange }) {
     const { name, value } = event.target;
     if (name === 'randomSeedType') {
       onChange(name, value); // "random" veya "fixed" değerini gönder
+    } else if (name === 'scalerType') {
+      onChange(name, value); // "standard" veya "minmax" değerini gönder
     } else {
       const { type, value: val } = event.target;
       let processedValue = val;
@@ -44,26 +56,97 @@ function GlobalSettingsPanel({ settings, onChange }) {
         {/* Cross-Validation Section */}
         <div className="setting-group">
           <label className="setting-group-title">
-            <input type="checkbox" name="useCrossValidation" checked={settings.useCrossValidation} onChange={handleCheckboxChange} />
+            <input
+              type="checkbox"
+              name="useCrossValidation"
+              checked={settings.useCrossValidation || false}
+              onChange={handleCheckboxChange}
+            />
             <span>Use Cross-Validation</span>
           </label>
           <div className={`setting-item indented ${settings.useCrossValidation ? 'visible' : 'hidden'}`}>
             <label htmlFor="cvFolds">Number of Folds:</label>
-            <input type="number" id="cvFolds" name="cvFolds" value={settings.cvFolds} onChange={handleValueChange} min="2" step="1" disabled={!settings.useCrossValidation} />
+            <input
+              type="number"
+              id="cvFolds"
+              name="cvFolds"
+              value={settings.cvFolds || 5}
+              onChange={handleValueChange}
+              min="2"
+              step="1"
+              disabled={!settings.useCrossValidation}
+            />
           </div>
         </div>
 
+        {/* Train/Test Split Section */}
         <div className="setting-group">
           <label className="setting-group-title">
-            <input type="checkbox" name="useTrainTestSplit" checked={settings.useTrainTestSplit} onChange={handleCheckboxChange} disabled={settings.useCrossValidation} />
+            <input
+              type="checkbox"
+              name="useTrainTestSplit"
+              checked={settings.useTrainTestSplit || false}
+              onChange={handleCheckboxChange}
+            />
             <span>Use Train/Test Split</span>
           </label>
-          <div className={`setting-item indented ${settings.useTrainTestSplit && !settings.useCrossValidation ? 'visible' : 'hidden'}`}>
+          <div className={`setting-item indented ${settings.useTrainTestSplit ? 'visible' : 'hidden'}`}>
             <label htmlFor="testSplitRatio">Test Set Ratio (0-1):</label>
-            <input type="number" id="testSplitRatio" name="testSplitRatio" value={settings.testSplitRatio} onChange={handleValueChange} min="0.01" max="0.99" step="0.01" disabled={!settings.useTrainTestSplit || settings.useCrossValidation} />
+            <input
+              type="number"
+              id="testSplitRatio"
+              name="testSplitRatio"
+              value={settings.testSplitRatio || 0.2}
+              onChange={handleValueChange}
+              min="0.01"
+              max="0.99"
+              step="0.01"
+              disabled={!settings.useTrainTestSplit}
+            />
           </div>
         </div>
 
+        {/* Feature Scaling Section */}
+        <div className="setting-group">
+          <label className="setting-group-title">
+            <input
+              type="checkbox"
+              name="applyFeatureScaling"
+              checked={settings.applyFeatureScaling || false}
+              onChange={handleCheckboxChange}
+            />
+            <span>Feature Scaling</span>
+          </label>
+          <div className={`setting-item indented ${settings.applyFeatureScaling ? 'visible' : 'hidden'}`}>
+            <label>Scaler Type:</label>
+            <div className="radio-group">
+              <label>
+                <input
+                  type="radio"
+                  name="scalerType"
+                  value="standard"
+                  checked={(settings.scalerType || 'standard') === "standard"}
+                  onChange={handleValueChange}
+                  disabled={!settings.applyFeatureScaling}
+                />
+                Standard
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="scalerType"
+                  value="minmax"
+                  checked={(settings.scalerType || 'standard') === "minmax"}
+                  onChange={handleValueChange}
+                  disabled={!settings.applyFeatureScaling}
+                />
+                MinMax
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Reproducibility Section */}
         <div className="setting-group">
           <label className="setting-group-title full-width">Reproducibility:</label>
           <div className="setting-item indented visible">
@@ -74,7 +157,7 @@ function GlobalSettingsPanel({ settings, onChange }) {
                   type="radio"
                   name="randomSeedType"
                   value="random"
-                  checked={settings.randomSeedType === "random"}
+                  checked={(settings.randomSeedType || "fixed") === "random"}
                   onChange={handleValueChange}
                 />
                 Random
@@ -84,10 +167,10 @@ function GlobalSettingsPanel({ settings, onChange }) {
                   type="radio"
                   name="randomSeedType"
                   value="fixed"
-                  checked={settings.randomSeedType === "fixed"}
+                  checked={(settings.randomSeedType || "fixed") === "fixed"}
                   onChange={handleValueChange}
                 />
-                Fixed (42)
+                Fixed
               </label>
             </div>
           </div>

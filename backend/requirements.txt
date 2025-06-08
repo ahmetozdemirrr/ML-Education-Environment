@@ -4,3 +4,4 @@ pydantic==1.10.7
 pandas
 scikit-learn
 python-multipart
+psutil==5.9.6

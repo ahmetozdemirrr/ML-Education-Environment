@@ -273,6 +273,8 @@ function App()
     useTrainTestSplit: true,
     testSplitRatio: 0.2,
     randomSeedType: "fixed",
+    applyFeatureScaling: true,
+    scalerType: "standard"
   });
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationState, setConfirmationState] = useState({ show: false, model: null });
@@ -402,12 +404,20 @@ function App()
       }
   };
 
-  const handleResetWorkspace = () => 
+  const handleResetWorkspace = () =>
   {
     if (window.confirm("Are you sure you want to reset all selections and configurations?")) {
-        setDatasets(initialStaticDatasets.map(d => ({ ...d, checked: false }))); // Checkbox'ları kaldır
+        setDatasets(initialStaticDatasets.map(d => ({ ...d, checked: false })));
         setSavedParams({});
-        setGlobalSettings({ useCrossValidation: false, cvFolds: 5, useTrainTestSplit: true, testSplitRatio: 0.2, randomSeed: 42 });
+        setGlobalSettings({
+          useCrossValidation: false,
+          cvFolds: 5,
+          useTrainTestSplit: true,
+          testSplitRatio: 0.2,
+          randomSeedType: "fixed",
+          applyFeatureScaling: true,
+          scalerType: "standard"
+        });
         setSelectedModelForPopup(null);
         setEditingConfigState(null);
         setConfirmationState({ show: false, model: null });
@@ -418,9 +428,20 @@ function App()
   const handleGlobalSettingsChange = (settingName, value) => {
     setGlobalSettings(prevSettings => {
       const newSettings = { ...prevSettings, [settingName]: value };
-      if (settingName === 'useCrossValidation' && value) newSettings.useTrainTestSplit = false;
-      if (settingName === 'useTrainTestSplit' && value) newSettings.useCrossValidation = false;
-      if (!newSettings.useCrossValidation && !newSettings.useTrainTestSplit) newSettings.useTrainTestSplit = true;
+
+      // Mutual exclusive logic: sadece biri aktif olabilir
+      if (settingName === 'useCrossValidation' && value) {
+        newSettings.useTrainTestSplit = false;
+      }
+      if (settingName === 'useTrainTestSplit' && value) {
+        newSettings.useCrossValidation = false;
+      }
+
+      // En az birinin aktif olması gerekiyor
+      if (!newSettings.useCrossValidation && !newSettings.useTrainTestSplit) {
+        newSettings.useTrainTestSplit = true;
+      }
+
       console.log("Global Settings Updated in App: ", newSettings);
       return newSettings;
     });
