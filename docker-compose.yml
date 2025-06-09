@@ -10,6 +10,7 @@ services:
     volumes:
       - ./backend:/app
       - ./project_datasets/datasets:/app/mounted_datasets
+      - ./cache_data:/app/cache_data
     environment:
       - PYTHONUNBUFFERED=1
   ###############################

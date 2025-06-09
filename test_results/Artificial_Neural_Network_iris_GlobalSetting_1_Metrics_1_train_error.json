@@ -1,0 +1,1 @@
+{"configId":"Artificial_Neural_Network_iris_GlobalSetting_1_Metrics_1_train","modelName":"Artificial Neural Network","datasetId":"iris","datasetName":"Iris","status":"error","errorMessage":"Sunucuda beklenmedik bir hata oluştu: TypeError","notes_from_model":["'NoneType' object does not support item assignment"]}

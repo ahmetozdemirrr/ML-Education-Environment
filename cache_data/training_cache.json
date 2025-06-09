@@ -1,0 +1,492 @@
+{
+  "eval_86fbaf42fe7da406069f1f3db97bd2480c74dad575c1321c537d94213c3ed620": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "bike_sharing_hourly_classification",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.8487
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0042,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:09.525171",
+    "last_accessed": "2025-06-09T17:07:09.525181",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_0812993e9170bf36d5c335d1cc6832ed766f3896f3188124218f3cb22f3013c0": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "synthetic_classification_hard",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.76
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0017,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:10.379480",
+    "last_accessed": "2025-06-09T17:07:10.379534",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_79d1751e16c2814891219d31ddac0ae66863d31c069f7988546762e687b10db0": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "iris",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.8
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0014,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:11.117616",
+    "last_accessed": "2025-06-09T17:07:11.117623",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_1270fe9ae0ba0d790292188b47cd238e99571005ad726edbdba59c0785788357": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "digits_data",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9639
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0023,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:12.305959",
+    "last_accessed": "2025-06-09T17:07:12.305969",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_e16e944f2f68815b3fcfe83573de32e58185876d7f1ab6d72da2aac70e8c6551": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "haberman_survival",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.7097
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0012,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:13.064840",
+    "last_accessed": "2025-06-09T17:07:13.064846",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_d5ac6c69fda318d0d14bd877b05f9c443979a19b9b48123042c153a1938cf763": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "wine_data",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.7222
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0014,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:13.792282",
+    "last_accessed": "2025-06-09T17:07:13.792288",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_ca0655ed03829ab9cdf66effa6fec7acbb5b52169d2eddfeb61c5e2e17b47251": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "abalone_classification",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.6364
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0019,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:15.315070",
+    "last_accessed": "2025-06-09T17:07:15.315078",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_0362c9833a7bc11c00ef75a057aa34229d00ace0948b0b287623f54dfe2e44b4": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "mnist_subset_7k",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9293
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0129,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:20.867744",
+    "last_accessed": "2025-06-09T17:07:20.867754",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_67c1a17bc68cd9ded3f143301bc64b74cb2c4acee7fc2eff6f4fbdea0fa93d91": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "mushroom_data",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 1.0
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0029,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:22.862579",
+    "last_accessed": "2025-06-09T17:07:22.862590",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_6d7d8d3b1bbd2c785fa17cd1642f5f039e33f8fc80ae088dcda001c0a0bc8482": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "banknote_authentication",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9745
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0014,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:23.747903",
+    "last_accessed": "2025-06-09T17:07:23.747910",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_b1f8423d0722cdca3adcc9cff01bb8cd0a0ea23c8c54269d466bc54a0d868cc9": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "breast_cancer_wisconsin",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9474
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0014,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:24.533575",
+    "last_accessed": "2025-06-09T17:07:24.533581",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_3184985844b228f8fdf307b914a4ef2da7a76102206a6547f9e7b299f7f8daef": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "pima_indians_diabetes",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.6104
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0025,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:25.271865",
+    "last_accessed": "2025-06-09T17:07:25.271876",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_691a6378e0307816fbe28eb521b340cc5c40296f74728d4bb9fcb49c1db02422": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "two_moons_data",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9125
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0016,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:07:26.044586",
+    "last_accessed": "2025-06-09T17:07:26.044630",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_74141e02ed893d671dc8ba2978df33b8002b2b170dcf1322768da2a192c1309b": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "mnist_full_70k",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9731
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0562,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-09T17:08:46.782680",
+    "last_accessed": "2025-06-09T17:08:46.782698",
+    "hit_count": 1,
+    "type": "evaluation"
+  }
+}

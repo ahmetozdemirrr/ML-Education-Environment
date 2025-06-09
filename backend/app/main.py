@@ -11,6 +11,7 @@ import time
 
 from app import data_processor
 from app import model_factory
+from app.cache_manager import cache_manager
 
 app = FastAPI() # fastapi objesi oluştur
 
@@ -102,20 +103,52 @@ async def list_available_datasets():
     return datasets
 
 
-"""
-/train ve /evaluate endpointlerini düzeltelim - main.py'deki değişiklikler
-"""
-
 @app.post("/train")
 async def process_training_request(request: Request, simulation_data: SimulationRequest):
     """
     SADECE EĞİTİM PERFORMANSI İÇİN:
-    - Fit time (eğitim süresi)
-    - Memory usage
-    - Training throughput
-    - Convergence info
+    - Cache'den kontrol et, varsa direkt döndür
+    - Yoksa hesapla ve cache'e kaydet
     """
     print("--- EĞİTİM PERFORMANSI İsteği Alındı ---")
+
+    # Cache key oluştur
+    cache_key = cache_manager.generate_cache_key(
+        algorithm=simulation_data.algorithm,
+        dataset_id=simulation_data.dataset,
+        model_params=simulation_data.params,
+        global_settings=simulation_data.global_settings
+    )
+
+    print(f"Cache Key: {cache_key[:16]}...")
+
+    # Cache'den kontrol et
+    cached_result = cache_manager.get_cached_training_result(cache_key)
+
+    if cached_result:
+        print("🚀 Cache'den sonuç döndürülüyor!")
+        unique_run_id = simulation_data.params.get("frontend_config_id", f"cached_{cache_key[:8]}")
+
+        response_payload = {
+            "configId": unique_run_id,
+            "modelName": simulation_data.algorithm,
+            "datasetId": simulation_data.dataset,
+            "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
+            "status": "success",
+            "training_metrics": cached_result["training_metrics"],
+            "fit_time_seconds": cached_result["fit_time_seconds"],
+            "memory_usage_mb": cached_result["memory_usage_mb"],
+            "training_throughput": cached_result["training_throughput"],
+            "convergence_info": cached_result["convergence_info"],
+            "notes_from_model": cached_result["notes"],
+            "overall_status_message": "Model sonuçları cache'den alındı (anında).",
+            "from_cache": True
+        }
+
+        return response_payload
+
+    # Cache'de yok, hesapla
+    print("💻 Cache'de yok, hesaplanıyor...")
     log_entry = {
         "algorithm": simulation_data.algorithm,
         "dataset_id": simulation_data.dataset,
@@ -129,38 +162,48 @@ async def process_training_request(request: Request, simulation_data: Simulation
                             detail="İstek gövdesinde 'global_settings' alanı eksik.")
 
     try:
-        # load, preprocess and split data using the data_processor module
+        # Veriyi hazırla
         prepared_data = data_processor.load_and_prepare_data(
             dataset_id=simulation_data.dataset,
             data_dir=DATA_DIR,
             global_settings=simulation_data.global_settings
         )
 
-        # Model eğitimi - SADECE HIZLI METRIKLER
+        # Model eğitimi - SADECE TRAIN MODE
         ml_results = model_factory.run_model_pipeline(
             algorithm_name=simulation_data.algorithm,
             model_params_from_frontend=simulation_data.params,
             data_dict=prepared_data,
             global_settings=simulation_data.global_settings,
-            mode="train"  # YENİ: mode parametresi
+            mode="train"
         )
 
-        unique_run_id = f"{simulation_data.algorithm}_{simulation_data.dataset}_{str(time.time()).replace('.', '')}"
+        # Cache'e kaydet
+        cache_manager.save_training_result(
+            cache_key=cache_key,
+            algorithm=simulation_data.algorithm,
+            dataset_id=simulation_data.dataset,
+            model_params=simulation_data.params,
+            global_settings=simulation_data.global_settings,
+            training_results=ml_results
+        )
 
-        # TRAIN response - sadece hız metrikleri
+        unique_run_id = simulation_data.params.get("frontend_config_id", f"new_{cache_key[:8]}")
+
         response_payload = {
-            "configId": simulation_data.params.get("frontend_config_id", unique_run_id),
+            "configId": unique_run_id,
             "modelName": simulation_data.algorithm,
             "datasetId": simulation_data.dataset,
             "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
             "status": "success",
-            "training_metrics": ml_results.get("training_metrics", {}),  # Hız metrikleri
+            "training_metrics": ml_results.get("training_metrics", {}),
             "fit_time_seconds": ml_results.get("fit_time_seconds"),
             "memory_usage_mb": ml_results.get("memory_usage_mb"),
             "training_throughput": ml_results.get("training_throughput"),
             "convergence_info": ml_results.get("convergence_info", {}),
             "notes_from_model": ml_results.get("notes", []),
-            "overall_status_message": "Model başarıyla eğitildi. Performans metrikleri hesaplandı."
+            "overall_status_message": "Model başarıyla eğitildi ve cache'e kaydedildi.",
+            "from_cache": False
         }
 
         print(f"Training Performans Sonuçları: {response_payload['training_metrics']}")
@@ -168,7 +211,6 @@ async def process_training_request(request: Request, simulation_data: Simulation
         return response_payload
 
     except Exception as e:
-        # Hata yönetimi aynı...
         return handle_error(e, simulation_data)
 
 
@@ -176,11 +218,50 @@ async def process_training_request(request: Request, simulation_data: Simulation
 async def process_evaluation_request(request: Request, simulation_data: SimulationRequest):
     """
     SADECE TAHMİN BAŞARISI İÇİN:
-    - Accuracy, Precision, Recall, F1-Score, ROC AUC
-    - Score time (tahmin süresi)
-    - Prediction performance
+    - Cache'den kontrol et, varsa filtreleyip döndür
+    - Yoksa hesapla ve cache'e kaydet (tüm metrikleri)
     """
     print("--- DEĞERLENDİRME (EVALUATE) İsteği Alındı ---")
+
+    # Cache key oluştur (selectedMetrics olmadan)
+    cache_key = cache_manager.generate_cache_key(
+        algorithm=simulation_data.algorithm,
+        dataset_id=simulation_data.dataset,
+        model_params=simulation_data.params,
+        global_settings=simulation_data.global_settings
+    )
+
+    print(f"Evaluation Cache Key: {cache_key[:16]}...")
+
+    # Selected metrics'i al
+    selected_metrics = simulation_data.params.get("selectedMetrics", [])
+
+    # Cache'den kontrol et
+    cached_result = cache_manager.get_cached_evaluation_result(cache_key, selected_metrics)
+
+    if cached_result:
+        print(f"🚀 Evaluation cache'den sonuç döndürülüyor! (Seçilen metrikler: {selected_metrics})")
+        unique_run_id = simulation_data.params.get("frontend_config_id", f"eval_cached_{cache_key[:8]}")
+
+        response_payload = {
+            "configId": unique_run_id,
+            "modelName": simulation_data.algorithm,
+            "datasetId": simulation_data.dataset,
+            "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
+            "status": "success",
+            "metrics": cached_result["metrics"],  # Filtrelenmiş metrikler
+            "plotData": cached_result["plot_data"],
+            "score_time_seconds": cached_result["score_time_seconds"],
+            "prediction_performance": cached_result["prediction_performance"],
+            "notes_from_model": cached_result["notes"],
+            "overall_status_message": "Evaluation sonuçları cache'den alındı (anında).",
+            "from_cache": True
+        }
+
+        return response_payload
+
+    # Cache'de yok, hesapla
+    print("💻 Evaluation cache'de yok, hesaplanıyor...")
     log_entry = {
         "algorithm": simulation_data.algorithm,
         "dataset_id": simulation_data.dataset,
@@ -194,37 +275,60 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
                             detail="İstek gövdesinde 'global_settings' alanı eksik.")
 
     try:
-        # load, preprocess and split data using the data_processor module
+        # Veriyi hazırla
         prepared_data = data_processor.load_and_prepare_data(
             dataset_id=simulation_data.dataset,
             data_dir=DATA_DIR,
             global_settings=simulation_data.global_settings
         )
 
-        # Model değerlendirmesi - SADECE BAŞARI METRİKLERİ
+        # Model değerlendirmesi - TÜM METRİKLERİ HESAPLA
         ml_results = model_factory.run_model_pipeline(
             algorithm_name=simulation_data.algorithm,
             model_params_from_frontend=simulation_data.params,
             data_dict=prepared_data,
             global_settings=simulation_data.global_settings,
-            mode="evaluate"  # YENİ: mode parametresi
+            mode="evaluate"
         )
 
-        unique_run_id = f"{simulation_data.algorithm}_{simulation_data.dataset}_{str(time.time()).replace('.', '')}"
+        # Cache'e kaydet (TÜM metrikleri kaydet)
+        cache_manager.save_evaluation_result(
+            cache_key=cache_key,
+            algorithm=simulation_data.algorithm,
+            dataset_id=simulation_data.dataset,
+            model_params=simulation_data.params,
+            global_settings=simulation_data.global_settings,
+            evaluation_results=ml_results
+        )
 
-        # EVALUATE response - sadece başarı metrikleri
+        # Kullanıcının seçtiği metriklerle filtrelenmiş sonuç döndür
+        if selected_metrics and ml_results.get("metrics"):
+            metric_mapping = {
+                "Accuracy": "accuracy",
+                "Precision": "precision",
+                "Recall": "recall",
+                "F1-Score": "f1_score",
+                "ROC AUC": "roc_auc"
+            }
+            backend_selected = [metric_mapping.get(m, m.lower()) for m in selected_metrics]
+            filtered_metrics = {k: v for k, v in ml_results["metrics"].items() if k in backend_selected}
+            ml_results["metrics"] = filtered_metrics
+
+        unique_run_id = simulation_data.params.get("frontend_config_id", f"eval_new_{cache_key[:8]}")
+
         response_payload = {
-            "configId": simulation_data.params.get("frontend_config_id", unique_run_id),
+            "configId": unique_run_id,
             "modelName": simulation_data.algorithm,
             "datasetId": simulation_data.dataset,
             "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
             "status": "success",
-            "metrics": ml_results.get("metrics", {}),  # Başarı metrikleri
+            "metrics": ml_results.get("metrics", {}),  # Filtrelenmiş metrikler
             "plotData": ml_results.get("plot_data", {}),
             "score_time_seconds": ml_results.get("score_time_seconds"),
             "prediction_performance": ml_results.get("prediction_performance", {}),
             "notes_from_model": ml_results.get("notes", []),
-            "overall_status_message": "Model başarıyla değerlendirildi. Tahmin başarısı ölçüldü."
+            "overall_status_message": "Model başarıyla değerlendirildi ve cache'e kaydedildi.",
+            "from_cache": False
         }
 
         if not ml_results.get("metrics"):
@@ -236,8 +340,21 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
         return response_payload
 
     except Exception as e:
-        # Hata yönetimi aynı...
         return handle_error(e, simulation_data)
+
+
+@app.get("/cache-stats")
+async def get_cache_statistics():
+    """Cache istatistiklerini döndür"""
+    stats = cache_manager.get_cache_stats()
+    return {"cache_stats": stats}
+
+
+@app.delete("/clear-cache")
+async def clear_training_cache():
+    """Cache'i temizle"""
+    cache_manager.clear_cache()
+    return {"message": "Training cache temizlendi"}
 
 
 def handle_error(e, simulation_data):

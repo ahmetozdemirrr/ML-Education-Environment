@@ -130,7 +130,15 @@ def train_and_evaluate_svm(
             if hasattr(model_instance, 'n_support_'):
                 output_results["convergence_info"]["support_vectors_per_class"] = [int(x) for x in model_instance.n_support_.tolist()]  # int() ekle
             if hasattr(model_instance, 'n_iter_'):
-                output_results["convergence_info"]["iterations"] = int(model_instance.n_iter_)  # int() ekle
+                # DÜZELTİLDİ: n_iter_ array olabilir, kontrol et
+                if isinstance(model_instance.n_iter_, np.ndarray):
+                    if model_instance.n_iter_.size == 1:
+                        output_results["convergence_info"]["iterations"] = int(model_instance.n_iter_.item())
+                    else:
+                        output_results["convergence_info"]["iterations_per_class"] = [int(x) for x in model_instance.n_iter_.tolist()]
+                        output_results["convergence_info"]["max_iterations"] = int(model_instance.n_iter_.max())
+                else:
+                    output_results["convergence_info"]["iterations"] = int(model_instance.n_iter_)
 
         elif mode == "evaluate":
             # SADECE TAHMİN BAŞARISI METRİKLERİ
