@@ -1,1 +1,0 @@
-{"configId":"Artificial_Neural_Network_wine_data_GlobalSetting_1_Metrics_2_train","modelName":"Artificial Neural Network","datasetId":"wine_data","datasetName":"Wine Data","status":"error","errorMessage":"Sunucuda beklenmedik bir hata oluştu: TypeError","notes_from_model":["'NoneType' object does not support item assignment"]}

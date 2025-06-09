@@ -1,1 +1,0 @@
-{"configId":"Artificial_Neural_Network_mnist_subset_7k_GlobalSetting_1_Metrics_2_train","modelName":"Artificial Neural Network","datasetId":"mnist_subset_7k","datasetName":"Mnist Subset 7K","status":"error","errorMessage":"Sunucuda beklenmedik bir hata oluştu: TypeError","notes_from_model":["'NoneType' object does not support item assignment"]}
