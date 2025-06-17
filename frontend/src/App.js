@@ -1,11 +1,11 @@
-/* ./frontend/src/App.js */
+/* ./frontend/src/App.js - Enhanced with Results Viewer */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import './App.css';
 import GlobalSettingsPanel from './GlobalSettingsPanel';
+import ResultsViewer from './components/ResultsViewer';
 import isEqual from 'lodash/isEqual';
-
 
 /* Machine Learning Models: */
 const initialModelsData = [
@@ -153,7 +153,7 @@ const availableDatasets = [
 
 const initialStaticDatasets = availableDatasets.map(d => ({ ...d, checked: false }));
 
-const allMetrics = 
+const allMetrics =
 {
   classification: ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC AUC']
 };
@@ -164,9 +164,9 @@ function ParameterPopup({ model, onClose, onSaveRequest, existingConfigs = [], e
   const [selectedMetricsState, setSelectedMetricsState] = useState([]);
   const availableMetrics = model ? allMetrics[model.task_type] || [] : [];
 
-  useEffect(() => 
+  useEffect(() =>
   {
-    if (model) 
+    if (model)
     {
       const initialParams = {};
 
@@ -175,7 +175,7 @@ function ParameterPopup({ model, onClose, onSaveRequest, existingConfigs = [], e
           initialParams[param.name] = editingConfig.params[param.name] !== undefined ? editingConfig.params[param.name] : param.defaultValue;
         });
         setSelectedMetricsState(editingConfig.metrics || (availableMetrics.length > 0 ? [availableMetrics[0]] : []));
-      } 
+      }
 
       else {
         model.params.forEach(param => {
@@ -185,26 +185,26 @@ function ParameterPopup({ model, onClose, onSaveRequest, existingConfigs = [], e
       }
       setParamsState(initialParams);
     }
-  }, 
+  },
   [model, editingConfig]);
 
-  const handleInputChange = (paramName, value) => 
-  { 
-    setParamsState(prevParams => ({ ...prevParams, [paramName]: value })); 
+  const handleInputChange = (paramName, value) =>
+  {
+    setParamsState(prevParams => ({ ...prevParams, [paramName]: value }));
   };
 
-  const handleMetricChangePopup = (event) => 
+  const handleMetricChangePopup = (event) =>
   {
     const { value, checked } = event.target;
 
-    setSelectedMetricsState(prevMetrics => 
+    setSelectedMetricsState(prevMetrics =>
     {
       if (checked) { return [...prevMetrics, value]; }
       else { return prevMetrics.filter(metric => metric !== value); }
     });
   };
 
-  const handleSaveAttempt = () => 
+  const handleSaveAttempt = () =>
   {
     const currentData = { params: paramsState, metrics: selectedMetricsState };
     onSaveRequest(model.id, currentData, editingConfig ? editingConfig.id : null);
@@ -212,7 +212,7 @@ function ParameterPopup({ model, onClose, onSaveRequest, existingConfigs = [], e
 
   if (!model) return null;
 
-  const shouldDisplay = (param) => 
+  const shouldDisplay = (param) =>
   {
     if (!param.condition) return true;
     const conditionParamValue = paramsState[param.condition.param];
@@ -250,12 +250,12 @@ function ParameterPopup({ model, onClose, onSaveRequest, existingConfigs = [], e
   );
 }
 
-function ConfirmationPopup({ modelName, onConfirm, onCancel }) 
+function ConfirmationPopup({ modelName, onConfirm, onCancel })
 {
   return ( <div className="popup-overlay confirmation-overlay"> <div className="popup-content confirmation-content"> <h4>Add Another Instance?</h4> <p>Do you want to add another instance of <strong>{modelName}</strong> with different settings?</p> <div className="confirmation-buttons"> <button onClick={onConfirm} className="confirm-yes-button">Yes, Add Another</button> <button onClick={onCancel} className="confirm-no-button">No, Finish</button> </div> </div> </div> );
 }
 
-function App() 
+function App()
 {
   const [models] = useState(initialModelsData);
   const [datasets, setDatasets] = useState(initialStaticDatasets);
@@ -276,22 +276,25 @@ function App()
     applyFeatureScaling: true,
     scalerType: "standard"
   });
+
+  // NEW: Results management state
+  const [simulationResults, setSimulationResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationState, setConfirmationState] = useState({ show: false, model: null });
   const simulationPanelRef = useRef(null);
   const API_BASE_URL = "http://localhost:8000";
 
-  const handleMouseEnter = (event, descriptionText) => 
+  const handleMouseEnter = (event, descriptionText) =>
   {
     if (tooltipTimeoutRef.current) { clearTimeout(tooltipTimeoutRef.current); tooltipTimeoutRef.current = null; }
     const targetRect = event.currentTarget.getBoundingClientRect();
-    const tooltipNominalHeight = 50; 
-    const tooltipWidth = 260; 
-    const gap = 15; 
-    const viewportPadding = 10; 
-    let top = targetRect.top + window.scrollY - tooltipNominalHeight - gap; 
+    const tooltipNominalHeight = 50;
+    const tooltipWidth = 260;
+    const gap = 15;
+    const viewportPadding = 10;
+    let top = targetRect.top + window.scrollY - tooltipNominalHeight - gap;
     let left = targetRect.left + window.scrollX + (targetRect.width / 2);
-    let transform = 'translateX(-50%)'; 
+    let transform = 'translateX(-50%)';
     if (top < window.scrollY + viewportPadding) { top = targetRect.bottom + window.scrollY + gap; }
     if (left - (tooltipWidth / 2) < viewportPadding) { left = viewportPadding + (tooltipWidth / 2) ; }
     else if (left + (tooltipWidth / 2) > window.innerWidth - viewportPadding) { left = window.innerWidth - viewportPadding - (tooltipWidth / 2); }
@@ -299,25 +302,25 @@ function App()
     setTooltipContent(descriptionText);
   };
 
-  const handleMouseLeave = () => 
+  const handleMouseLeave = () =>
   {
-    tooltipTimeoutRef.current = setTimeout(() => 
+    tooltipTimeoutRef.current = setTimeout(() =>
     {
         setTooltipPosition(prev => ({ ...prev, opacity: 0 }));
-        setTimeout(() => { if (!tooltipTimeoutRef.current) return; setTooltipContent(''); tooltipTimeoutRef.current = null; }, 200); 
-    }, 100); 
+        setTimeout(() => { if (!tooltipTimeoutRef.current) return; setTooltipContent(''); tooltipTimeoutRef.current = null; }, 200);
+    }, 100);
   };
 
   const configsAreEqual = (config1, config2) => isEqual(config1.params, config2.params) && isEqual(config1.metrics, config2.metrics);
-  
-  const handleModelCheckboxChange = (modelId) => 
+
+  const handleModelCheckboxChange = (modelId) =>
   {
     const modelToConfigure = models.find(m => m.id === modelId);
 
     if (selectedModelForPopup?.id === modelId && !editingConfigState) {
         setSelectedModelForPopup(null);
         setEditingConfigState(null);
-    } 
+    }
 
     else if (modelToConfigure) {
         setSelectedModelForPopup(modelToConfigure);
@@ -326,28 +329,28 @@ function App()
   };
 
   const handleDatasetCheckboxChange = (datasetId) => setDatasets(datasets.map(d => d.id === datasetId ? { ...d, checked: !d.checked } : d ));
-  
-  const closePopup = () => 
+
+  const closePopup = () =>
   {
     setSelectedModelForPopup(null);
     setEditingConfigState(null);
   };
 
-  const handleSaveConfiguration = (modelId, newData, configToEditId = null) => 
+  const handleSaveConfiguration = (modelId, newData, configToEditId = null) =>
   {
     const existingConfigsForModel = savedParams[modelId] || [];
-    
+
     if (configToEditId) {
         const updatedConfigs = existingConfigsForModel.map(config =>
             config.id === configToEditId ? { ...config, ...newData } : config
         );
         setSavedParams(prevParams => ({ ...prevParams, [modelId]: updatedConfigs }));
         console.log(`Configuration ${configToEditId} updated for ${modelId}:`, newData);
-    } 
+    }
 
     else {
         const isDuplicate = existingConfigsForModel.some(existingConfig => configsAreEqual(existingConfig, newData));
-        
+
         if (isDuplicate) {
             alert("These settings are identical to a previously configured instance for this model.");
             return false;
@@ -360,15 +363,15 @@ function App()
     return true;
   };
 
-  const handleSaveAndConfirm = (modelId, newData, configToEditId = null) => 
+  const handleSaveAndConfirm = (modelId, newData, configToEditId = null) =>
   {
     const success = handleSaveConfiguration(modelId, newData, configToEditId);
-    
-    if (success) 
+
+    if (success)
     {
         if (configToEditId) {
             closePopup();
-        } 
+        }
 
         else {
             const model = models.find(m => m.id === modelId);
@@ -380,7 +383,7 @@ function App()
   const handleConfirmYes = () => setConfirmationState({ show: false, model: null });
   const handleConfirmNo = () => { setConfirmationState({ show: false, model: null }); closePopup(); };
 
-  const handleDeleteConfiguration = (modelId, configIdToDelete) => 
+  const handleDeleteConfiguration = (modelId, configIdToDelete) =>
   {
     setSavedParams(prevParams => {
         const updatedConfigsForModel = (prevParams[modelId] || []).filter(config => config.id !== configIdToDelete);
@@ -393,11 +396,11 @@ function App()
     console.log(`Configuration ${configIdToDelete} deleted for model ${modelId}.`);
   };
 
-  const handleEditConfiguration = (modelId, configIdToEdit) => 
+  const handleEditConfiguration = (modelId, configIdToEdit) =>
   {
       const modelToConfigure = models.find(m => m.id === modelId);
       const configToEdit = (savedParams[modelId] || []).find(c => c.id === configIdToEdit);
-      
+
       if (modelToConfigure && configToEdit) {
           setSelectedModelForPopup(modelToConfigure);
           setEditingConfigState(configToEdit);
@@ -406,9 +409,10 @@ function App()
 
   const handleResetWorkspace = () =>
   {
-    if (window.confirm("Are you sure you want to reset all selections and configurations?")) {
+    if (window.confirm("Are you sure you want to reset all selections and configurations? This will also clear all simulation results.")) {
         setDatasets(initialStaticDatasets.map(d => ({ ...d, checked: false })));
         setSavedParams({});
+        setSimulationResults([]); // NEW: Clear results
         setGlobalSettings({
           useCrossValidation: false,
           cvFolds: 5,
@@ -421,7 +425,7 @@ function App()
         setSelectedModelForPopup(null);
         setEditingConfigState(null);
         setConfirmationState({ show: false, model: null });
-        console.log("Workspace reset.");
+        console.log("Workspace and results reset.");
     }
   };
 
@@ -447,32 +451,42 @@ function App()
     });
   };
 
-  // Backend'e İstek Gönderme Fonksiyonu
-  const sendSimulationRequest = async (endpoint, actionType) => 
+  // NEW: Clear results function
+  const handleClearResults = () => {
+    if (window.confirm("Are you sure you want to clear all simulation results?")) {
+      setSimulationResults([]);
+      console.log("Simulation results cleared.");
+    }
+  };
+
+  // Backend'e İstek Gönderme Fonksiyonu - ENHANCED
+  const sendSimulationRequest = async (endpoint, actionType) =>
   {
     console.log(`--- ${actionType} Button Clicked ---`);
     setIsLoading(true);
 
-    const allConfiguredModels = Object.values(savedParams).flat(); // Tüm konfigürasyonları tek bir diziye al
+    const allConfiguredModels = Object.values(savedParams).flat();
     const selectedDatasets = datasets.filter(d => d.checked);
 
     if (allConfiguredModels.length === 0 || selectedDatasets.length === 0) {
       alert(`Please configure at least one model instance and select at least one dataset to ${actionType.toLowerCase()}.`);
-      setIsLoading(false); 
+      setIsLoading(false);
       return;
     }
+
     const requests = [];
+    const newResults = [];
 
     // Her bir konfigürasyon ve her bir dataset için istek oluştur
-    for (const config of allConfiguredModels) 
+    for (const config of allConfiguredModels)
     {
-        const originalModel = models.find(m => config.id.startsWith(m.id)); // Orijinal model bilgisini bul
+        const originalModel = models.find(m => config.id.startsWith(m.id));
         if (!originalModel) continue;
 
-        for (const dataset of selectedDatasets) 
+        for (const dataset of selectedDatasets)
         {
           const randomSeed = globalSettings.randomSeedType === "fixed" ? 42 : null;
-          const payload = 
+          const payload =
           {
               algorithm: originalModel.name,
               params: {
@@ -483,7 +497,7 @@ function App()
               dataset: dataset.id,
               global_settings: {
                 ...globalSettings,
-                randomSeed: randomSeed // randomSeedType'a göre dinamik olarak ayarlanıyor
+                randomSeed: randomSeed
               }
           };
           console.log(`Sending ${actionType} request for ${originalModel.name} (Config: ${config.id}) on ${dataset.name}`);
@@ -502,35 +516,54 @@ function App()
           })
           .then(data => {
               console.log(`${actionType} Response for ${originalModel.name} (Config: ${config.id}) on ${dataset.name}:`, data);
-              // Sonuçları işlemek için config.id'yi de ekleyebiliriz
-              return { status: 'fulfilled', configId: config.id, model: originalModel.name, dataset: dataset.name, data: data };
+
+              // NEW: Enhanced result processing
+              const enhancedResult = {
+                ...data,
+                timestamp: new Date().toISOString(),
+                actionType: actionType.toLowerCase(),
+                configId: config.id,
+                modelId: originalModel.id,
+                datasetId: dataset.id,
+                datasetName: dataset.name,
+                globalSettings: globalSettings,
+                selected: false // For comparison functionality
+              };
+
+              newResults.push(enhancedResult);
+              return { status: 'fulfilled', configId: config.id, model: originalModel.name, dataset: dataset.name, data: enhancedResult };
           })
           .catch(error => {
               console.error(`Workspace error during ${actionType} for ${originalModel.name} (Config: ${config.id}) on ${dataset.name}:`, error);
-                  return { status: 'rejected', configId: config.id, model: originalModel.name, dataset: dataset.name, reason: error.message };
+              return { status: 'rejected', configId: config.id, model: originalModel.name, dataset: dataset.name, reason: error.message };
           });
           requests.push(requestPromise);
         }
     }
 
-    try 
+    try
     {
         const results = await Promise.allSettled(requests);
         console.log(`${actionType} - All requests settled:`, results);
+
+        // NEW: Add successful results to state
+        const successfulResults = results.filter(r => r.status === 'fulfilled' && r.value.status === 'fulfilled');
+        if (successfulResults.length > 0) {
+          setSimulationResults(prev => [...prev, ...newResults]);
+        }
+
         setIsLoading(false);
-        const failures = results.filter(result => result.status === 'rejected');
-        
+        const failures = results.filter(result => result.status === 'rejected' || result.value.status === 'rejected');
+
         if (failures.length > 0) {
             console.warn(`${failures.length} request(s) failed during ${actionType}.`);
-            alert(`${failures.length} simulation task(s) failed. Check console for details.`);
-        } 
-
-        else {
-            alert(`${actionType} requests completed successfully for all configurations! Check backend console.`);
+            alert(`${failures.length} simulation task(s) failed. ${successfulResults.length} completed successfully. Check console for details.`);
         }
-    } 
-
-    catch (error) 
+        else {
+            alert(`${actionType} completed successfully for all ${successfulResults.length} configurations!`);
+        }
+    }
+    catch (error)
     {
         console.error(`Error managing ${actionType} requests:`, error);
         setIsLoading(false);
@@ -539,34 +572,34 @@ function App()
   };
 
   const handleTrain = () => { sendSimulationRequest('/train', 'Train'); };
-  const handleEvaluate = () => { sendSimulationRequest('/train', 'Evaluate'); };
+  const handleEvaluate = () => { sendSimulationRequest('/evaluate', 'Evaluate'); };
 
-  const toggleFullScreen = async () => 
+  const toggleFullScreen = async () =>
   {
     const elem = simulationPanelRef.current;
     if (!elem) return;
 
-    if (!document.fullscreenElement) 
+    if (!document.fullscreenElement)
     {
-      try 
+      try
       {
         if (elem.requestFullscreen) { await elem.requestFullscreen(); }
         else if (elem.webkitRequestFullscreen) { await elem.webkitRequestFullscreen(); }
         else if (elem.msRequestFullscreen) { await elem.msRequestFullscreen(); }
         else { alert('Fullscreen API is not supported by your browser.'); }
-      } 
+      }
       catch (err) { console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`); }
-    } 
+    }
 
-    else 
+    else
     {
-      try 
+      try
       {
         if (document.exitFullscreen) { await document.exitFullscreen(); }
         else if (document.webkitExitFullscreen) { await document.webkitExitFullscreen(); }
         else if (document.msExitFullscreen) { await document.msExitFullscreen(); }
         else { alert('Fullscreen API is not supported by your browser.'); }
-      } 
+      }
       catch (err) { console.error(`Error attempting to exit full-screen mode: ${err.message} (${err.name})`); }
     }
   };
@@ -599,63 +632,90 @@ function App()
         <GlobalSettingsPanel settings={globalSettings} onChange={handleGlobalSettingsChange} />
       </div>
 
-      <div className="panel simulation-panel" ref={simulationPanelRef}>
-        <div className="simulation-panel-header">
-          <h2>Simulation Screen</h2>
-          <button onClick={toggleFullScreen} className="fullscreen-button" title="Toggle Fullscreen">
-             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"> <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/> </svg>
-          </button>
-        </div>
-        <div className="simulation-panel-content">
-          {isLoading && <div className="loading-indicator">Running Simulations...</div>}
-          <p>( Currently Empty - Simulation results will appear here )</p>
-          <div className="simulation-summary">
-            <div>
-              <h4>Configured Model Instances:</h4>
-              {Object.keys(savedParams).length > 0 ? (
-                <ul className="configured-instances-list">
-                  {Object.entries(savedParams).map(([modelId, configs]) =>
-                    configs.map((config, index) => {
-                      const originalModel = models.find(m => m.id === modelId);
-                      return (
-                        <li key={config.id} className="config-item">
-                          <div className="config-item-name">
-                            <span><strong>{originalModel?.name || modelId}</strong> (Instance {index + 1})</span>
-                          </div>
-                          <div className="config-item-actions">
-                            <button 
-                              onClick={() => handleEditConfiguration(modelId, config.id)} 
-                              className="config-action-button edit-button" 
-                              title="Edit Configuration">
-                              ✏️ {/* Kalem ikonu */}
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteConfiguration(modelId, config.id)} 
-                              className="config-action-button delete-button" 
-                              title="Delete Configuration">
-                              🗑️ {/* Çöp kutusu ikonu */}
-                            </button>
-                          </div>
-                          <details className="config-details">
-                            <summary>Details</summary>
-                            <pre>
-                              ID: {config.id}{"\n"}
-                              Params: {JSON.stringify(config.params, null, 1)}{"\n"}
-                              Metrics: {JSON.stringify(config.metrics, null, 1)}
-                            </pre>
-                          </details>
-                        </li>
-                      );
-                    })
-                  )}
-                </ul>
-              ) : ( <small>No model instances configured yet.</small> )}
-            </div>
-            <div><h4>Selected Datasets:</h4><ul>{datasets.filter(d => d.checked).map(d => <li key={d.id}>{d.name}</li>)}</ul>{datasets.filter(d => d.checked).length === 0 && <small>No datasets selected.</small>}</div>
-            <div><h4>Global Settings:</h4><pre>{JSON.stringify(globalSettings, null, 2)}</pre></div>
-          </div>
-        </div>
+    <div className="panel simulation-panel" ref={simulationPanelRef}>
+      <div className="simulation-panel-header">
+        <h2>{simulationResults.length > 0 ? 'Simulation Results' : 'Simulation Screen'}</h2>
+        <button onClick={toggleFullScreen} className="fullscreen-button" title="Toggle Fullscreen">
+           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"> <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/> </svg>
+        </button>
       </div>
+      <div className="simulation-panel-content">
+        {simulationResults.length > 0 || isLoading ? (
+          <ResultsViewer
+            results={simulationResults}
+            isLoading={isLoading}
+            onClearResults={handleClearResults}
+          />
+        ) : (
+          <div className="simulation-content-classic">
+            <div className="simulation-status">
+              <p className="simulation-note">( Currently Empty - Simulation results will appear here )</p>
+            </div>
+
+            <div className="simulation-summary">
+              <div className="summary-section">
+                <h4>Configured Model Instances:</h4>
+                {Object.keys(savedParams).length > 0 ? (
+                  <ul className="configured-instances-list">
+                    {Object.entries(savedParams).map(([modelId, configs]) =>
+                      configs.map((config, index) => {
+                        const originalModel = models.find(m => m.id === modelId);
+                        return (
+                          <li key={config.id} className="config-item">
+                            <div className="config-item-name">
+                              <span><strong>{originalModel?.name || modelId}</strong> (Instance {index + 1})</span>
+                            </div>
+                            <div className="config-item-actions">
+                              <button
+                                onClick={() => handleEditConfiguration(modelId, config.id)}
+                                className="config-action-button edit-button"
+                                title="Edit Configuration">
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDeleteConfiguration(modelId, config.id)}
+                                className="config-action-button delete-button"
+                                title="Delete Configuration">
+                                🗑️
+                              </button>
+                            </div>
+                            <details className="config-details">
+                              <summary>Details</summary>
+                              <pre>
+                                ID: {config.id}{"\n"}
+                                Params: {JSON.stringify(config.params, null, 1)}{"\n"}
+                                Metrics: {JSON.stringify(config.metrics, null, 1)}
+                              </pre>
+                            </details>
+                          </li>
+                        );
+                      })
+                    )}
+                  </ul>
+                ) : (
+                  <p className="no-data-text">No model instances configured yet.</p>
+                )}
+              </div>
+
+              <div className="summary-section">
+                <h4>Selected Datasets:</h4>
+                <ul>
+                  {datasets.filter(d => d.checked).map(d => <li key={d.id}>{d.name}</li>)}
+                </ul>
+                {datasets.filter(d => d.checked).length === 0 &&
+                  <p className="no-data-text">No datasets selected.</p>
+                }
+              </div>
+
+              <div className="summary-section">
+                <h4>Global Settings:</h4>
+                <pre className="settings-json">{JSON.stringify(globalSettings, null, 2)}</pre>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
 
       <div className="right-column">
         <div className="panel datasets-panel">
@@ -681,19 +741,18 @@ function App()
         <div className="action-buttons-bottom">
           <button className="train-button" onClick={handleTrain} disabled={isLoading}>{isLoading ? 'Processing...' : 'Train'}</button>
           <button className="evaluate-button" onClick={handleEvaluate} disabled={isLoading}>{isLoading ? 'Processing...' : 'Evaluate'}</button>
-          {/* YENİ: Reset Butonu */}
           <button className="reset-button" onClick={handleResetWorkspace} disabled={isLoading}>Reset Workspace</button>
         </div>
       </div>
 
-      {selectedModelForPopup && ( 
-        <ParameterPopup 
-            model={selectedModelForPopup} 
-            onClose={closePopup} 
-            onSaveRequest={handleSaveAndConfirm} 
+      {selectedModelForPopup && (
+        <ParameterPopup
+            model={selectedModelForPopup}
+            onClose={closePopup}
+            onSaveRequest={handleSaveAndConfirm}
             existingConfigs={savedParams[selectedModelForPopup.id] || []}
-            editingConfig={editingConfigState} // Düzenlenecek konfigürasyonu prop olarak geçir
-        /> 
+            editingConfig={editingConfigState}
+        />
       )}
       {confirmationState.show && confirmationState.model && ( <ConfirmationPopup modelName={confirmationState.model.name} onConfirm={handleConfirmYes} onCancel={handleConfirmNo} /> )}
 

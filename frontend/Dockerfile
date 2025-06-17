@@ -1,11 +1,11 @@
-FROM node:16
+FROM node:18
 WORKDIR /app
 
 # ÖNCE sadece paket manifest dosyalarını kopyala
 COPY package.json package-lock.json ./
 
-# package-lock.json'a göre GÜVENİLİR kurulum için npm ci kullan
-RUN npm ci
+# npm ci yerine npm install kullan (lock file uyumsuzlukları için)
+RUN npm install
 
 # Uygulama kodunun geri kalanını kopyala
 COPY . .

@@ -13,40 +13,31 @@ from app import data_processor
 from app import model_factory
 from app.cache_manager import cache_manager
 
-app = FastAPI() # fastapi objesi oluştur
+app = FastAPI()
 
-# CORS settings - DÜZELTİLDİ
+# CORS settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Tüm originlere izin ver
-    allow_credentials=False,  # Credentials kapatıldı
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-"""
-    Docker volume ile mount edilen datasetlerin container içindeki yolu.
-    Bu yol, docker-compose.yml dosyasında belirtilmiştir, konteyner ile
-    host makine arasında bir bağlantı sağlar
-"""
 DATA_DIR = "/app/mounted_datasets"
 
 # Frontend'den gelecek isteklerin yapısını tanımlayan Pydantic modelleri
-
-# /train endpointine gelen POST isteklerinin yapısı:
 class SimulationRequest(BaseModel):
     algorithm: str
-    params: Dict[str, Any] # Model parametreleri ve seçilen metrikleri içerecek
-    dataset: str           # Dataset ID'si (dosya adının uzantısız hali)
-    global_settings: Dict[str, Any] # Frontend'deki GlobalSettingsPanel'den gelen ayarlar
+    params: Dict[str, Any]
+    dataset: str
+    global_settings: Dict[str, Any]
 
-# /datasets enpointinin döndüreceği veri yapısı:
 class DatasetInfo(BaseModel):
     id: str
     name: str
 
-
-@app.on_event("startup") # FastAPI başladığında ele alınan rutin
+@app.on_event("startup")
 async def startup_event():
     """Uygulama başladığında dataset dizininin varlığını ve içeriğini kontrol et."""
     print(f"Backend uygulaması başlatılıyor...")
@@ -55,10 +46,8 @@ async def startup_event():
         print(f"UYARI: Dataset dizini '{DATA_DIR}' container içinde bulunamadı.")
         print("Lütfen docker-compose.yml dosyasındaki volume mount ayarlarını ve host makinenizdeki")
         print("'./project_datasets/datasets' klasörünün varlığını kontrol edin.")
-
     else:
         print(f"Datasetler şu dizinden sunulacak: '{DATA_DIR}'")
-
         try:
             if not os.listdir(DATA_DIR):
                 print(f"UYARI: Dataset dizini '{DATA_DIR}' boş.")
@@ -68,15 +57,8 @@ async def startup_event():
         except Exception as e:
             print(f"Dataset dizini okunurken hata: {e}")
 
-
-"""
-    /datasets endpointine gelen GET isteklerini ele alır data set listesi
-    ([dataset_id, dataset_isim] gibi) döner, boş bir liste oluşturur DATA_DIR'ı
-    kontrol eder, klasör yoksa hata döner HTTPException ile
-"""
 @app.get("/datasets", response_model=List[DatasetInfo])
 async def list_available_datasets():
-
     datasets = []
     if not os.path.exists(DATA_DIR):
         raise HTTPException(status_code=500,
@@ -84,7 +66,6 @@ async def list_available_datasets():
 
     try:
         for filename in os.listdir(DATA_DIR):
-
             if filename.startswith('.') or os.path.isdir(os.path.join(DATA_DIR, filename)):
                 continue
 
@@ -102,13 +83,13 @@ async def list_available_datasets():
 
     return datasets
 
-
 @app.post("/train")
 async def process_training_request(request: Request, simulation_data: SimulationRequest):
     """
     SADECE EĞİTİM PERFORMANSI İÇİN:
     - Cache'den kontrol et, varsa direkt döndür
     - Yoksa hesapla ve cache'e kaydet
+    - Enhanced results ile birlikte döndür
     """
     print("--- EĞİTİM PERFORMANSI İsteği Alındı ---")
 
@@ -129,22 +110,9 @@ async def process_training_request(request: Request, simulation_data: Simulation
         print("🚀 Cache'den sonuç döndürülüyor!")
         unique_run_id = simulation_data.params.get("frontend_config_id", f"cached_{cache_key[:8]}")
 
-        response_payload = {
-            "configId": unique_run_id,
-            "modelName": simulation_data.algorithm,
-            "datasetId": simulation_data.dataset,
-            "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
-            "status": "success",
-            "training_metrics": cached_result["training_metrics"],
-            "fit_time_seconds": cached_result["fit_time_seconds"],
-            "memory_usage_mb": cached_result["memory_usage_mb"],
-            "training_throughput": cached_result["training_throughput"],
-            "convergence_info": cached_result["convergence_info"],
-            "notes_from_model": cached_result["notes"],
-            "overall_status_message": "Model sonuçları cache'den alındı (anında).",
-            "from_cache": True
-        }
-
+        response_payload = create_enhanced_training_response(
+            unique_run_id, simulation_data, cached_result, from_cache=True
+        )
         return response_payload
 
     # Cache'de yok, hesapla
@@ -190,21 +158,9 @@ async def process_training_request(request: Request, simulation_data: Simulation
 
         unique_run_id = simulation_data.params.get("frontend_config_id", f"new_{cache_key[:8]}")
 
-        response_payload = {
-            "configId": unique_run_id,
-            "modelName": simulation_data.algorithm,
-            "datasetId": simulation_data.dataset,
-            "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
-            "status": "success",
-            "training_metrics": ml_results.get("training_metrics", {}),
-            "fit_time_seconds": ml_results.get("fit_time_seconds"),
-            "memory_usage_mb": ml_results.get("memory_usage_mb"),
-            "training_throughput": ml_results.get("training_throughput"),
-            "convergence_info": ml_results.get("convergence_info", {}),
-            "notes_from_model": ml_results.get("notes", []),
-            "overall_status_message": "Model başarıyla eğitildi ve cache'e kaydedildi.",
-            "from_cache": False
-        }
+        response_payload = create_enhanced_training_response(
+            unique_run_id, simulation_data, ml_results, from_cache=False
+        )
 
         print(f"Training Performans Sonuçları: {response_payload['training_metrics']}")
         print("--- EĞİTİM İsteği Başarıyla Tamamlandı ---")
@@ -213,13 +169,13 @@ async def process_training_request(request: Request, simulation_data: Simulation
     except Exception as e:
         return handle_error(e, simulation_data)
 
-
 @app.post("/evaluate")
 async def process_evaluation_request(request: Request, simulation_data: SimulationRequest):
     """
     SADECE TAHMİN BAŞARISI İÇİN:
     - Cache'den kontrol et, varsa filtreleyip döndür
     - Yoksa hesapla ve cache'e kaydet (tüm metrikleri)
+    - Enhanced results ile birlikte döndür
     """
     print("--- DEĞERLENDİRME (EVALUATE) İsteği Alındı ---")
 
@@ -243,21 +199,9 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
         print(f"🚀 Evaluation cache'den sonuç döndürülüyor! (Seçilen metrikler: {selected_metrics})")
         unique_run_id = simulation_data.params.get("frontend_config_id", f"eval_cached_{cache_key[:8]}")
 
-        response_payload = {
-            "configId": unique_run_id,
-            "modelName": simulation_data.algorithm,
-            "datasetId": simulation_data.dataset,
-            "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
-            "status": "success",
-            "metrics": cached_result["metrics"],  # Filtrelenmiş metrikler
-            "plotData": cached_result["plot_data"],
-            "score_time_seconds": cached_result["score_time_seconds"],
-            "prediction_performance": cached_result["prediction_performance"],
-            "notes_from_model": cached_result["notes"],
-            "overall_status_message": "Evaluation sonuçları cache'den alındı (anında).",
-            "from_cache": True
-        }
-
+        response_payload = create_enhanced_evaluation_response(
+            unique_run_id, simulation_data, cached_result, from_cache=True
+        )
         return response_payload
 
     # Cache'de yok, hesapla
@@ -316,20 +260,9 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
 
         unique_run_id = simulation_data.params.get("frontend_config_id", f"eval_new_{cache_key[:8]}")
 
-        response_payload = {
-            "configId": unique_run_id,
-            "modelName": simulation_data.algorithm,
-            "datasetId": simulation_data.dataset,
-            "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
-            "status": "success",
-            "metrics": ml_results.get("metrics", {}),  # Filtrelenmiş metrikler
-            "plotData": ml_results.get("plot_data", {}),
-            "score_time_seconds": ml_results.get("score_time_seconds"),
-            "prediction_performance": ml_results.get("prediction_performance", {}),
-            "notes_from_model": ml_results.get("notes", []),
-            "overall_status_message": "Model başarıyla değerlendirildi ve cache'e kaydedildi.",
-            "from_cache": False
-        }
+        response_payload = create_enhanced_evaluation_response(
+            unique_run_id, simulation_data, ml_results, from_cache=False
+        )
 
         if not ml_results.get("metrics"):
             response_payload["status"] = "warning"
@@ -342,6 +275,97 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
     except Exception as e:
         return handle_error(e, simulation_data)
 
+def create_enhanced_training_response(unique_run_id, simulation_data, ml_results, from_cache=False):
+    """Create enhanced training response with additional metadata and insights"""
+
+    # FIXED: f-string içinde backslash kullanımı yerine ternary operator kullanıldı
+    cache_message = "cache'den alındı (anında)" if from_cache else "başarıyla eğitildi ve cache'e kaydedildi"
+
+    # Base response
+    response_payload = {
+        "configId": unique_run_id,
+        "modelName": simulation_data.algorithm,
+        "datasetId": simulation_data.dataset,
+        "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
+        "status": "success",
+        "training_metrics": ml_results.get("training_metrics", {}),
+        "fit_time_seconds": ml_results.get("fit_time_seconds"),
+        "memory_usage_mb": ml_results.get("memory_usage_mb"),
+        "training_throughput": ml_results.get("training_throughput"),
+        "convergence_info": ml_results.get("convergence_info", {}),
+        "notes_from_model": ml_results.get("notes", []),
+        "overall_status_message": f"Model sonuçları {cache_message}.",
+        "from_cache": from_cache
+    }
+
+    # Add enhanced results if available
+    if ml_results.get("enhanced_results"):
+        response_payload["enhanced_results"] = ml_results["enhanced_results"]
+
+    # Add recommendations if available
+    if ml_results.get("recommendations"):
+        response_payload["recommendations"] = ml_results["recommendations"]
+
+    # Add plot data if available
+    if ml_results.get("plot_data"):
+        response_payload["plotData"] = ml_results["plot_data"]
+
+    # Add execution metadata
+    response_payload["execution_metadata"] = {
+        "timestamp": time.time(),
+        "cache_hit": from_cache,
+        "algorithm": simulation_data.algorithm,
+        "dataset": simulation_data.dataset,
+        "mode": "training"
+    }
+
+    return response_payload
+
+def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_results, from_cache=False):
+    """Create enhanced evaluation response with additional metadata and insights"""
+
+    # FIXED: f-string içinde backslash kullanımı yerine ternary operator kullanıldı
+    cache_message = "cache'den alındı (anında)" if from_cache else "başarıyla değerlendirildi ve cache'e kaydedildi"
+
+    # Base response
+    response_payload = {
+        "configId": unique_run_id,
+        "modelName": simulation_data.algorithm,
+        "datasetId": simulation_data.dataset,
+        "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
+        "status": "success",
+        "metrics": ml_results.get("metrics", {}),
+        "plotData": ml_results.get("plot_data", {}),
+        "score_time_seconds": ml_results.get("score_time_seconds"),
+        "prediction_performance": ml_results.get("prediction_performance", {}),
+        "notes_from_model": ml_results.get("notes", []),
+        "overall_status_message": f"Evaluation sonuçları {cache_message}.",
+        "from_cache": from_cache
+    }
+
+    # Add enhanced results if available
+    if ml_results.get("enhanced_results"):
+        response_payload["enhanced_results"] = ml_results["enhanced_results"]
+
+    # Add recommendations if available
+    if ml_results.get("recommendations"):
+        response_payload["recommendations"] = ml_results["recommendations"]
+
+    # Add detailed metrics if available
+    if ml_results.get("detailed_metrics"):
+        response_payload["detailed_metrics"] = ml_results["detailed_metrics"]
+
+    # Add execution metadata
+    response_payload["execution_metadata"] = {
+        "timestamp": time.time(),
+        "cache_hit": from_cache,
+        "algorithm": simulation_data.algorithm,
+        "dataset": simulation_data.dataset,
+        "mode": "evaluation",
+        "selected_metrics": simulation_data.params.get("selectedMetrics", [])
+    }
+
+    return response_payload
 
 @app.get("/cache-stats")
 async def get_cache_statistics():
@@ -349,13 +373,106 @@ async def get_cache_statistics():
     stats = cache_manager.get_cache_stats()
     return {"cache_stats": stats}
 
-
 @app.delete("/clear-cache")
 async def clear_training_cache():
     """Cache'i temizle"""
     cache_manager.clear_cache()
     return {"message": "Training cache temizlendi"}
 
+@app.get("/results-summary")
+async def get_results_summary():
+    """
+    Sistemdeki tüm sonuçların özetini döndür
+    Bu endpoint frontend'in analiz yapması için kullanılabilir
+    """
+    try:
+        stats = cache_manager.get_cache_stats()
+
+        summary = {
+            "total_cached_results": stats.get("total_entries", 0),
+            "training_results": stats.get("training_entries", 0),
+            "evaluation_results": stats.get("evaluation_entries", 0),
+            "unique_algorithms": stats.get("unique_algorithms", 0),
+            "unique_datasets": stats.get("unique_datasets", 0),
+            "algorithms": stats.get("algorithms", []),
+            "datasets": stats.get("datasets", []),
+            "cache_hit_rate": stats.get("avg_hits_per_entry", 0),
+            "cache_size_mb": stats.get("cache_file_size_mb", 0)
+        }
+
+        return {"results_summary": summary}
+
+    except Exception as e:
+        return {"error": f"Results summary oluşturulurken hata: {str(e)}"}
+
+@app.get("/model-insights/{algorithm_name}")
+async def get_model_insights(algorithm_name: str):
+    """
+    Belirli bir algoritma için insights ve öneriler döndür
+    """
+    insights = {
+        "algorithm": algorithm_name,
+        "strengths": [],
+        "weaknesses": [],
+        "best_use_cases": [],
+        "parameter_tips": [],
+        "performance_expectations": {}
+    }
+
+    # Algorithm-specific insights
+    if algorithm_name == "Decision Tree":
+        insights.update({
+            "strengths": [
+                "Highly interpretable and explainable",
+                "Handles both numerical and categorical features",
+                "No need for feature scaling",
+                "Can capture non-linear relationships"
+            ],
+            "weaknesses": [
+                "Prone to overfitting, especially with deep trees",
+                "Can be unstable (small changes in data can result in different trees)",
+                "Biased toward features with more levels"
+            ],
+            "best_use_cases": [
+                "When model interpretability is crucial",
+                "Mixed data types (numerical and categorical)",
+                "Rule-based decision making scenarios"
+            ],
+            "parameter_tips": [
+                "Limit max_depth to prevent overfitting (try 3-10 for small datasets)",
+                "Increase min_samples_split for complex datasets",
+                "Use Gini for speed, Entropy for slightly better accuracy"
+            ]
+        })
+    elif algorithm_name == "SVM":
+        insights.update({
+            "strengths": [
+                "Effective in high-dimensional spaces",
+                "Memory efficient (uses support vectors)",
+                "Versatile (different kernel functions)",
+                "Works well with clear margin separation"
+            ],
+            "weaknesses": [
+                "Slow on large datasets",
+                "Sensitive to feature scaling",
+                "No probabilistic output (unless probability=True)",
+                "Choice of kernel and parameters can be tricky"
+            ],
+            "best_use_cases": [
+                "Text classification and high-dimensional data",
+                "Small to medium datasets",
+                "When clear decision boundaries exist"
+            ],
+            "parameter_tips": [
+                "Always apply feature scaling",
+                "Start with RBF kernel for non-linear problems",
+                "Use Grid Search for C and gamma parameters",
+                "Consider Linear kernel for large datasets"
+            ]
+        })
+    # Add more algorithms as needed...
+
+    return {"model_insights": insights}
 
 def handle_error(e, simulation_data):
     """Ortak hata yönetimi fonksiyonu"""
@@ -383,16 +500,37 @@ def handle_error(e, simulation_data):
                 "status": "error",
                 "errorMessage": error_detail_for_frontend,
                 "notes_from_model": [str(e)],
+                "execution_metadata": {
+                    "timestamp": time.time(),
+                    "cache_hit": False,
+                    "algorithm": simulation_data.algorithm,
+                    "dataset": simulation_data.dataset,
+                    "error": True
+                }
             }
         )
 
-"""
-    /health endpoint is a standard endpoint that is usually used to check
-    if an application is healthy (running)
-
-    - can be tested with `curl -X GET "http://localhost:8000/health"`
-    - or with Python: response = requests.get("http://localhost:8000/health")
-"""
 @app.get("/health")
 async def health_check():
     return {"status": "Backend is running"}
+
+@app.get("/system-info")
+async def system_info():
+    """Sistem bilgilerini döndür"""
+    import psutil
+    import platform
+
+    try:
+        return {
+            "system": {
+                "platform": platform.system(),
+                "python_version": platform.python_version(),
+                "cpu_count": psutil.cpu_count(),
+                "memory_total_gb": round(psutil.virtual_memory().total / (1024**3), 2),
+                "disk_free_gb": round(psutil.disk_usage('/').free / (1024**3), 2)
+            },
+            "cache": cache_manager.get_cache_stats(),
+            "datasets_available": len([f for f in os.listdir(DATA_DIR) if f.endswith(('.csv', '.json'))]) if os.path.exists(DATA_DIR) else 0
+        }
+    except Exception as e:
+        return {"error": f"System info alınırken hata: {str(e)}"}
