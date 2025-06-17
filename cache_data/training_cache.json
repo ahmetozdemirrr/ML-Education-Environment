@@ -1,121 +1,4 @@
 {
-  "eval_8ed8c84ea0f37126048a2f879e5b856478b97dd7ff1f2f4caaa39a16b98af259": {
-    "algorithm": "Decision Tree",
-    "dataset_id": "iris",
-    "model_params": {
-      "Criterion": "Gini",
-      "Max Depth": "",
-      "Min Samples Split": 2,
-      "Min Samples Leaf": 1
-    },
-    "global_settings": {
-      "useCrossValidation": false,
-      "cvFolds": 5,
-      "useTrainTestSplit": true,
-      "testSplitRatio": 0.2,
-      "randomSeedType": "fixed",
-      "applyFeatureScaling": true,
-      "scalerType": "standard",
-      "randomSeed": 42
-    },
-    "metrics": {
-      "Accuracy": 0.9333,
-      "Precision": 0.9333,
-      "Recall": 0.9333,
-      "ROC AUC": 0.95,
-      "F1-Score": 0.9333
-    },
-    "plot_data": {},
-    "score_time_seconds": 0.003,
-    "prediction_performance": {},
-    "notes": [
-      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
-      "Decision Tree modeli Scikit-learn parametreleriyle oluşturuldu: {'criterion': 'gini', 'max_depth': None, 'min_samples_split': 2, 'min_samples_leaf': 1, 'random_state': 42}",
-      "Train/Test split ile evaluate yapılıyor."
-    ],
-    "created_at": "2025-06-17T20:31:32.476143",
-    "last_accessed": "2025-06-17T20:31:32.476152",
-    "hit_count": 1,
-    "type": "evaluation"
-  },
-  "eval_50fe1eb08b729b084e3b2e39ceceaf9daa57f6c09c54b92c827fe577f5049e35": {
-    "algorithm": "Decision Tree",
-    "dataset_id": "two_moons_data",
-    "model_params": {
-      "Criterion": "Gini",
-      "Max Depth": "",
-      "Min Samples Split": 2,
-      "Min Samples Leaf": 1
-    },
-    "global_settings": {
-      "useCrossValidation": false,
-      "cvFolds": 5,
-      "useTrainTestSplit": true,
-      "testSplitRatio": 0.2,
-      "randomSeedType": "fixed",
-      "applyFeatureScaling": true,
-      "scalerType": "standard",
-      "randomSeed": 42
-    },
-    "metrics": {
-      "Accuracy": 0.9625,
-      "Precision": 0.9628,
-      "Recall": 0.9625,
-      "ROC AUC": 0.9625,
-      "F1-Score": 0.9625
-    },
-    "plot_data": {},
-    "score_time_seconds": 0.0022,
-    "prediction_performance": {},
-    "notes": [
-      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
-      "Decision Tree modeli Scikit-learn parametreleriyle oluşturuldu: {'criterion': 'gini', 'max_depth': None, 'min_samples_split': 2, 'min_samples_leaf': 1, 'random_state': 42}",
-      "Train/Test split ile evaluate yapılıyor."
-    ],
-    "created_at": "2025-06-17T20:31:32.501137",
-    "last_accessed": "2025-06-17T20:31:32.501144",
-    "hit_count": 1,
-    "type": "evaluation"
-  },
-  "eval_ea8b0daf221801e615a30b087266a1d5e70ad6306cb64d1e88736e82c41ec445": {
-    "algorithm": "SVM",
-    "dataset_id": "iris",
-    "model_params": {
-      "C (Reg. Param)": 1,
-      "Kernel": "RBF",
-      "Gamma": "Scale",
-      "Degree (Poly Kernel)": 3
-    },
-    "global_settings": {
-      "useCrossValidation": false,
-      "cvFolds": 5,
-      "useTrainTestSplit": true,
-      "testSplitRatio": 0.2,
-      "randomSeedType": "fixed",
-      "applyFeatureScaling": true,
-      "scalerType": "standard",
-      "randomSeed": 42
-    },
-    "metrics": {
-      "Accuracy": 0.9667,
-      "Precision": 0.9697,
-      "Recall": 0.9667,
-      "ROC AUC": 0.9967,
-      "F1-Score": 0.9666
-    },
-    "plot_data": {},
-    "score_time_seconds": 0.0023,
-    "prediction_performance": {},
-    "notes": [
-      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
-      "SVM modeli Scikit-learn parametreleriyle oluşturuldu: {'C': 1.0, 'kernel': 'rbf', 'gamma': 'scale', 'probability': True, 'random_state': 42}",
-      "Train/Test split ile evaluate yapılıyor."
-    ],
-    "created_at": "2025-06-17T20:31:32.528555",
-    "last_accessed": "2025-06-17T20:31:32.528562",
-    "hit_count": 1,
-    "type": "evaluation"
-  },
   "eval_5bcf31df26f6e1ad2b6e9f43a18e89d480fd037f617887b99fd63b828f0ecc27": {
     "algorithm": "Decision Tree",
     "dataset_id": "wine_data",
@@ -138,98 +21,122 @@
     "metrics": {
       "Accuracy": 0.9444,
       "Precision": 0.9583,
-      "Recall": 0.9389,
       "ROC AUC": 0.9545,
-      "F1-Score": 0.9457
+      "F1-Score": 0.9457,
+      "Recall": 0.9389
     },
-    "plot_data": {},
-    "score_time_seconds": 0.0021,
+    "plot_data": {
+      "confusion_matrix": {
+        "matrix": [
+          [
+            11,
+            1,
+            0
+          ],
+          [
+            0,
+            14,
+            0
+          ],
+          [
+            0,
+            1,
+            9
+          ]
+        ],
+        "labels": [
+          "0",
+          "1",
+          "2"
+        ]
+      },
+      "class_distribution": {
+        "true_distribution": {
+          "0": 12,
+          "1": 14,
+          "2": 10
+        },
+        "predicted_distribution": {
+          "0": 11,
+          "1": 16,
+          "2": 9
+        }
+      },
+      "confidence_distribution": {
+        "confidence_scores": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "histogram_counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          36,
+          0,
+          0,
+          0,
+          0
+        ],
+        "histogram_bins": [
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0,
+          1.1,
+          1.2000000000000002,
+          1.3,
+          1.4,
+          1.5
+        ]
+      }
+    },
+    "score_time_seconds": 0.0029,
     "prediction_performance": {},
     "notes": [
       "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
       "Decision Tree modeli Scikit-learn parametreleriyle oluşturuldu: {'criterion': 'gini', 'max_depth': None, 'min_samples_split': 2, 'min_samples_leaf': 1, 'random_state': 42}",
       "Train/Test split ile evaluate yapılıyor."
     ],
-    "created_at": "2025-06-17T20:31:32.553857",
-    "last_accessed": "2025-06-17T20:31:32.553867",
-    "hit_count": 1,
-    "type": "evaluation"
-  },
-  "eval_d850c703741be8800dc2067c58026a553c701339d8023adfffb0981079eaa626": {
-    "algorithm": "Logistic Regression",
-    "dataset_id": "iris",
-    "model_params": {
-      "Penalty": "L2",
-      "C (Reg. Strength)": 1,
-      "Solver": "lbfgs",
-      "Max Iterations": 100
-    },
-    "global_settings": {
-      "useCrossValidation": false,
-      "cvFolds": 5,
-      "useTrainTestSplit": true,
-      "testSplitRatio": 0.2,
-      "randomSeedType": "fixed",
-      "applyFeatureScaling": true,
-      "scalerType": "standard",
-      "randomSeed": 42
-    },
-    "metrics": {
-      "Accuracy": 0.9333,
-      "Precision": 0.9333,
-      "ROC AUC": 0.9967,
-      "F1-Score": 0.9333,
-      "Recall": 0.9333
-    },
-    "plot_data": {},
-    "score_time_seconds": 0.0031,
-    "prediction_performance": {},
-    "notes": [
-      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
-      "Logistic Regression modeli Scikit-learn parametreleriyle oluşturuldu: {'penalty': 'l2', 'C': 1.0, 'solver': 'lbfgs', 'max_iter': 1000, 'random_state': 42}",
-      "Train/Test split ile evaluate yapılıyor."
-    ],
-    "created_at": "2025-06-17T20:31:32.581269",
-    "last_accessed": "2025-06-17T20:31:32.581275",
-    "hit_count": 1,
-    "type": "evaluation"
-  },
-  "eval_f54110aeb1d8ab648e4ebd1a15f793a6f909205987b79ae75b06a5ca27d85f18": {
-    "algorithm": "Logistic Regression",
-    "dataset_id": "two_moons_data",
-    "model_params": {
-      "Penalty": "L2",
-      "C (Reg. Strength)": 1,
-      "Solver": "lbfgs",
-      "Max Iterations": 100
-    },
-    "global_settings": {
-      "useCrossValidation": false,
-      "cvFolds": 5,
-      "useTrainTestSplit": true,
-      "testSplitRatio": 0.2,
-      "randomSeedType": "fixed",
-      "applyFeatureScaling": true,
-      "scalerType": "standard",
-      "randomSeed": 42
-    },
-    "metrics": {
-      "Accuracy": 0.9125,
-      "Precision": 0.9128,
-      "ROC AUC": 0.9862,
-      "F1-Score": 0.9125,
-      "Recall": 0.9125
-    },
-    "plot_data": {},
-    "score_time_seconds": 0.0019,
-    "prediction_performance": {},
-    "notes": [
-      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
-      "Logistic Regression modeli Scikit-learn parametreleriyle oluşturuldu: {'penalty': 'l2', 'C': 1.0, 'solver': 'lbfgs', 'max_iter': 1000, 'random_state': 42}",
-      "Train/Test split ile evaluate yapılıyor."
-    ],
-    "created_at": "2025-06-17T20:31:32.607150",
-    "last_accessed": "2025-06-17T20:31:32.607156",
+    "created_at": "2025-06-17T21:02:30.837781",
+    "last_accessed": "2025-06-17T21:02:30.837791",
     "hit_count": 1,
     "type": "evaluation"
   },
@@ -256,58 +163,120 @@
       "Accuracy": 0.9722,
       "Precision": 0.9778,
       "ROC AUC": 1.0,
-      "F1-Score": 0.971,
-      "Recall": 0.9667
+      "F1-Score": 0.971
     },
-    "plot_data": {},
-    "score_time_seconds": 0.0025,
+    "plot_data": {
+      "confusion_matrix": {
+        "matrix": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            0,
+            14,
+            0
+          ],
+          [
+            0,
+            1,
+            9
+          ]
+        ],
+        "labels": [
+          "0",
+          "1",
+          "2"
+        ]
+      },
+      "class_distribution": {
+        "true_distribution": {
+          "0": 12,
+          "1": 14,
+          "2": 10
+        },
+        "predicted_distribution": {
+          "0": 12,
+          "1": 15,
+          "2": 9
+        }
+      },
+      "confidence_distribution": {
+        "confidence_scores": [
+          0.9996708023921943,
+          0.5404229885878247,
+          0.9920003291892833,
+          0.7074673617319975,
+          0.9623127877216157,
+          0.9991664740821481,
+          0.9993517992330544,
+          0.9573349939429502,
+          0.9429037282441058,
+          0.9973365296990404,
+          0.9614040273803536,
+          0.8678403640398878,
+          0.999846970942241,
+          0.6007872003937303,
+          0.999993577873954,
+          0.999648698591221,
+          0.9966737643762249,
+          0.9926389886566614,
+          0.9974832312520806,
+          0.658538731881246,
+          0.9967715906023382,
+          0.981488963713281,
+          0.9930164563924271,
+          0.9999793961191508,
+          0.9515078613874246,
+          0.9986617977592654,
+          0.9996799412233304,
+          0.9544525068480256,
+          0.9104320496029041,
+          0.9979225692825754,
+          0.992037841313778,
+          0.9956934825233977,
+          0.9975643479179652,
+          0.998956719825282,
+          0.9979015540336772,
+          0.9966350919033246
+        ],
+        "histogram_counts": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          3,
+          28
+        ],
+        "histogram_bins": [
+          0.5404229885878247,
+          0.5863800475164376,
+          0.6323371064450506,
+          0.6782941653736635,
+          0.7242512243022764,
+          0.7702082832308894,
+          0.8161653421595023,
+          0.8621224010881152,
+          0.9080794600167281,
+          0.9540365189453411,
+          0.999993577873954
+        ]
+      }
+    },
+    "score_time_seconds": 0.0021,
     "prediction_performance": {},
     "notes": [
       "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
       "Logistic Regression modeli Scikit-learn parametreleriyle oluşturuldu: {'penalty': 'l2', 'C': 1.0, 'solver': 'lbfgs', 'max_iter': 1000, 'random_state': 42}",
       "Train/Test split ile evaluate yapılıyor."
     ],
-    "created_at": "2025-06-17T20:31:32.636816",
-    "last_accessed": "2025-06-17T20:31:32.636837",
-    "hit_count": 1,
-    "type": "evaluation"
-  },
-  "eval_cde2515a747d91158a73bb08c1e750f592f8cc5ed2a23e1d459e6293cd5a4389": {
-    "algorithm": "SVM",
-    "dataset_id": "two_moons_data",
-    "model_params": {
-      "C (Reg. Param)": 1,
-      "Kernel": "RBF",
-      "Gamma": "Scale",
-      "Degree (Poly Kernel)": 3
-    },
-    "global_settings": {
-      "useCrossValidation": false,
-      "cvFolds": 5,
-      "useTrainTestSplit": true,
-      "testSplitRatio": 0.2,
-      "randomSeedType": "fixed",
-      "applyFeatureScaling": true,
-      "scalerType": "standard",
-      "randomSeed": 42
-    },
-    "metrics": {
-      "Accuracy": 0.975,
-      "Precision": 0.975,
-      "Recall": 0.975,
-      "ROC AUC": 0.9994,
-      "F1-Score": 0.975
-    },
-    "plot_data": {},
-    "score_time_seconds": 0.003,
-    "prediction_performance": {},
-    "notes": [
-      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
-      "SVM modeli Scikit-learn parametreleriyle oluşturuldu: {'C': 1.0, 'kernel': 'rbf', 'gamma': 'scale', 'probability': True, 'random_state': 42}",
-      "Train/Test split ile evaluate yapılıyor."
-    ],
-    "created_at": "2025-06-17T20:31:32.665648",
-    "last_accessed": "2025-06-17T20:31:32.665654",
+    "created_at": "2025-06-17T21:02:30.888985",
+    "last_accessed": "2025-06-17T21:02:30.888994",
     "hit_count": 1,
     "type": "evaluation"
   },
@@ -333,20 +302,201 @@
     "metrics": {
       "Accuracy": 0.9722,
       "Precision": 0.9778,
-      "Recall": 0.9667,
       "ROC AUC": 1.0,
-      "F1-Score": 0.971
+      "F1-Score": 0.971,
+      "Recall": 0.9667
     },
-    "plot_data": {},
-    "score_time_seconds": 0.0029,
+    "plot_data": {
+      "confusion_matrix": {
+        "matrix": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            0,
+            14,
+            0
+          ],
+          [
+            0,
+            1,
+            9
+          ]
+        ],
+        "labels": [
+          "0",
+          "1",
+          "2"
+        ]
+      },
+      "class_distribution": {
+        "true_distribution": {
+          "0": 12,
+          "1": 14,
+          "2": 10
+        },
+        "predicted_distribution": {
+          "0": 12,
+          "1": 15,
+          "2": 9
+        }
+      },
+      "confidence_distribution": {
+        "confidence_scores": [
+          0.9893032396906183,
+          0.5472127977580399,
+          0.9919464893618817,
+          0.8313006566706538,
+          0.9534253897971359,
+          0.9911845979397228,
+          0.9908154154448694,
+          0.7877467695428289,
+          0.9386038035845312,
+          0.9846819994121659,
+          0.9585573034003435,
+          0.8806982684083197,
+          0.9915898955194666,
+          0.6688904369333233,
+          0.9615180871504965,
+          0.9949657106835704,
+          0.9791361511861975,
+          0.974909859934395,
+          0.9759974758371146,
+          0.8661566587113582,
+          0.9918956651041407,
+          0.9843831790881291,
+          0.9938864354613022,
+          0.9491462226989781,
+          0.9125271991386811,
+          0.990145204722111,
+          0.9881543074443221,
+          0.9755253148061366,
+          0.8968923328372386,
+          0.974811209626832,
+          0.9936701860704608,
+          0.98344352354802,
+          0.9904183715197369,
+          0.9826458031488237,
+          0.9915040775662718,
+          0.9789180577027723
+        ],
+        "histogram_counts": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          3,
+          3,
+          26
+        ],
+        "histogram_bins": [
+          0.5472127977580399,
+          0.591988089050593,
+          0.636763380343146,
+          0.681538671635699,
+          0.7263139629282521,
+          0.7710892542208052,
+          0.8158645455133582,
+          0.8606398368059113,
+          0.9054151280984644,
+          0.9501904193910173,
+          0.9949657106835704
+        ]
+      }
+    },
+    "score_time_seconds": 0.0023,
     "prediction_performance": {},
     "notes": [
       "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
       "SVM modeli Scikit-learn parametreleriyle oluşturuldu: {'C': 1.0, 'kernel': 'rbf', 'gamma': 'scale', 'probability': True, 'random_state': 42}",
       "Train/Test split ile evaluate yapılıyor."
     ],
-    "created_at": "2025-06-17T20:31:32.695411",
-    "last_accessed": "2025-06-17T20:31:32.695418",
+    "created_at": "2025-06-17T21:02:30.943218",
+    "last_accessed": "2025-06-17T21:02:30.943226",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_da338efea43d9410566826101478f07fe63ff094979075ff5dded152601fe11b": {
+    "algorithm": "K-Nearest Neighbor",
+    "dataset_id": "wine_data",
+    "model_params": {
+      "N Neighbors": 5,
+      "Weights": "Uniform",
+      "Algorithm": "auto",
+      "Metric": "minkowski"
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9722,
+      "Precision": 0.9697,
+      "ROC AUC": 0.9988,
+      "F1-Score": 0.9718,
+      "Recall": 0.9762
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0066,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "KNN modeli Scikit-learn parametreleriyle oluşturuldu: {'n_neighbors': 5, 'weights': 'uniform', 'algorithm': 'auto', 'metric': 'minkowski', 'p': 2}",
+      "Train/Test split ile evaluate yapılıyor."
+    ],
+    "created_at": "2025-06-17T21:02:30.973441",
+    "last_accessed": "2025-06-17T21:02:30.973448",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_3e753b2bf8b722647dcf31ef861a65ef5c17dc02c60cc153d851f79b4540d79e": {
+    "algorithm": "Artificial Neural Network",
+    "dataset_id": "wine_data",
+    "model_params": {
+      "Hidden Layer Sizes": "100",
+      "Activation": "ReLU",
+      "Solver": "Adam",
+      "Alpha (L2 Penalty)": 0.0001,
+      "Learning Rate (SGD)": "Constant"
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.7222,
+      "F1-Score": 0.7122,
+      "ROC AUC": 0.983,
+      "Recall": 0.7143,
+      "Precision": 0.8061
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0101,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "ANN (MLPClassifier) modeli Scikit-learn parametreleriyle oluşturuldu: {'hidden_layer_sizes': (100,), 'activation': 'relu', 'solver': 'adam', 'alpha': 0.0001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'random_state': 42}",
+      "Train/Test split ile eğitim ve değerlendirme yapılıyor."
+    ],
+    "created_at": "2025-06-17T21:02:31.021441",
+    "last_accessed": "2025-06-17T21:02:31.021448",
     "hit_count": 1,
     "type": "evaluation"
   }

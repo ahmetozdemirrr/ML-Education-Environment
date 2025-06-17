@@ -159,18 +159,52 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
     };
   };
 
-  const renderDetailedMetrics = (result) => {
+const renderDetailedMetrics = (result) => {
     const metrics = result.metrics || {};
     const trainingMetrics = result.training_metrics || {};
+
+    // FIXED: Better metric display order and formatting
+    const displayMetrics = {};
+    const metricOrder = ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC AUC'];
+
+    // Process metrics in preferred order
+    metricOrder.forEach(preferredKey => {
+      // Check various possible key formats
+      const possibleKeys = [
+        preferredKey,
+        preferredKey.toLowerCase(),
+        preferredKey.replace('-', '_').toLowerCase(),
+        preferredKey.replace(' ', '_').toLowerCase()
+      ];
+
+      for (const key of possibleKeys) {
+        if (metrics[key] !== undefined) {
+          displayMetrics[preferredKey] = metrics[key];
+          break;
+        }
+      }
+    });
+
+    // Add any remaining metrics not in the standard order
+    Object.entries(metrics).forEach(([key, value]) => {
+      const normalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+      if (!displayMetrics[normalizedKey] && !metricOrder.some(mk =>
+        mk.toLowerCase() === key.toLowerCase() ||
+        mk.replace('-', '_').toLowerCase() === key.toLowerCase() ||
+        mk.replace(' ', '_').toLowerCase() === key.toLowerCase()
+      )) {
+        displayMetrics[normalizedKey] = value;
+      }
+    });
 
     return (
       <div className="detailed-metrics">
         {/* Evaluation Metrics */}
-        {Object.keys(metrics).length > 0 && (
+        {Object.keys(displayMetrics).length > 0 && (
           <div className="metrics-section">
             <h5>🎯 Evaluation Metrics</h5>
             <div className="metrics-grid">
-              {Object.entries(metrics).map(([key, value]) => (
+              {Object.entries(displayMetrics).map(([key, value]) => (
                 <div key={key} className="metric-card">
                   <div className="metric-label">{key}</div>
                   <div className="metric-value">

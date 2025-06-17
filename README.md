@@ -1,3 +1,6 @@
 - küçük-büyük dataset ayrımı için mnist'in subsample'ı ve tamamı
 - feeature scaling bazı modellerde etki etmezken bazılaruında baya etkiliyor, o yüzden bunu global ayarlarda seçenek olarak alalım.
-- 
+- cache'leme olunca sonuçlar kayboluyor
+- grafiklerde eksiklik var (roc auc ve confusion matrix yok)
+- bazı yerlerde renk değiştirmemiz gerekiyor
+- grafiklerin altına açıklama eklemeliyiz

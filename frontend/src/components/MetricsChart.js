@@ -75,52 +75,64 @@ const MetricsChart = ({ results }) => {
     labels: metricsData.map(d => d.label),
     datasets: [
       {
-        label: 'Accuracy',
-        data: metricsData.map(d => d.accuracy),
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1
+        "label": "Accuracy",
+        "data": metricsData.map(d => d.accuracy),
+        "backgroundColor": "rgba(255, 99, 132, 0.6)",
+        "borderColor": "rgba(255, 99, 132, 1)",
+        "borderWidth": 1
       },
       {
-        label: 'Precision',
-        data: metricsData.map(d => d.precision),
-        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1
+        "label": "Precision",
+        "data": metricsData.map(d => d.precision),
+        "backgroundColor": "rgba(54, 162, 235, 0.6)",
+        "borderColor": "rgba(54, 162, 235, 1)",
+        "borderWidth": 1
       },
       {
-        label: 'Recall',
-        data: metricsData.map(d => d.recall),
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1
+        "label": "Recall",
+        "data": metricsData.map(d => d.recall),
+        "backgroundColor": "rgba(255, 205, 86, 0.6)",
+        "borderColor": "rgba(255, 205, 86, 1)",
+        "borderWidth": 1
       },
       {
-        label: 'F1-Score',
-        data: metricsData.map(d => d.f1_score),
-        backgroundColor: 'rgba(255, 205, 86, 0.6)',
-        borderColor: 'rgba(255, 205, 86, 1)',
-        borderWidth: 1
+        "label": "F1-Score",
+        "data": metricsData.map(d => d.f1_score),
+        "backgroundColor": "rgba(0, 0, 0, 0.6)",
+        "borderColor": "rgba(0, 0, 0, 1)",
+        "borderWidth": 1
       },
       {
-        label: 'ROC AUC',
-        data: metricsData.map(d => d.roc_auc),
-        backgroundColor: 'rgba(139, 92, 246, 0.6)',
-        borderColor: 'rgba(139, 92, 246, 1)',
-        borderWidth: 1
+        "label": "ROC AUC",
+        "data": metricsData.map(d => d.roc_auc),
+        "backgroundColor": "rgba(139, 0, 255, 0.6)",
+        "borderColor": "rgba(139, 0, 255, 1)",
+        "borderWidth": 1
       }
     ]
   };
 
   const radarData = {
-    labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC AUC'], // ROC AUC eklendi
+    labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC AUC'],
     datasets: metricsData.slice(0, 5).map((data, index) => ({
       label: data.label,
-      data: [data.accuracy, data.precision, data.recall, data.f1_score, data.roc_auc], // ROC AUC eklendi
-      backgroundColor: `rgba(${75 + index * 40}, ${192 - index * 30}, ${192 + index * 15}, 0.2)`,
-      borderColor: `rgba(${75 + index * 40}, ${192 - index * 30}, ${192 + index * 15}, 1)`,
+      data: [data.accuracy, data.precision, data.recall, data.f1_score, data.roc_auc],
+      backgroundColor: index === 0 ? 'rgba(255, 99, 132, 0.2)' :
+                      index === 1 ? 'rgba(54, 162, 235, 0.2)' :
+                      index === 2 ? 'rgba(255, 205, 86, 0.2)' :
+                      index === 3 ? 'rgba(0, 0, 0, 0.2)' :
+                      'rgba(139, 0, 255, 0.2)',
+      borderColor: index === 0 ? 'rgba(255, 99, 132, 1)' :
+                     index === 1 ? 'rgba(54, 162, 235, 1)' :
+                     index === 2 ? 'rgba(255, 205, 86, 1)' :
+                     index === 3 ? 'rgba(0, 0, 0, 1)' :
+                     'rgba(139, 0, 255, 1)',
       borderWidth: 2,
-      pointBackgroundColor: `rgba(${75 + index * 40}, ${192 - index * 30}, ${192 + index * 15}, 1)`
+      pointBackgroundColor: index === 0 ? 'rgba(255, 99, 132, 1)' :
+                           index === 1 ? 'rgba(54, 162, 235, 1)' :
+                           index === 2 ? 'rgba(255, 205, 86, 1)' :
+                           index === 3 ? 'rgba(0, 0, 0, 1)' :
+                           'rgba(139, 0, 255, 1)'
     }))
   };
 
@@ -355,11 +367,24 @@ const ConfusionMatrix = ({ results }) => {
     return <div className="chart-placeholder">No confusion matrix data available</div>;
   }
 
-  // Find the first result with confusion matrix data
-  const resultWithMatrix = results.find(r =>
-    r.enhanced_results?.visualization_data?.confusion_matrix ||
-    r.plot_data?.confusion_matrix
-  );
+  // FIXED: Better search for confusion matrix data in multiple possible locations
+  const resultWithMatrix = results.find(r => {
+    // Check multiple possible locations for confusion matrix data
+    const locations = [
+      r.plot_data?.confusion_matrix,
+      r.enhanced_results?.visualization_data?.confusion_matrix,
+      r.enhanced_results?.plot_data?.confusion_matrix,
+      r.plotData?.confusion_matrix
+    ];
+
+    return locations.some(location =>
+      location &&
+      location.matrix &&
+      location.labels &&
+      Array.isArray(location.matrix) &&
+      Array.isArray(location.labels)
+    );
+  });
 
   if (!resultWithMatrix) {
     return (
@@ -367,14 +392,51 @@ const ConfusionMatrix = ({ results }) => {
         <h4>Confusion Matrix</h4>
         <div className="no-matrix-data">
           <p>Confusion matrix data not available</p>
-          <p>This feature requires detailed evaluation results</p>
+          <p>Backend might not be generating plot data correctly</p>
+          <p>Available data keys in first result:</p>
+          <pre style={{fontSize: '0.8em', maxHeight: '100px', overflow: 'auto'}}>
+            {results[0] ? JSON.stringify(Object.keys(results[0]), null, 2) : 'No results'}
+          </pre>
+          {results[0]?.plot_data && (
+            <>
+              <p>plot_data keys:</p>
+              <pre style={{fontSize: '0.8em', maxHeight: '100px', overflow: 'auto'}}>
+                {JSON.stringify(Object.keys(results[0].plot_data), null, 2)}
+              </pre>
+            </>
+          )}
         </div>
       </div>
     );
   }
 
-  const matrixData = resultWithMatrix.enhanced_results?.visualization_data?.confusion_matrix ||
-                     resultWithMatrix.plot_data?.confusion_matrix;
+  // Find the confusion matrix data from the available locations
+  let matrixData = null;
+  const locations = [
+    resultWithMatrix.plot_data?.confusion_matrix,
+    resultWithMatrix.enhanced_results?.visualization_data?.confusion_matrix,
+    resultWithMatrix.enhanced_results?.plot_data?.confusion_matrix,
+    resultWithMatrix.plotData?.confusion_matrix
+  ];
+
+  for (const location of locations) {
+    if (location && location.matrix && location.labels) {
+      matrixData = location;
+      break;
+    }
+  }
+
+  if (!matrixData) {
+    return (
+      <div className="confusion-matrix-container">
+        <h4>Confusion Matrix</h4>
+        <div className="no-matrix-data">
+          <p>Confusion matrix structure invalid</p>
+          <p>Expected: {"{matrix: [[...]], labels: [...]}"}</p>
+        </div>
+      </div>
+    );
+  }
 
   const matrix = matrixData.matrix;
   const labels = matrixData.labels;
@@ -432,11 +494,17 @@ const ConfusionMatrix = ({ results }) => {
       <div className="matrix-stats">
         <div className="stat">
           <span className="stat-label">Total Predictions:</span>
-          <span className="stat-value">{matrix.flat().reduce((a, b) => a + b, 0)}</span>
+          <span className="stat-value" style={{color: '#374151'}}>{matrix.flat().reduce((a, b) => a + b, 0)}</span>
         </div>
         <div className="stat">
           <span className="stat-label">Correct Predictions:</span>
-          <span className="stat-value">{matrix.reduce((sum, row, idx) => sum + row[idx], 0)}</span>
+          <span className="stat-value" style={{color: '#374151'}}>{matrix.reduce((sum, row, idx) => sum + row[idx], 0)}</span>
+        </div>
+        <div className="stat">
+          <span className="stat-label">Accuracy:</span>
+          <span className="stat-value" style={{color: '#374151'}}>
+            {((matrix.reduce((sum, row, idx) => sum + row[idx], 0) / matrix.flat().reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%
+          </span>
         </div>
       </div>
     </div>
