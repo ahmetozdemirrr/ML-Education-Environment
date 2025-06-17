@@ -226,7 +226,6 @@
   background-color: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  overflow: hidden;
   transition: all 0.2s ease;
 }
 
@@ -1256,9 +1255,6 @@
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 20px;
-  /* FIXED: Size constraints for chart containers */
-  max-height: 600px;
-  overflow: hidden;
 }
 
 .metrics-chart-container canvas,
@@ -1301,9 +1297,7 @@
 /* Detailed results section constraint */
 .detailed-results-section {
   /* FIXED: Prevent this section from growing too large */
-  max-height: 600px;
-  overflow-y: auto;
-  margin: 20px 0;
+
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 16px;
@@ -1340,8 +1334,6 @@
 .metrics-chart-container > div,
 .performance-chart-container > div {
   position: relative;
-  max-height: 350px !important;
-  overflow: hidden;
 }
 
 /* Additional constraint for Chart.js responsive behavior */

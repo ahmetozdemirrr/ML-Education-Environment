@@ -104,7 +104,13 @@ async def process_training_request(request: Request, simulation_data: Simulation
     print(f"Cache Key: {cache_key[:16]}...")
 
     # Cache'den kontrol et
-    cached_result = cache_manager.get_cached_training_result(cache_key)
+    cached_result = cache_manager.get_cached_evaluation_result(cache_key, selected_metrics)
+
+    # VALIDATE CACHE DATA - boş metrics'leri reddet
+    if cached_result and not cached_result.get("metrics"):
+        print("⚠️ WARNING: Cache'de boş metrics bulundu, cache entry siliniyor...")
+        cache_manager.delete_cache_entry(cache_key)
+        cached_result = None
 
     if cached_result:
         print("🚀 Cache'den sonuç döndürülüyor!")
@@ -234,6 +240,8 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
             global_settings=simulation_data.global_settings,
             mode="evaluate"
         )
+        # FIX: Debug the ml_results
+        print(f"DEBUG - ML Results metrics before filtering: {ml_results.get('metrics', 'NO_METRICS')}")
 
         # Cache'e kaydet (TÜM metrikleri kaydet)
         cache_manager.save_evaluation_result(
@@ -244,19 +252,34 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
             global_settings=simulation_data.global_settings,
             evaluation_results=ml_results
         )
+        # FIX: Filtering logic - DON'T filter if no metrics exist
+        selected_metrics = simulation_data.params.get("selectedMetrics", [])
 
         # Kullanıcının seçtiği metriklerle filtrelenmiş sonuç döndür
-        if selected_metrics and ml_results.get("metrics"):
+        if selected_metrics and ml_results.get("metrics") and len(ml_results["metrics"]) > 0:
+            # Only filter if we actually have metrics to filter
             metric_mapping = {
-                "Accuracy": "accuracy",
-                "Precision": "precision",
-                "Recall": "recall",
-                "F1-Score": "f1_score",
-                "ROC AUC": "roc_auc"
+                "Accuracy": ["accuracy", "Accuracy"],
+                "Precision": ["precision", "Precision"],
+                "Recall": ["recall", "Recall"],
+                "F1-Score": ["f1_score", "F1-Score", "f1-score"],
+                "ROC AUC": ["roc_auc", "ROC AUC"]
             }
-            backend_selected = [metric_mapping.get(m, m.lower()) for m in selected_metrics]
-            filtered_metrics = {k: v for k, v in ml_results["metrics"].items() if k in backend_selected}
-            ml_results["metrics"] = filtered_metrics
+
+            filtered_metrics = {}
+            for selected_metric in selected_metrics:
+                possible_keys = metric_mapping.get(selected_metric, [selected_metric.lower()])
+                for key in possible_keys:
+                    if key in ml_results["metrics"]:
+                        filtered_metrics[key] = ml_results["metrics"][key]
+                        break
+
+            if filtered_metrics:  # Only apply filter if we found matching metrics
+                ml_results["metrics"] = filtered_metrics
+            # If no matches found, keep original metrics
+
+        print(f"DEBUG - Final metrics to send: {ml_results.get('metrics', 'NO_METRICS')}")
+
 
         unique_run_id = simulation_data.params.get("frontend_config_id", f"eval_new_{cache_key[:8]}")
 
@@ -264,9 +287,11 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
             unique_run_id, simulation_data, ml_results, from_cache=False
         )
 
-        if not ml_results.get("metrics"):
+        # FIX: Better status checking
+        if not ml_results.get("metrics") or len(ml_results.get("metrics", {})) == 0:
             response_payload["status"] = "warning"
             response_payload["overall_status_message"] = "Model değerlendirildi ancak metrikler hesaplanamadı."
+            print("WARNING: No metrics calculated!")
 
         print(f"Evaluation Başarı Sonuçları: {response_payload['metrics']}")
         print("--- DEĞERLENDİRME İsteği Başarıyla Tamamlandı ---")
@@ -309,6 +334,7 @@ def create_enhanced_training_response(unique_run_id, simulation_data, ml_results
     # Add plot data if available
     if ml_results.get("plot_data"):
         response_payload["plotData"] = ml_results["plot_data"]
+        print(f"DEBUG - PlotData keys added to response: {list(ml_results['plot_data'].keys())}")
 
     # Add execution metadata
     response_payload["execution_metadata"] = {
@@ -327,6 +353,14 @@ def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_resul
     # FIXED: f-string içinde backslash kullanımı yerine ternary operator kullanıldı
     cache_message = "cache'den alındı (anında)" if from_cache else "başarıyla değerlendirildi ve cache'e kaydedildi"
 
+    # FIX: Metrics processing
+    metrics = ml_results.get("metrics", {})
+
+    # Ensure metrics are properly formatted and not filtered incorrectly
+    if not metrics and ml_results.get("enhanced_results", {}).get("metadata", {}).get("mode") == "evaluate":
+        # Try to get metrics from enhanced_results if main metrics is empty
+        metrics = ml_results.get("enhanced_results", {}).get("evaluation_metrics", {})
+
     # Base response
     response_payload = {
         "configId": unique_run_id,
@@ -334,7 +368,7 @@ def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_resul
         "datasetId": simulation_data.dataset,
         "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
         "status": "success",
-        "metrics": ml_results.get("metrics", {}),
+        "metrics": metrics,  # FIX: Make sure this is not empty
         "plotData": ml_results.get("plot_data", {}),
         "score_time_seconds": ml_results.get("score_time_seconds"),
         "prediction_performance": ml_results.get("prediction_performance", {}),
@@ -354,6 +388,10 @@ def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_resul
     # Add detailed metrics if available
     if ml_results.get("detailed_metrics"):
         response_payload["detailed_metrics"] = ml_results["detailed_metrics"]
+
+    # FIX: Debug logging
+    print(f"DEBUG - Response metrics: {response_payload['metrics']}")
+    print(f"DEBUG - Original ml_results metrics: {ml_results.get('metrics', 'NO_METRICS')}")
 
     # Add execution metadata
     response_payload["execution_metadata"] = {

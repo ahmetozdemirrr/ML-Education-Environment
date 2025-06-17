@@ -47,16 +47,28 @@ const MetricsChart = ({ results }) => {
   }, []);
 
   if (!results || results.length === 0) {
-    return <div className="chart-placeholder">No metrics data available</div>;
+      return <div className="chart-placeholder">No metrics data available</div>;
   }
 
-  // Extract metrics for comparison
-  const metricsData = results.map(result => ({
+  // Filter results that have actual metrics data
+  const resultsWithMetrics = results.filter(r => r.metrics && Object.keys(r.metrics).length > 0);
+
+  if (resultsWithMetrics.length === 0) {
+      return (
+          <div className="chart-placeholder">
+              <p>No evaluation metrics available for charting.</p>
+              <p>Please run some evaluations first to see performance charts.</p>
+          </div>
+      );
+  }
+
+  const metricsData = resultsWithMetrics.map(result => ({
     label: `${result.modelName} (${result.datasetName})`,
     accuracy: result.metrics?.accuracy || result.metrics?.Accuracy || 0,
     precision: result.metrics?.precision || result.metrics?.Precision || 0,
     recall: result.metrics?.recall || result.metrics?.Recall || 0,
-    f1_score: result.metrics?.f1_score || result.metrics?.['F1-Score'] || 0
+    f1_score: result.metrics?.f1_score || result.metrics?.['F1-Score'] || 0,
+    roc_auc: result.metrics?.roc_auc || result.metrics?.['ROC AUC'] || 0  // BU SATIRI EKLE
   }));
 
   const barData = {
@@ -89,15 +101,22 @@ const MetricsChart = ({ results }) => {
         backgroundColor: 'rgba(255, 205, 86, 0.6)',
         borderColor: 'rgba(255, 205, 86, 1)',
         borderWidth: 1
+      },
+      {
+        label: 'ROC AUC',
+        data: metricsData.map(d => d.roc_auc),
+        backgroundColor: 'rgba(139, 92, 246, 0.6)',
+        borderColor: 'rgba(139, 92, 246, 1)',
+        borderWidth: 1
       }
     ]
   };
 
   const radarData = {
-    labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score'],
+    labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC AUC'], // ROC AUC eklendi
     datasets: metricsData.slice(0, 5).map((data, index) => ({
       label: data.label,
-      data: [data.accuracy, data.precision, data.recall, data.f1_score],
+      data: [data.accuracy, data.precision, data.recall, data.f1_score, data.roc_auc], // ROC AUC eklendi
       backgroundColor: `rgba(${75 + index * 40}, ${192 - index * 30}, ${192 + index * 15}, 0.2)`,
       borderColor: `rgba(${75 + index * 40}, ${192 - index * 30}, ${192 + index * 15}, 1)`,
       borderWidth: 2,

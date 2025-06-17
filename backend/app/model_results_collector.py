@@ -100,29 +100,64 @@ class ModelResultsCollector:
         try:
             # Predictions
             y_pred = model.predict(X_test)
+            print(f"DEBUG - Predictions generated: {len(y_pred)} samples")
 
-            # Probability predictions (if available)
+            # FIXED: Enhanced probability predictions with SVM support
             y_pred_proba = None
             if hasattr(model, 'predict_proba'):
                 try:
                     y_pred_proba = model.predict_proba(X_test)
-                except:
-                    pass
+                    print(f"DEBUG - predict_proba shape: {y_pred_proba.shape if y_pred_proba is not None else 'None'}")
+                except Exception as e:
+                    print(f"DEBUG - predict_proba failed: {e}")
+            elif hasattr(model, 'decision_function'):
+                try:
+                    # SVM için decision_function'ı probability'ye çevir
+                    decision_scores = model.decision_function(X_test)
+                    print(f"DEBUG - Using decision_function for ROC AUC, shape: {decision_scores.shape}")
+
+                    # Binary classification için decision function'ı [0,1] aralığına normalize et
+                    if len(np.unique(y_test)) == 2:
+                        from sklearn.preprocessing import MinMaxScaler
+                        scaler = MinMaxScaler()
+                        if decision_scores.ndim == 1:
+                            decision_scores = decision_scores.reshape(-1, 1)
+                        normalized_scores = scaler.fit_transform(decision_scores).flatten()
+                        # İki sınıf için proba benzeri format oluştur
+                        y_pred_proba = np.column_stack([1-normalized_scores, normalized_scores])
+                        print(f"DEBUG - Created pseudo-probabilities from decision function: {y_pred_proba.shape}")
+                    else:
+                        # Multi-class için decision function'ı softmax'a çevir
+                        from scipy.special import softmax
+                        y_pred_proba = softmax(decision_scores, axis=1)
+                        print(f"DEBUG - Created multi-class probabilities using softmax: {y_pred_proba.shape}")
+                except Exception as e:
+                    print(f"DEBUG - decision_function conversion failed: {e}")
+            else:
+                print(f"DEBUG - No probability method available for {algorithm_name}")
 
             # Basic metrics
             results["metrics"] = self._calculate_basic_metrics(
                 y_test, y_pred, y_pred_proba, selected_metrics
             )
+            print(f"DEBUG - Calculated metrics: {list(results['metrics'].keys())}")
 
             # Detailed classification report
             results["detailed_metrics"] = self._generate_detailed_classification_report(
                 y_test, y_pred
             )
 
-            # Plot data for visualizations
+            # FIXED: Plot data for visualizations with debug info
             results["plot_data"] = self._generate_plot_data(
                 y_test, y_pred, y_pred_proba, algorithm_name
             )
+
+            # DEBUG: Print plot data info
+            print(f"DEBUG - Generated plot_data keys: {list(results['plot_data'].keys())}")
+            if 'confusion_matrix' in results['plot_data']:
+                cm_shape = results['plot_data']['confusion_matrix']['matrix']
+                print(f"DEBUG - Confusion matrix shape: {len(cm_shape)}x{len(cm_shape[0]) if cm_shape else 0}")
+                print(f"DEBUG - Confusion matrix labels: {results['plot_data']['confusion_matrix']['labels']}")
 
             # Prediction analysis
             results["predictions"] = self._analyze_predictions(
@@ -135,6 +170,7 @@ class ModelResultsCollector:
             )
 
         except Exception as e:
+            print(f"ERROR - collect_evaluation_results failed: {e}")
             results["error"] = str(e)
 
         results["collection_time"] = round(time.time() - start_time, 4)
@@ -210,25 +246,49 @@ class ModelResultsCollector:
         if selected_metrics is None:
             selected_metrics = ["Accuracy", "Precision", "Recall", "F1-Score"]
 
+        print(f"DEBUG - Calculating metrics for: {selected_metrics}")
+
         # Calculate each metric
         for metric in selected_metrics:
             try:
                 if metric == "Accuracy":
                     metrics["accuracy"] = round(accuracy_score(y_true, y_pred), 4)
+                    print(f"DEBUG - Accuracy: {metrics['accuracy']}")
                 elif metric == "Precision":
                     metrics["precision"] = round(precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
+                    print(f"DEBUG - Precision: {metrics['precision']}")
                 elif metric == "Recall":
                     metrics["recall"] = round(recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
+                    print(f"DEBUG - Recall: {metrics['recall']}")
                 elif metric == "F1-Score":
                     metrics["f1_score"] = round(f1_score(y_true, y_pred, average='macro', zero_division=0), 4)
-                elif metric == "ROC AUC" and y_pred_proba is not None:
-                    if len(np.unique(y_true)) == 2:
-                        metrics["roc_auc"] = round(roc_auc_score(y_true, y_pred_proba[:, 1]), 4)
-                    else:
-                        metrics["roc_auc"] = round(roc_auc_score(y_true, y_pred_proba, average='weighted', multi_class='ovr'), 4)
-            except Exception as e:
-                metrics[metric.lower().replace('-', '_')] = f"Error: {str(e)}"
+                    print(f"DEBUG - F1-Score: {metrics['f1_score']}")
+                elif metric == "ROC AUC":
+                    # FIXED: Enhanced ROC AUC calculation with better debugging
+                    try:
+                        if y_pred_proba is not None:
+                            unique_classes = len(np.unique(y_true))
+                            print(f"DEBUG - ROC AUC calculation: {unique_classes} classes, proba shape: {y_pred_proba.shape}")
 
+                            if unique_classes == 2:
+                                metrics["roc_auc"] = round(roc_auc_score(y_true, y_pred_proba[:, 1]), 4)
+                                print(f"DEBUG - Binary ROC AUC: {metrics['roc_auc']}")
+                            else:
+                                metrics["roc_auc"] = round(roc_auc_score(y_true, y_pred_proba, average='weighted', multi_class='ovr'), 4)
+                                print(f"DEBUG - Multi-class ROC AUC: {metrics['roc_auc']}")
+                        else:
+                            print(f"DEBUG - ROC AUC skipped: no probability predictions available")
+                            metrics["roc_auc"] = "N/A"
+                    except Exception as e:
+                        print(f"DEBUG - ROC AUC calculation failed: {e}")
+                        metrics["roc_auc"] = f"Error: {str(e)}"
+
+            except Exception as e:
+                error_key = metric.lower().replace('-', '_').replace(' ', '_')
+                metrics[error_key] = f"Error: {str(e)}"
+                print(f"DEBUG - {metric} calculation failed: {e}")
+
+        print(f"DEBUG - Final metrics: {metrics}")
         return metrics
 
     def _generate_detailed_classification_report(self, y_true, y_pred):
@@ -251,6 +311,7 @@ class ModelResultsCollector:
 
             return convert_types(report)
         except Exception as e:
+            print(f"DEBUG - Classification report failed: {e}")
             return {"error": str(e)}
 
     def _generate_plot_data(self, y_true, y_pred, y_pred_proba, algorithm_name):
@@ -258,48 +319,61 @@ class ModelResultsCollector:
         plot_data = {}
 
         try:
-            # Confusion Matrix
+            # FIXED: Enhanced Confusion Matrix generation
             cm = confusion_matrix(y_true, y_pred)
+            unique_labels = sorted(list(set(y_true.tolist() + y_pred.tolist())))
+
             plot_data["confusion_matrix"] = {
                 "matrix": cm.tolist(),
-                "labels": sorted(list(set(y_true.tolist() + y_pred.tolist())))
+                "labels": [str(label) for label in unique_labels]  # Ensure string labels
             }
+            print(f"DEBUG - Confusion matrix created: {cm.shape} with labels: {unique_labels}")
 
             # Class distribution
             unique_true, counts_true = np.unique(y_true, return_counts=True)
             unique_pred, counts_pred = np.unique(y_pred, return_counts=True)
 
             plot_data["class_distribution"] = {
-                "true_distribution": dict(zip([int(x) for x in unique_true], [int(x) for x in counts_true])),
-                "predicted_distribution": dict(zip([int(x) for x in unique_pred], [int(x) for x in counts_pred]))
+                "true_distribution": dict(zip([str(x) for x in unique_true], [int(x) for x in counts_true])),
+                "predicted_distribution": dict(zip([str(x) for x in unique_pred], [int(x) for x in counts_pred]))
             }
 
-            # ROC Curve (for binary classification)
-            if y_pred_proba is not None and len(np.unique(y_true)) == 2:
-                fpr, tpr, thresholds = roc_curve(y_true, y_pred_proba[:, 1])
-                plot_data["roc_curve"] = {
-                    "fpr": fpr.tolist(),
-                    "tpr": tpr.tolist(),
-                    "thresholds": thresholds.tolist()
-                }
-
-                # Precision-Recall Curve
-                precision, recall, pr_thresholds = precision_recall_curve(y_true, y_pred_proba[:, 1])
-                plot_data["precision_recall_curve"] = {
-                    "precision": precision.tolist(),
-                    "recall": recall.tolist(),
-                    "thresholds": pr_thresholds.tolist()
-                }
-
-            # Prediction confidence distribution
+            # FIXED: Enhanced ROC Curve generation
             if y_pred_proba is not None:
+                unique_classes = len(np.unique(y_true))
+                print(f"DEBUG - Generating ROC curves for {unique_classes} classes")
+
+                if unique_classes == 2:
+                    # Binary classification
+                    fpr, tpr, thresholds = roc_curve(y_true, y_pred_proba[:, 1])
+                    plot_data["roc_curve"] = {
+                        "fpr": fpr.tolist(),
+                        "tpr": tpr.tolist(),
+                        "thresholds": thresholds.tolist()
+                    }
+                    print(f"DEBUG - Binary ROC curve generated")
+
+                    # Precision-Recall Curve
+                    precision, recall, pr_thresholds = precision_recall_curve(y_true, y_pred_proba[:, 1])
+                    plot_data["precision_recall_curve"] = {
+                        "precision": precision.tolist(),
+                        "recall": recall.tolist(),
+                        "thresholds": pr_thresholds.tolist()
+                    }
+                    print(f"DEBUG - Precision-Recall curve generated")
+
+                # Prediction confidence distribution
                 max_proba = np.max(y_pred_proba, axis=1)
+                hist_counts, hist_bins = np.histogram(max_proba, bins=10)
                 plot_data["confidence_distribution"] = {
                     "confidence_scores": max_proba.tolist(),
-                    "bins": np.histogram(max_proba, bins=10)[1].tolist()
+                    "histogram_counts": hist_counts.tolist(),
+                    "histogram_bins": hist_bins.tolist()
                 }
+                print(f"DEBUG - Confidence distribution generated")
 
         except Exception as e:
+            print(f"DEBUG - Plot data generation failed: {e}")
             plot_data["error"] = str(e)
 
         return plot_data
@@ -352,6 +426,7 @@ class ModelResultsCollector:
                 }
 
         except Exception as e:
+            print(f"DEBUG - Prediction analysis failed: {e}")
             analysis["error"] = str(e)
 
         return analysis
@@ -404,6 +479,7 @@ class ModelResultsCollector:
                     summary["recommendations"].append("Consider class balancing techniques")
 
         except Exception as e:
+            print(f"DEBUG - Performance summary failed: {e}")
             summary["error"] = str(e)
 
         return summary

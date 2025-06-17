@@ -50,8 +50,13 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
   const scatterChartRef = useRef(null);
   const lineChartRef = useRef(null);
 
+  // FIXED: Initialize results with selected property
   useEffect(() => {
-    setSelectedResults(results);
+    const resultsWithSelection = results.map(result => ({
+      ...result,
+      selected: false
+    }));
+    setSelectedResults(resultsWithSelection);
   }, [results]);
 
   // Chart cleanup effect - FIXED: moved to component level
@@ -104,7 +109,7 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
       if (filterBy === 'train') {
         filtered = filtered.filter(r => r.training_metrics);
       } else if (filterBy === 'evaluate') {
-        filtered = filtered.filter(r => r.metrics);
+        filtered = filtered.filter(r => r.metrics && Object.keys(r.metrics).length > 0);
       }
     }
 
@@ -128,15 +133,19 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
   const getOverviewStats = () => {
     const filteredResults = getFilteredResults();
     const totalResults = filteredResults.length;
-    const trainResults = filteredResults.filter(r => r.training_metrics).length;
-    const evalResults = filteredResults.filter(r => r.metrics).length;
+    const trainResults = filteredResults.filter(r => r.training_metrics && Object.keys(r.training_metrics).length > 0).length;
+    const evalResults = filteredResults.filter(r => r.metrics && Object.keys(r.metrics).length > 0).length;
 
     const algorithms = [...new Set(filteredResults.map(r => r.modelName))];
     const datasets = [...new Set(filteredResults.map(r => r.datasetName))];
 
-    const avgAccuracy = filteredResults
-      .map(r => r.metrics?.accuracy || r.metrics?.Accuracy || 0)
-      .reduce((sum, acc, _, arr) => sum + acc / arr.length, 0);
+    const validAccuracies = filteredResults
+      .map(r => r.metrics?.accuracy || r.metrics?.Accuracy)
+      .filter(acc => typeof acc === 'number' && acc > 0);
+
+    const avgAccuracy = validAccuracies.length > 0
+      ? validAccuracies.reduce((sum, acc) => sum + acc, 0) / validAccuracies.length
+      : 0;
 
     return {
       totalResults,
@@ -189,20 +198,20 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
             <div className="training-metrics-grid">
               <div className="training-metric">
                 <span className="label">Fit Time:</span>
-                <span className="value">{trainingMetrics.fit_time_seconds?.toFixed(3) || 'N/A'}s</span>
+                <span className="value">{trainingMetrics.fit_time_seconds?.toFixed(3) || result.fit_time_seconds?.toFixed(3) || 'N/A'}s</span>
               </div>
               <div className="training-metric">
                 <span className="label">Memory Usage:</span>
-                <span className="value">{trainingMetrics.memory_usage_mb?.toFixed(1) || 'N/A'} MB</span>
+                <span className="value">{trainingMetrics.memory_usage_mb?.toFixed(1) || result.memory_usage_mb?.toFixed(1) || 'N/A'} MB</span>
               </div>
               <div className="training-metric">
                 <span className="label">Throughput:</span>
-                <span className="value">{trainingMetrics.training_throughput_samples_per_sec?.toFixed(0) || 'N/A'} samples/s</span>
+                <span className="value">{trainingMetrics.training_throughput_samples_per_sec?.toFixed(0) || result.training_throughput?.toFixed(0) || 'N/A'} samples/s</span>
               </div>
-              {trainingMetrics.training_samples_count && (
+              {(trainingMetrics.training_samples_count || result.training_samples_count) && (
                 <div className="training-metric">
                   <span className="label">Samples:</span>
-                  <span className="value">{trainingMetrics.training_samples_count}</span>
+                  <span className="value">{trainingMetrics.training_samples_count || result.training_samples_count}</span>
                 </div>
               )}
             </div>
@@ -233,10 +242,15 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
   const getMetricColor = (metricName) => {
     const colors = {
       'Accuracy': '#10b981',
+      'accuracy': '#10b981',
       'Precision': '#3b82f6',
+      'precision': '#3b82f6',
       'Recall': '#8b5cf6',
+      'recall': '#8b5cf6',
       'F1-Score': '#f59e0b',
-      'ROC AUC': '#ef4444'
+      'f1_score': '#f59e0b',
+      'ROC AUC': '#ef4444',
+      'roc_auc': '#ef4444'
     };
     return colors[metricName] || '#6b7280';
   };
@@ -245,7 +259,6 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
     const stats = getOverviewStats();
     const filteredResults = getFilteredResults();
 
-    // FIXED: Removed hooks from render function
     return (
       <div className="overview-tab">
         <div className="stats-grid">
@@ -295,18 +308,18 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
                       <span className="dataset-name">on {result.datasetName}</span>
                     </div>
                     <div className="quick-metrics">
-                      {result.metrics?.Accuracy && (
+                      {(result.metrics?.Accuracy || result.metrics?.accuracy) && (
                         <span className="quick-metric accuracy">
-                          Acc: {result.metrics.Accuracy.toFixed(3)}
+                          Acc: {(result.metrics.Accuracy || result.metrics.accuracy).toFixed(3)}
                         </span>
                       )}
-                      {result.fit_time_seconds && (
+                      {(result.fit_time_seconds || result.score_time_seconds) && (
                         <span className="quick-metric time">
-                          Time: {result.fit_time_seconds.toFixed(3)}s
+                          Time: {(result.fit_time_seconds || result.score_time_seconds).toFixed(3)}s
                         </span>
                       )}
-                      <span className={`mode-badge ${result.metrics ? 'evaluate' : 'train'}`}>
-                        {result.metrics ? 'EVALUATE' : 'TRAIN'}
+                      <span className={`mode-badge ${(result.metrics && Object.keys(result.metrics).length > 0) ? 'evaluate' : 'train'}`}>
+                        {(result.metrics && Object.keys(result.metrics).length > 0) ? 'EVALUATE' : 'TRAIN'}
                       </span>
                     </div>
                   </div>
@@ -422,15 +435,15 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={result.selected || false}
+                      checked={selectedResults.find(r => r.configId === result.configId)?.selected || false}
                       onChange={() => handleResultToggle(result.configId)}
                     />
                   </td>
                   <td>{result.modelName}</td>
                   <td>{result.datasetName}</td>
                   <td>
-                    <span className={`mode-badge ${result.metrics ? 'evaluate' : 'train'}`}>
-                      {result.metrics ? 'Evaluate' : 'Train'}
+                    <span className={`mode-badge ${(result.metrics && Object.keys(result.metrics).length > 0) ? 'evaluate' : 'train'}`}>
+                      {(result.metrics && Object.keys(result.metrics).length > 0) ? 'Evaluate' : 'Train'}
                     </span>
                   </td>
                   <td>{result.metrics?.accuracy?.toFixed(3) || result.metrics?.Accuracy?.toFixed(3) || 'N/A'}</td>
@@ -461,12 +474,15 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
   };
 
   const renderChartsTab = () => {
-    const filteredResults = getFilteredResults().filter(r => r.metrics);
+    // FIXED: Better filtering for charts
+    const filteredResults = getFilteredResults().filter(r => r.metrics && Object.keys(r.metrics).length > 0);
 
     if (filteredResults.length === 0) {
       return (
         <div className="no-data">
           <p>No evaluation results available for charting.</p>
+          <p>Please run some model evaluations first to see performance charts.</p>
+          <p>Current results appear to be training-only data.</p>
         </div>
       );
     }
@@ -489,12 +505,13 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
   };
 
   const renderComparisonTab = () => {
+    // FIXED: Use selectedResults with proper filtering
     const selectedForComparison = selectedResults.filter(r => r.selected);
 
     return (
       <div className="comparison-tab">
         <div className="comparison-header">
-          <h4>Model Comparison</h4>
+          <h4>Model Comparison ({selectedForComparison.length} selected)</h4>
           <p>Select results from the Details tab to compare them here.</p>
         </div>
         <ComparisonTable results={selectedForComparison} />
@@ -504,11 +521,18 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
 
   const renderAnalysisTab = () => {
     const filteredResults = getFilteredResults();
-    const bestResult = filteredResults.reduce((best, current) => {
+
+    // FIXED: Try to find best evaluation result first, then training result
+    let bestResult = filteredResults.reduce((best, current) => {
       const currentAcc = current.metrics?.accuracy || current.metrics?.Accuracy || 0;
       const bestAcc = best?.metrics?.accuracy || best?.metrics?.Accuracy || 0;
       return currentAcc > bestAcc ? current : best;
     }, null);
+
+    // If no evaluation results, find best training result
+    if (!bestResult || (!bestResult.metrics || Object.keys(bestResult.metrics).length === 0)) {
+      bestResult = filteredResults.find(r => r.training_metrics && Object.keys(r.training_metrics).length > 0);
+    }
 
     return (
       <div className="analysis-tab">
@@ -521,7 +545,18 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
                   <strong>{bestResult.modelName}</strong> on <strong>{bestResult.datasetName}</strong>
                 </div>
                 <div className="performance-metrics">
+                  {/* Evaluation metrics */}
                   {bestResult.metrics && Object.entries(bestResult.metrics).map(([key, value]) => (
+                    <div key={key} className="metric-item">
+                      <span className="metric-label">{key}:</span>
+                      <span className="metric-value">
+                        {typeof value === 'number' ? value.toFixed(4) : value}
+                      </span>
+                    </div>
+                  ))}
+                  {/* Training metrics if no evaluation metrics */}
+                  {(!bestResult.metrics || Object.keys(bestResult.metrics).length === 0) &&
+                   bestResult.training_metrics && Object.entries(bestResult.training_metrics).map(([key, value]) => (
                     <div key={key} className="metric-item">
                       <span className="metric-label">{key}:</span>
                       <span className="metric-value">
@@ -550,7 +585,7 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
                 )}
               </div>
             ) : (
-              <p>No evaluation results available.</p>
+              <p>No results available for analysis.</p>
             )}
           </div>
 

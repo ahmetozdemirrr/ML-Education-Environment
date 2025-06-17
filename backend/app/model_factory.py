@@ -82,14 +82,26 @@ def run_model_pipeline(
     enhanced_results = {}
 
     try:
-        # Add configuration metadata
+        # Safe data extraction - DÜZELTME
+        X_data = data_dict.get("X_full")
+        if X_data is None:
+            X_data = data_dict.get("X_train")
+
+        # Güvenli boyut kontrolü
+        if X_data is not None and hasattr(X_data, 'shape'):
+            n_features = X_data.shape[1]
+            n_samples = len(X_data)
+        else:
+            n_features = 0
+            n_samples = 0
+
         enhanced_results["metadata"] = {
             "config_id": config_id,
             "algorithm": algorithm_name,
             "mode": mode,
             "dataset_info": {
-                "n_features": data_dict.get("X_full", data_dict.get("X_train", pd.DataFrame())).shape[1] if not data_dict.get("X_full", data_dict.get("X_train", pd.DataFrame())).empty else 0,
-                "n_samples": len(data_dict.get("X_full", data_dict.get("X_train", pd.DataFrame()))),
+                "n_features": n_features,
+                "n_samples": n_samples,
                 "scaled": data_dict.get("scaled", False)
             },
             "global_settings": global_settings,
