@@ -679,8 +679,8 @@
       "Train/Test split ile evaluate yapılıyor."
     ],
     "created_at": "2025-06-17T08:58:58.183925",
-    "last_accessed": "2025-06-17T08:58:58.183936",
-    "hit_count": 1,
+    "last_accessed": "2025-06-17T15:25:50.693953",
+    "hit_count": 2,
     "type": "evaluation"
   },
   "eval_5bcf31df26f6e1ad2b6e9f43a18e89d480fd037f617887b99fd63b828f0ecc27": {
@@ -757,7 +757,198 @@
       "Train/Test split ile evaluate yapılıyor."
     ],
     "created_at": "2025-06-17T08:59:29.449612",
-    "last_accessed": "2025-06-17T08:59:29.449621",
+    "last_accessed": "2025-06-17T09:16:05.819245",
+    "hit_count": 2,
+    "type": "evaluation"
+  },
+  "eval_ea8b0daf221801e615a30b087266a1d5e70ad6306cb64d1e88736e82c41ec445": {
+    "algorithm": "SVM",
+    "dataset_id": "iris",
+    "model_params": {
+      "C (Reg. Param)": 1,
+      "Kernel": "RBF",
+      "Gamma": "Scale",
+      "Degree (Poly Kernel)": 3
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9667,
+      "Precision": 0.9697,
+      "Recall": 0.9667,
+      "ROC AUC": 0.9967,
+      "F1-Score": 0.9666
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0018,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "SVM modeli Scikit-learn parametreleriyle oluşturuldu: {'C': 1.0, 'kernel': 'rbf', 'gamma': 'scale', 'probability': True, 'random_state': 42}",
+      "Train/Test split ile evaluate yapılıyor."
+    ],
+    "created_at": "2025-06-17T09:09:34.218851",
+    "last_accessed": "2025-06-17T09:14:57.313746",
+    "hit_count": 2,
+    "type": "evaluation"
+  },
+  "eval_dd36c5632c01e41c0aec3b7dbe73d36fb5a02cd160c9419791395fc917fb35e7": {
+    "algorithm": "Logistic Regression",
+    "dataset_id": "digits_data",
+    "model_params": {
+      "Penalty": "L2",
+      "C (Reg. Strength)": 1,
+      "Solver": "lbfgs",
+      "Max Iterations": 100
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9722,
+      "ROC AUC": 0.9991,
+      "Precision": 0.9721,
+      "Recall": 0.9719,
+      "F1-Score": 0.9719
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0023,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "Logistic Regression modeli Scikit-learn parametreleriyle oluşturuldu: {'penalty': 'l2', 'C': 1.0, 'solver': 'lbfgs', 'max_iter': 1000, 'random_state': 42}",
+      "Train/Test split ile evaluate yapılıyor."
+    ],
+    "created_at": "2025-06-17T15:07:48.078779",
+    "last_accessed": "2025-06-17T15:07:48.078789",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_b99ec2a6b9cd4bad4f23699754796e04081510f7647a3d4371b43e7533dfebc9": {
+    "algorithm": "Logistic Regression",
+    "dataset_id": "wine_data",
+    "model_params": {
+      "Penalty": "L2",
+      "C (Reg. Strength)": 1,
+      "Solver": "lbfgs",
+      "Max Iterations": 100
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9722,
+      "Precision": 0.9778,
+      "Recall": 0.9667,
+      "ROC AUC": 1.0,
+      "F1-Score": 0.971
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0018,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "Logistic Regression modeli Scikit-learn parametreleriyle oluşturuldu: {'penalty': 'l2', 'C': 1.0, 'solver': 'lbfgs', 'max_iter': 1000, 'random_state': 42}",
+      "Train/Test split ile evaluate yapılıyor."
+    ],
+    "created_at": "2025-06-17T15:13:04.712281",
+    "last_accessed": "2025-06-17T15:13:04.712291",
+    "hit_count": 1,
+    "type": "evaluation"
+  },
+  "eval_cde2515a747d91158a73bb08c1e750f592f8cc5ed2a23e1d459e6293cd5a4389": {
+    "algorithm": "SVM",
+    "dataset_id": "two_moons_data",
+    "model_params": {
+      "C (Reg. Param)": 1,
+      "Kernel": "RBF",
+      "Gamma": "Scale",
+      "Degree (Poly Kernel)": 3
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.975
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.0009,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "SVM modeli Scikit-learn parametreleriyle oluşturuldu: {'C': 1.0, 'kernel': 'rbf', 'gamma': 'scale', 'random_state': 42}",
+      "Train/Test split ile evaluate yapılıyor."
+    ],
+    "created_at": "2025-06-17T15:27:53.789341",
+    "last_accessed": "2025-06-17T15:30:18.263079",
+    "hit_count": 2,
+    "type": "evaluation"
+  },
+  "eval_50fe1eb08b729b084e3b2e39ceceaf9daa57f6c09c54b92c827fe577f5049e35": {
+    "algorithm": "Decision Tree",
+    "dataset_id": "two_moons_data",
+    "model_params": {
+      "Criterion": "Gini",
+      "Max Depth": "",
+      "Min Samples Split": 2,
+      "Min Samples Leaf": 1
+    },
+    "global_settings": {
+      "useCrossValidation": false,
+      "cvFolds": 5,
+      "useTrainTestSplit": true,
+      "testSplitRatio": 0.2,
+      "randomSeedType": "fixed",
+      "applyFeatureScaling": true,
+      "scalerType": "standard",
+      "randomSeed": 42
+    },
+    "metrics": {
+      "Accuracy": 0.9625,
+      "Precision": 0.9628,
+      "Recall": 0.9625,
+      "ROC AUC": 0.9625,
+      "F1-Score": 0.9625
+    },
+    "plot_data": {},
+    "score_time_seconds": 0.003,
+    "prediction_performance": {},
+    "notes": [
+      "Train/Test split (test_size=0.2, random_state=42). Özellikler standardScaler ile ölçeklendi.",
+      "Decision Tree modeli Scikit-learn parametreleriyle oluşturuldu: {'criterion': 'gini', 'max_depth': None, 'min_samples_split': 2, 'min_samples_leaf': 1, 'random_state': 42}",
+      "Train/Test split ile evaluate yapılıyor."
+    ],
+    "created_at": "2025-06-17T15:30:18.290670",
+    "last_accessed": "2025-06-17T15:30:18.290680",
     "hit_count": 1,
     "type": "evaluation"
   }

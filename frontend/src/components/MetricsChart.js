@@ -1,9 +1,51 @@
-// frontend/src/components/MetricsChart.js
+// frontend/src/components/MetricsChart.js - FIXED VERSION
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  RadialLinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
 import { Bar, Radar, Line, Scatter } from 'react-chartjs-2';
 
+// Register all Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  RadialLinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
 const MetricsChart = ({ results }) => {
+  const chartRef = useRef(null);
+
+  // FIXED: Chart cleanup effect with proper dependency
+  useEffect(() => {
+    return () => {
+      // Copy ref value to variable inside effect to avoid ESLint warnings
+      const currentChart = chartRef.current;
+      if (currentChart) {
+        currentChart.destroy();
+      }
+    };
+  }, []);
+
   if (!results || results.length === 0) {
     return <div className="chart-placeholder">No metrics data available</div>;
   }
@@ -70,17 +112,28 @@ const MetricsChart = ({ results }) => {
         <div className="chart-section">
           <h5>Bar Chart Comparison</h5>
           <Bar
+            ref={chartRef}
             data={barData}
             options={{
               responsive: true,
+              maintainAspectRatio: false,
+              interaction: {
+                intersect: false,
+              },
               plugins: {
                 legend: { position: 'top' },
                 title: { display: true, text: 'Model Performance Metrics' }
               },
               scales: {
                 y: { beginAtZero: true, max: 1 }
+              },
+              // FIXED: Add size constraints
+              aspectRatio: 2,
+              layout: {
+                padding: 10
               }
             }}
+            height={300}
           />
         </div>
 
@@ -91,14 +144,30 @@ const MetricsChart = ({ results }) => {
               data={radarData}
               options={{
                 responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                  intersect: false,
+                },
                 plugins: {
                   legend: { position: 'top' },
                   title: { display: true, text: 'Performance Radar' }
                 },
                 scales: {
-                  r: { beginAtZero: true, max: 1 }
+                  r: {
+                    beginAtZero: true,
+                    max: 1,
+                    ticks: {
+                      stepSize: 0.2
+                    }
+                  }
+                },
+                // FIXED: Add size constraints
+                aspectRatio: 1,
+                layout: {
+                  padding: 10
                 }
               }}
+              height={300}
             />
           </div>
         )}
@@ -108,6 +177,25 @@ const MetricsChart = ({ results }) => {
 };
 
 const PerformanceChart = ({ results }) => {
+  const scatterChartRef = useRef(null);
+  const lineChartRef = useRef(null);
+
+  // FIXED: Chart cleanup effect with proper dependencies
+  useEffect(() => {
+    return () => {
+      // Copy ref values to variables inside effect to avoid ESLint warnings
+      const currentScatterChart = scatterChartRef.current;
+      const currentLineChart = lineChartRef.current;
+
+      if (currentScatterChart) {
+        currentScatterChart.destroy();
+      }
+      if (currentLineChart) {
+        currentLineChart.destroy();
+      }
+    };
+  }, []);
+
   if (!results || results.length === 0) {
     return <div className="chart-placeholder">No performance data available</div>;
   }
@@ -157,9 +245,14 @@ const PerformanceChart = ({ results }) => {
       <div className="chart-section">
         <h5>Accuracy vs Training Time</h5>
         <Scatter
+          ref={scatterChartRef}
           data={scatterData}
           options={{
             responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+            },
             plugins: {
               legend: { position: 'top' },
               title: { display: true, text: 'Performance Trade-offs' },
@@ -181,17 +274,28 @@ const PerformanceChart = ({ results }) => {
                 beginAtZero: true,
                 max: 1
               }
+            },
+            // FIXED: Add size constraints
+            aspectRatio: 2,
+            layout: {
+              padding: 10
             }
           }}
+          height={300}
         />
       </div>
 
       <div className="chart-section">
         <h5>Performance Over Time</h5>
         <Line
+          ref={lineChartRef}
           data={timeSeriesData}
           options={{
             responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+            },
             plugins: {
               legend: { position: 'top' },
               title: { display: true, text: 'Accuracy and Training Time Trends' }
@@ -213,8 +317,14 @@ const PerformanceChart = ({ results }) => {
                 grid: { drawOnChartArea: false },
                 beginAtZero: true
               }
+            },
+            // FIXED: Add size constraints
+            aspectRatio: 2,
+            layout: {
+              padding: 10
             }
           }}
+          height={300}
         />
       </div>
     </div>

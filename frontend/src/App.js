@@ -164,10 +164,8 @@ function ParameterPopup({ model, onClose, onSaveRequest, existingConfigs = [], e
   const [selectedMetricsState, setSelectedMetricsState] = useState([]);
   const availableMetrics = model ? allMetrics[model.task_type] || [] : [];
 
-  useEffect(() =>
-  {
-    if (model)
-    {
+  useEffect(() => {
+    if (model) {
       const initialParams = {};
 
       if (editingConfig && editingConfig.params) {
@@ -185,8 +183,7 @@ function ParameterPopup({ model, onClose, onSaveRequest, existingConfigs = [], e
       }
       setParamsState(initialParams);
     }
-  },
-  [model, editingConfig]);
+  }, [model, editingConfig, availableMetrics]); // availableMetrics dependency eklendi
 
   const handleInputChange = (paramName, value) =>
   {

@@ -1,25 +1,79 @@
-// frontend/src/components/ResultsViewer.js
+// frontend/src/components/ResultsViewer.js - FIXED VERSION
 
-import React, { useState, useEffect } from 'react';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  RadialLinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement,
+  Filler
+} from 'chart.js';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import MetricsChart from './MetricsChart';
 import { PerformanceChart, ConfusionMatrix, ComparisonTable } from './MetricsChart';
 
 import './ResultsViewer.css';
 
-// Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
+// Register ALL Chart.js components properly
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  RadialLinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement,
+  Filler
+);
 
 const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedResults, setSelectedResults] = useState([]);
-  const [filterBy, setFilterBy] = useState('all'); // 'all', 'algorithm', 'dataset'
-  const [sortBy, setSortBy] = useState('timestamp'); // 'timestamp', 'accuracy', 'algorithm'
+  const [filterBy, setFilterBy] = useState('all');
+  const [sortBy, setSortBy] = useState('timestamp');
+  const [expandedResults, setExpandedResults] = useState(new Set());
+
+  // Move all refs to component level - FIXED
+  const barChartRef = useRef(null);
+  const pieChartRef = useRef(null);
+  const chartRef = useRef(null);
+  const scatterChartRef = useRef(null);
+  const lineChartRef = useRef(null);
 
   useEffect(() => {
     setSelectedResults(results);
   }, [results]);
+
+  // Chart cleanup effect - FIXED: moved to component level
+  useEffect(() => {
+    return () => {
+      if (barChartRef.current) {
+        barChartRef.current.destroy();
+      }
+      if (pieChartRef.current) {
+        pieChartRef.current.destroy();
+      }
+      if (chartRef.current) {
+        chartRef.current.destroy();
+      }
+      if (scatterChartRef.current) {
+        scatterChartRef.current.destroy();
+      }
+      if (lineChartRef.current) {
+        lineChartRef.current.destroy();
+      }
+    };
+  }, []);
 
   const handleResultToggle = (resultId) => {
     setSelectedResults(prev =>
@@ -31,12 +85,22 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
     );
   };
 
+  const toggleResultDetails = (resultId) => {
+    setExpandedResults(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(resultId)) {
+        newSet.delete(resultId);
+      } else {
+        newSet.add(resultId);
+      }
+      return newSet;
+    });
+  };
+
   const getFilteredResults = () => {
     let filtered = results;
 
-    // Apply filters
     if (filterBy !== 'all') {
-      // Implement specific filters based on filterBy value
       if (filterBy === 'train') {
         filtered = filtered.filter(r => r.training_metrics);
       } else if (filterBy === 'evaluate') {
@@ -44,7 +108,6 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
       }
     }
 
-    // Apply sorting
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'accuracy':
@@ -67,10 +130,10 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
     const totalResults = filteredResults.length;
     const trainResults = filteredResults.filter(r => r.training_metrics).length;
     const evalResults = filteredResults.filter(r => r.metrics).length;
-    
+
     const algorithms = [...new Set(filteredResults.map(r => r.modelName))];
     const datasets = [...new Set(filteredResults.map(r => r.datasetName))];
-    
+
     const avgAccuracy = filteredResults
       .map(r => r.metrics?.accuracy || r.metrics?.Accuracy || 0)
       .reduce((sum, acc, _, arr) => sum + acc / arr.length, 0);
@@ -87,10 +150,102 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
     };
   };
 
+  const renderDetailedMetrics = (result) => {
+    const metrics = result.metrics || {};
+    const trainingMetrics = result.training_metrics || {};
+
+    return (
+      <div className="detailed-metrics">
+        {/* Evaluation Metrics */}
+        {Object.keys(metrics).length > 0 && (
+          <div className="metrics-section">
+            <h5>🎯 Evaluation Metrics</h5>
+            <div className="metrics-grid">
+              {Object.entries(metrics).map(([key, value]) => (
+                <div key={key} className="metric-card">
+                  <div className="metric-label">{key}</div>
+                  <div className="metric-value">
+                    {typeof value === 'number' ? value.toFixed(4) : value}
+                  </div>
+                  <div className="metric-bar">
+                    <div
+                      className="metric-fill"
+                      style={{
+                        width: `${typeof value === 'number' ? Math.min(value * 100, 100) : 0}%`,
+                        backgroundColor: getMetricColor(key)
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Training Performance Metrics */}
+        {Object.keys(trainingMetrics).length > 0 && (
+          <div className="metrics-section">
+            <h5>⚡ Training Performance</h5>
+            <div className="training-metrics-grid">
+              <div className="training-metric">
+                <span className="label">Fit Time:</span>
+                <span className="value">{trainingMetrics.fit_time_seconds?.toFixed(3) || 'N/A'}s</span>
+              </div>
+              <div className="training-metric">
+                <span className="label">Memory Usage:</span>
+                <span className="value">{trainingMetrics.memory_usage_mb?.toFixed(1) || 'N/A'} MB</span>
+              </div>
+              <div className="training-metric">
+                <span className="label">Throughput:</span>
+                <span className="value">{trainingMetrics.training_throughput_samples_per_sec?.toFixed(0) || 'N/A'} samples/s</span>
+              </div>
+              {trainingMetrics.training_samples_count && (
+                <div className="training-metric">
+                  <span className="label">Samples:</span>
+                  <span className="value">{trainingMetrics.training_samples_count}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Additional Info */}
+        <div className="additional-info">
+          <div className="info-item">
+            <span className="label">Cache:</span>
+            <span className={`cache-badge ${result.from_cache ? 'hit' : 'miss'}`}>
+              {result.from_cache ? '🚀 CACHE HIT' : '💻 COMPUTED'}
+            </span>
+          </div>
+          <div className="info-item">
+            <span className="label">Config ID:</span>
+            <span className="value">{result.configId}</span>
+          </div>
+          <div className="info-item">
+            <span className="label">Timestamp:</span>
+            <span className="value">{new Date(result.timestamp || Date.now()).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const getMetricColor = (metricName) => {
+    const colors = {
+      'Accuracy': '#10b981',
+      'Precision': '#3b82f6',
+      'Recall': '#8b5cf6',
+      'F1-Score': '#f59e0b',
+      'ROC AUC': '#ef4444'
+    };
+    return colors[metricName] || '#6b7280';
+  };
+
   const renderOverviewTab = () => {
     const stats = getOverviewStats();
     const filteredResults = getFilteredResults();
 
+    // FIXED: Removed hooks from render function
     return (
       <div className="overview-tab">
         <div className="stats-grid">
@@ -120,15 +275,64 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
           </div>
         </div>
 
+        {/* Detailed results section */}
+        <div className="detailed-results-section">
+          <div className="section-header">
+            <h4>📊 Detailed Results</h4>
+            <p>Click on any result to see detailed metrics and performance data</p>
+          </div>
+
+          <div className="results-list-detailed">
+            {filteredResults.map((result, index) => (
+              <div key={result.configId || index} className="result-item-detailed">
+                <div
+                  className="result-header-clickable"
+                  onClick={() => toggleResultDetails(result.configId)}
+                >
+                  <div className="result-main-info">
+                    <div className="model-dataset-info">
+                      <span className="model-name">{result.modelName}</span>
+                      <span className="dataset-name">on {result.datasetName}</span>
+                    </div>
+                    <div className="quick-metrics">
+                      {result.metrics?.Accuracy && (
+                        <span className="quick-metric accuracy">
+                          Acc: {result.metrics.Accuracy.toFixed(3)}
+                        </span>
+                      )}
+                      {result.fit_time_seconds && (
+                        <span className="quick-metric time">
+                          Time: {result.fit_time_seconds.toFixed(3)}s
+                        </span>
+                      )}
+                      <span className={`mode-badge ${result.metrics ? 'evaluate' : 'train'}`}>
+                        {result.metrics ? 'EVALUATE' : 'TRAIN'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="expand-indicator">
+                    {expandedResults.has(result.configId) ? '▼' : '▶'}
+                  </div>
+                </div>
+
+                {expandedResults.has(result.configId) && renderDetailedMetrics(result)}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Existing charts */}
         <div className="overview-charts">
           <div className="chart-container">
             <h4>Results by Algorithm</h4>
             <Bar
+              key={`algorithms-${stats.totalResults}`}
+              ref={barChartRef}
               data={{
                 labels: stats.algorithms,
                 datasets: [{
                   label: 'Number of Results',
-                  data: stats.algorithms.map(alg => 
+                  data: stats.algorithms.map(alg =>
                     filteredResults.filter(r => r.modelName === alg).length
                   ),
                   backgroundColor: 'rgba(75, 192, 192, 0.6)',
@@ -138,21 +342,28 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
               }}
               options={{
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                   legend: { position: 'top' },
                   title: { display: true, text: 'Results Distribution by Algorithm' }
+                },
+                scales: {
+                  y: { beginAtZero: true }
                 }
               }}
+              height={250}
             />
           </div>
 
           <div className="chart-container">
             <h4>Results by Dataset</h4>
             <Pie
+              key={`datasets-${stats.totalResults}`}
+              ref={pieChartRef}
               data={{
                 labels: stats.datasets,
                 datasets: [{
-                  data: stats.datasets.map(dataset => 
+                  data: stats.datasets.map(dataset =>
                     filteredResults.filter(r => r.datasetName === dataset).length
                   ),
                   backgroundColor: [
@@ -161,42 +372,22 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
                     'rgba(255, 205, 86, 0.6)',
                     'rgba(75, 192, 192, 0.6)',
                     'rgba(153, 102, 255, 0.6)',
-                    'rgba(255, 159, 64, 0.6)'
+                    'rgba(255, 159, 64, 0.6)',
+                    'rgba(199, 199, 199, 0.6)',
+                    'rgba(83, 102, 255, 0.6)'
                   ]
                 }]
               }}
               options={{
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                   legend: { position: 'top' },
                   title: { display: true, text: 'Results Distribution by Dataset' }
                 }
               }}
+              height={250}
             />
-          </div>
-        </div>
-
-        <div className="recent-results">
-          <h4>Recent Results</h4>
-          <div className="results-list">
-            {filteredResults.slice(0, 5).map((result, index) => (
-              <div key={result.configId || index} className="result-item">
-                <div className="result-header">
-                  <span className="model-name">{result.modelName}</span>
-                  <span className="dataset-name">{result.datasetName}</span>
-                  <span className="timestamp">
-                    {new Date(result.timestamp || Date.now()).toLocaleString()}
-                  </span>
-                </div>
-                <div className="result-metrics">
-                  {result.metrics && Object.entries(result.metrics).slice(0, 3).map(([key, value]) => (
-                    <span key={key} className="metric">
-                      {key}: {typeof value === 'number' ? value.toFixed(3) : value}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
@@ -253,7 +444,7 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
                     </span>
                   </td>
                   <td>
-                    <button 
+                    <button
                       className="view-details-btn"
                       onClick={() => setActiveTab('analysis')}
                     >
@@ -283,9 +474,15 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
     return (
       <div className="charts-tab">
         <div className="charts-grid">
-          <MetricsChart results={filteredResults} />
-          <PerformanceChart results={filteredResults} />
-          <ConfusionMatrix results={filteredResults} />
+          <div key={`metrics-chart-${filteredResults.length}`}>
+            <MetricsChart results={filteredResults} />
+          </div>
+          <div key={`performance-chart-${filteredResults.length}`}>
+            <PerformanceChart results={filteredResults} />
+          </div>
+          <div key={`confusion-matrix-${filteredResults.length}`}>
+            <ConfusionMatrix results={filteredResults} />
+          </div>
         </div>
       </div>
     );
@@ -373,6 +570,7 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
           <div className="performance-trends">
             <h4>Performance Trends</h4>
             <Line
+              key={`trends-${filteredResults.length}`}
               data={{
                 labels: filteredResults.map((_, idx) => `Run ${idx + 1}`),
                 datasets: [{
@@ -385,6 +583,7 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
               }}
               options={{
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                   legend: { position: 'top' },
                   title: { display: true, text: 'Accuracy Trends Over Time' }
@@ -393,6 +592,7 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
                   y: { beginAtZero: true, max: 1 }
                 }
               }}
+              height={300}
             />
           </div>
         </div>
@@ -427,10 +627,10 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
           <h3>Simulation Results</h3>
           <span className="results-count">{results.length} results</span>
         </div>
-        
+
         <div className="header-controls">
-          <select 
-            value={filterBy} 
+          <select
+            value={filterBy}
             onChange={(e) => setFilterBy(e.target.value)}
             className="filter-select"
           >
@@ -438,9 +638,9 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
             <option value="train">Training Only</option>
             <option value="evaluate">Evaluation Only</option>
           </select>
-          
-          <select 
-            value={sortBy} 
+
+          <select
+            value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="sort-select"
           >
@@ -448,8 +648,8 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
             <option value="accuracy">Sort by Accuracy</option>
             <option value="algorithm">Sort by Algorithm</option>
           </select>
-          
-          <button 
+
+          <button
             onClick={onClearResults}
             className="clear-results-btn"
           >
@@ -459,35 +659,35 @@ const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
       </div>
 
       <div className="results-tabs">
-        <button 
+        <button
           className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveTab('overview')}
         >
-          Overview
+          📊 Overview
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'details' ? 'active' : ''}`}
           onClick={() => setActiveTab('details')}
         >
-          Details
+          📋 Details
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'charts' ? 'active' : ''}`}
           onClick={() => setActiveTab('charts')}
         >
-          Charts
+          📈 Charts
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'comparison' ? 'active' : ''}`}
           onClick={() => setActiveTab('comparison')}
         >
-          Comparison
+          ⚖️ Comparison
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'analysis' ? 'active' : ''}`}
           onClick={() => setActiveTab('analysis')}
         >
-          Analysis
+          🔍 Analysis
         </button>
       </div>
 
