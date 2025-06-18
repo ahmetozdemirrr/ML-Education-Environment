@@ -3,7 +3,8 @@
 .results-viewer {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh; /* Tam yükseklik */
+  max-height: 100vh;
   background-color: #ffffff;
   border-radius: 8px;
   overflow: hidden;
@@ -123,7 +124,9 @@
 .results-content {
   flex: 1;
   padding: 20px;
-  overflow-y: auto;
+  overflow-y: visible;          /* auto yerine visible */
+  overflow-x: hidden;
+  height: auto;                 /* Otomatik yükseklik */
 }
 
 /* Loading and Empty States */
@@ -196,7 +199,7 @@
   background-color: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 20px;
+  padding: 16px;
 }
 
 .section-header {
@@ -220,10 +223,12 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
 .result-item-detailed {
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   transition: all 0.2s ease;
@@ -333,7 +338,7 @@
 }
 
 .metric-card {
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 16px;
@@ -381,7 +386,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
 }
@@ -412,7 +417,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px;
-  background-color: white;
+  background-color: #f8fafc;
   border-radius: 4px;
 }
 
@@ -436,10 +441,14 @@
 }
 
 .chart-container {
-  background-color: #f9fafb;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 20px;
+
+  position: relative;
+  height: auto;              /* Otomatik yükseklik */
+  overflow: visible;         /* Tüm içerik görünsün */
 }
 
 .chart-container h4 {
@@ -447,6 +456,13 @@
   color: #374151;
   font-size: 1rem;
   font-weight: 600;
+}
+
+.chart-container canvas {
+  max-width: 100% !important;
+  max-height: 350px !important;
+  width: auto !important;
+  height: auto !important;
 }
 
 .recent-results {
@@ -470,7 +486,7 @@
 }
 
 .result-item {
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   padding: 12px;
@@ -505,7 +521,7 @@
 }
 
 .results-table-container {
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
@@ -589,13 +605,15 @@
 
 /* Charts Tab Styles */
 .charts-tab {
-  height: 100%;
+  height: auto;                 /* 100% yerine auto */
+  overflow: visible;            /* Scroll kaldır */
 }
 
 .charts-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 32px;
+  overflow-y: visible;
 }
 
 .chart-placeholder {
@@ -619,18 +637,24 @@
 /* Chart Components Styles */
 .metrics-chart-container,
 .performance-chart-container {
-  background-color: #f9fafb;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+  height: auto;                 /* Otomatik yükseklik */
+  overflow: visible;            /* Tüm içerik görünsün */
 }
 
 .metrics-chart-container h4,
 .performance-chart-container h4 {
-  margin: 0 0 20px 0;
+  margin: 0 0 24px 0;
   color: #374151;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 600;
+  text-align: center;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #3b82f6;
 }
 
 .chart-tabs {
@@ -640,22 +664,95 @@
 }
 
 .chart-section {
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 16px;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  position: relative;
+  height: auto;              /* Otomatik yükseklik */
+  overflow: visible;         /* Tüm içerik görünsün */
+}
+
+.chart-section:last-child {
+  margin-bottom: 0;
 }
 
 .chart-section h5 {
   margin: 0 0 16px 0;
   color: #374151;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chart-section canvas {
+  max-width: 100% !important;
+  max-height: 400px !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Dataset bazında chart grid stilleri */
+.dataset-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+/* Birden fazla dataset varsa yan yana göster */
+@media (min-width: 1200px) {
+  .dataset-charts-grid {
+    grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  }
+}
+
+/* Dataset chart özel boyutları */
+.dataset-chart {
+  background-color: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+
+  /* min-height: 450px; <- Bu satırı SİL veya azalt */
+  min-height: auto;             /* Minimum yükseklik kaldır */
+  height: auto;                 /* Otomatik yükseklik */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: visible;            /* Tüm içerik görünsün */
+}
+
+.dataset-chart h5 {
+  margin: 0 0 20px 0;
+  color: #374151;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.dataset-chart canvas {
+  max-width: 100% !important;
+  max-height: 380px !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Chart hover efektleri */
+.dataset-chart:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
 }
 
 /* Confusion Matrix Styles */
 .confusion-matrix-container {
-  background-color: #f9fafb;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 20px;
@@ -679,7 +776,7 @@
 
 .matrix-wrapper {
   display: flex;
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   overflow: hidden;
@@ -747,7 +844,7 @@
   gap: 24px;
   margin-top: 16px;
   padding: 12px;
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
 }
@@ -831,7 +928,7 @@
 
 .comparison-table-wrapper {
   overflow-x: auto;
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
@@ -965,7 +1062,7 @@
 .comparison-summary {
   margin-top: 20px;
   padding: 16px;
-  background-color: #f9fafb;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
@@ -1006,7 +1103,7 @@
 
 .best-result-card,
 .recommendations-card {
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 20px;
@@ -1042,7 +1139,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  background-color: #f9fafb;
+  background-color: #f8fafc;
   border-radius: 6px;
 }
 
@@ -1108,10 +1205,12 @@
 }
 
 .performance-trends {
-  background-color: white;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 20px;
+  height: auto;                 /* Otomatik yükseklik */
+  overflow: visible;            /* Tüm içerik görünsün */
 }
 
 .performance-trends h4 {
@@ -1121,7 +1220,46 @@
   font-weight: 600;
 }
 
+.performance-trends canvas {
+  max-width: 100% !important;
+  max-height: 350px !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Legend stilleri iyileştirme */
+.chart-section .chartjs-legend {
+  margin-bottom: 16px;
+}
+
+.chart-section .chartjs-legend ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+.chart-section .chartjs-legend li {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .dataset-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dataset-chart {
+    min-height: 400px;
+  }
+}
+
 @media (max-width: 768px) {
   .results-header {
     flex-direction: column;
@@ -1161,6 +1299,19 @@
   .training-metrics-grid {
     grid-template-columns: 1fr;
   }
+
+  .dataset-chart {
+    padding: 16px;
+    min-height: 350px;
+  }
+
+  .dataset-chart h5 {
+    font-size: 0.95rem;
+  }
+
+  .performance-chart-container {
+    padding: 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1187,160 +1338,541 @@
   }
 }
 
-/* Additional CSS fixes for chart size issues - ADD TO ResultsViewer.css */
+/* Multiple Confusion Matrix Grid */
+.confusion-matrices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin-top: 16px;
+}
 
-/* Chart container fixes */
-.chart-container {
-  background-color: #f9fafb;
+/* Single Confusion Matrix Container */
+.single-confusion-matrix {
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 20px;
-  /* FIXED: Add explicit size constraints */
-  max-height: 400px;
-  overflow: hidden;
-  position: relative;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.chart-container canvas {
-  /* FIXED: Prevent canvas from growing indefinitely */
-  max-width: 100% !important;
-  max-height: 350px !important;
-  width: auto !important;
-  height: auto !important;
+.single-confusion-matrix .matrix-info h5 {
+  margin: 0 0 16px 0;
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
 }
 
-/* Overview charts grid fixes */
-.overview-charts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  /* FIXED: Add max height to prevent infinite growth */
-  max-height: 500px;
+/* Responsive adjustments for confusion matrices */
+@media (max-width: 768px) {
+  .confusion-matrices-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .single-confusion-matrix {
+    padding: 12px;
+  }
+
+  .single-confusion-matrix .matrix-info h5 {
+    font-size: 0.9rem;
+  }
 }
 
-/* Chart sections in other tabs */
-.chart-section {
-  background-color: white;
+/* DAHA BELİRGİN GRİMSİ RENKLER - Bu kısmı CSS dosyasının SONUNA ekleyin */
+
+/* Ana bölüm konteynerları - daha koyu grimsi */
+.chart-container,
+.chart-section,
+.dataset-chart,
+.metrics-chart-container,
+.performance-chart-container,
+.confusion-matrix-container,
+.detailed-results-section,
+.recent-results,
+.best-result-card,
+.recommendations-card,
+.performance-trends,
+.results-table-container,
+.comparison-table-wrapper,
+.comparison-summary {
+  background-color: #e2e8f0 !important; /* Daha koyu grimsi-mavi */
+}
+
+/* Küçük kutucuklar - orta ton grimsi */
+.metric-card,
+.training-metric,
+.info-item,
+.result-item,
+.result-item-detailed,
+.single-confusion-matrix,
+.matrix-wrapper,
+.matrix-stats,
+.metric-item {
+  background-color: #cbd5e1 !important; /* Daha koyu gri */
+}
+
+/* Tablo içerikleri */
+.results-table th {
+  background-color: #94a3b8 !important; /* Çok daha koyu gri */
+}
+
+.comparison-table th {
+  background-color: #94a3b8 !important; /* Çok daha koyu gri */
+}
+
+/* Hover efektleri */
+.result-item-detailed:hover {
+  background-color: #ddd6fe !important; /* Hafif mor ton */
+  border-color: #3b82f6;
+}
+
+.results-table tr:hover,
+.comparison-table tr:hover {
+  background-color: #e0e7ff !important; /* Hafif mavi ton */
+}
+
+.result-header-clickable:hover {
+  background-color: #ddd6fe !important; /* Hafif mor ton */
+}
+
+/* Chart Values Table Styles - ResultsViewer.css dosyasının sonuna ekleyin */
+
+.chart-values-section {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.values-table-wrapper {
+  overflow-x: auto;
+
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  padding: 16px;
-  /* FIXED: Add size constraints */
-  max-height: 450px;
-  overflow: hidden;
-  position: relative;
-}
-
-.chart-section canvas {
-  /* FIXED: Force canvas to respect container bounds */
-  max-width: 100% !important;
-  max-height: 400px !important;
-  width: auto !important;
-  height: auto !important;
-}
-
-/* Charts tab specific fixes */
-.charts-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-  /* FIXED: Prevent charts from growing beyond viewport */
-  max-height: calc(100vh - 300px);
-  overflow-y: auto;
-}
-
-/* Metrics chart container specific fixes */
-.metrics-chart-container,
-.performance-chart-container {
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 20px;
-}
-
-.metrics-chart-container canvas,
-.performance-chart-container canvas {
-  /* FIXED: Canvas size limits */
-  max-width: 100% !important;
-  max-height: 350px !important;
-  width: auto !important;
-  height: auto !important;
-}
-
-/* Chart tabs specific */
-.chart-tabs {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  /* FIXED: Prevent infinite height growth */
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-}
-
-/* Performance trends specific fix */
-.performance-trends {
   background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 20px;
-  /* FIXED: Size constraint for trends chart */
-  max-height: 400px;
-  overflow: hidden;
+  height: auto;
 }
 
-.performance-trends canvas {
-  max-width: 100% !important;
-  max-height: 300px !important;
-  width: auto !important;
-  height: auto !important;
+.chart-values-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
 }
 
-/* Detailed results section constraint */
-.detailed-results-section {
-  /* FIXED: Prevent this section from growing too large */
-
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 16px;
+.chart-values-table th {
+  background-color: #94a3b8;
+  color: white;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #64748b;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.results-list-detailed {
-  /* FIXED: Scrollable list with max height */
-  max-height: 500px;
-  overflow-y: auto;
+.chart-values-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  border-right: 1px solid #f1f5f9;
 }
 
-/* Results content fixes */
-.results-content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  /* FIXED: Prevent content from growing beyond bounds */
-  max-height: calc(100vh - 200px);
+.chart-values-table tbody tr:hover {
+  background-color: #f8fafc;
 }
 
-/* Overview tab specific */
-.overview-tab {
+.model-name-cell {
+  background-color: #f9fafb;
+  border-right: 2px solid #e5e7eb;
+  font-weight: 500;
+}
+
+.metric-value-cell {
+  text-align: center;
+  font-family: monospace;
+  font-weight: 600;
+  color: #374151;
+  min-width: 80px;
+}
+
+.chart-values-table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.chart-values-table tbody tr:nth-child(even):hover {
+  background-color: #f1f5f9;
+}
+
+/* Responsive design for values table */
+@media (max-width: 768px) {
+  .chart-values-section {
+    padding: 12px;
+  }
+
+  .chart-values-table {
+    font-size: 0.75rem;
+  }
+
+  .chart-values-table th,
+  .chart-values-table td {
+    padding: 6px 8px;
+  }
+
+  .model-name-cell div {
+    font-size: 0.75rem !important;
+  }
+
+  .model-name-cell div:last-child {
+    font-size: 0.625rem !important;
+  }
+}
+
+/* ResultsViewer.css dosyasının sonuna bu stilleri ekle: */
+
+/* =================================== */
+/* DATASET BAZINDA KARŞILAŞTIRMA STİLLERİ */
+/* =================================== */
+
+/* Global Header */
+.comparison-global-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.global-info h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.global-stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.global-stat {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  /* FIXED: Overview content bounds */
-  height: 100%;
-  overflow-y: auto;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
 }
 
-/* Force charts to maintain aspect ratio but respect size limits */
-.chart-container > div,
-.chart-section > div,
-.metrics-chart-container > div,
-.performance-chart-container > div {
-  position: relative;
+.global-stat .stat-label {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  margin-bottom: 4px;
 }
 
-/* Additional constraint for Chart.js responsive behavior */
-.chart-container .chartjs-render-monitor,
-.chart-section .chartjs-render-monitor,
-.metrics-chart-container .chartjs-render-monitor,
-.performance-chart-container .chartjs-render-monitor {
-  max-height: 350px !important;
-  max-width: 100% !important;
+.global-stat .stat-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.global-stat .stat-value.champion {
+  color: #fbbf24;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Datasets Container */
+.datasets-comparison-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Dataset Section */
+.dataset-comparison-section {
+  background-color: #f8fafc;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dataset-comparison-section:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Dataset Header */
+.dataset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.dataset-info h4 {
+  margin: 0 0 12px 0;
+  color: #374151;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.dataset-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #e0e7ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 16px;
+  font-size: 0.875rem;
+}
+
+.stat-chip .stat-label {
+  color: #6366f1;
+  font-weight: 500;
+}
+
+.stat-chip .stat-value {
+  color: #4338ca;
+  font-weight: 700;
+}
+
+/* Dataset Best Performer */
+.dataset-best-performer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(251, 191, 36, 0.3);
+}
+
+.best-crown {
+  font-size: 1.5rem;
+  animation: pulse-crown 2s infinite;
+}
+
+@keyframes pulse-crown {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.best-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.best-info .best-label {
+  font-size: 0.75rem;
+  color: #92400e;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.best-info .best-model {
+  font-size: 1rem;
+  color: #451a03;
+  font-weight: 700;
+}
+
+.best-info .best-accuracy {
+  font-size: 0.875rem;
+  color: #78716c;
+  font-weight: 500;
+}
+
+/* Dataset Best Row */
+.comparison-table tr.dataset-best {
+  background: linear-gradient(90deg, #fef7ff 0%, #f3e8ff 100%) !important;
+  border: 2px solid #a855f7 !important;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.2);
+}
+
+.comparison-table tr.dataset-best:hover {
+  background: linear-gradient(90deg, #fae8ff 0%, #e9d5ff 100%) !important;
+}
+
+/* Dataset Best Badge */
+.dataset-best-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  animation: glow-badge 3s infinite;
+}
+
+@keyframes glow-badge {
+  0%, 100% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.5); }
+  50% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.8); }
+}
+
+.crown-icon {
+  font-size: 0.75rem;
+}
+
+/* Rank Badge */
+.rank-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  min-width: 32px;
+}
+
+.rank-badge.rank-1 {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #451a03;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+.rank-badge.rank-2 {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(148, 163, 184, 0.3);
+}
+
+.rank-badge.rank-3 {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(249, 115, 22, 0.3);
+}
+
+.rank-badge:not(.rank-1):not(.rank-2):not(.rank-3) {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+/* Enhanced Performance Badges */
+.performance-badge.excellent {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.performance-badge.good {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.performance-badge.fair {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.performance-badge.poor {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+/* Enhanced Cache Badges */
+.cache-badge.hit {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.cache-badge.miss {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+/* Responsive Design for New Elements */
+@media (max-width: 1200px) {
+  .dataset-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .dataset-best-performer {
+    justify-content: center;
+  }
+
+  .global-stats {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .dataset-comparison-section {
+    padding: 16px;
+  }
+
+  .comparison-global-header {
+    padding: 16px;
+  }
+
+  .global-info h3 {
+    font-size: 1.25rem;
+  }
+
+  .global-stats {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .global-stat {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .dataset-stats {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dataset-best-performer {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .dataset-info h4 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .datasets-comparison-container {
+    gap: 24px;
+  }
+
+  .dataset-comparison-section {
+    padding: 12px;
+  }
+
+  .dataset-header {
+    gap: 12px;
+  }
 }

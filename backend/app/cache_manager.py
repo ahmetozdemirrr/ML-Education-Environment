@@ -35,15 +35,55 @@ class TrainingCacheManager:
             print(f"Cache yükleme hatası: {e}")
             self.cache_data = {}
 
+    def _safe_json_serialize(self, data):
+        """
+        Safely serialize data to JSON, handling numpy types and edge cases
+        """
+        import math
+        import numpy as np
+
+        def convert_for_json(obj):
+            if isinstance(obj, dict):
+                return {k: convert_for_json(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_for_json(item) for item in obj]
+            elif isinstance(obj, tuple):
+                return tuple(convert_for_json(item) for item in obj)
+            elif isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                val = float(obj)
+                if math.isnan(val) or math.isinf(val):
+                    return "N/A"
+                return val
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, np.bool_):
+                return bool(obj)
+            elif isinstance(obj, (np.complex64, np.complex128)):
+                return str(obj)
+            elif isinstance(obj, float):
+                if math.isnan(obj) or math.isinf(obj):
+                    return "N/A"
+                return obj
+            else:
+                return obj
+
+        return convert_for_json(data)
+
     def _save_cache(self):
         """Cache'i dosyaya kaydet"""
         try:
             # Geçici dosyaya yaz, sonra atomic move
             temp_file = self.cache_file_path + ".tmp"
+
+            # FIXED: Safe JSON serialization
+            safe_cache_data = self._safe_json_serialize(self.cache_data)
+
             with open(temp_file, 'w', encoding='utf-8') as f:
                 # File lock ile güvenli yazma
                 fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-                json.dump(self.cache_data, f, indent=2, ensure_ascii=False)
+                json.dump(safe_cache_data, f, indent=2, ensure_ascii=False)
                 fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
             # Atomic move
@@ -51,6 +91,12 @@ class TrainingCacheManager:
 
         except Exception as e:
             print(f"Cache kaydetme hatası: {e}")
+            # Clean up temp file if it exists
+            if os.path.exists(temp_file):
+                try:
+                    os.remove(temp_file)
+                except:
+                    pass
 
     def generate_cache_key(
         self,

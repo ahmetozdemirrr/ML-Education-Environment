@@ -1,4 +1,4 @@
-// frontend/src/components/MetricsChart.js - FIXED VERSION
+// frontend/src/components/MetricsChart.js - COMPLETE FIXED VERSION
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -32,13 +32,92 @@ ChartJS.register(
   Filler
 );
 
+// Etiket kısaltma fonksiyonu
+const shortenLabel = (modelName, datasetName) => {
+  const modelShort = modelName
+    .replace('Logistic Regression', 'LR')
+    .replace('Decision Tree', 'DT')
+    .replace('Random Forest', 'RF')
+    .replace('Support Vector Machine', 'SVM')
+    .replace('K-Nearest Neighbor', 'KNN')
+    .replace('Artificial Neural Network', 'ANN')
+    .replace('Naive Bayes', 'NB')
+    .replace('Gradient Boosting', 'GB');
+
+  const datasetShort = datasetName
+    .replace('Dataset', '')
+    .replace('(Synthetic)', '(Syn)')
+    .replace('Two Moons', 'TwoMoons')
+    .trim();
+
+  return `${modelShort} (${datasetShort})`;
+};
+
+// FIXED: Metric değeri alma yardımcı fonksiyonu - Backend format'ına göre
+const getMetricValue = (result, metricName) => {
+  const metrics = result.metrics || {};
+
+  // Backend'den gelen format: {'Accuracy': 0.9333, 'Precision': 0.9333, 'ROC AUC': 0.95, 'F1-Score': 0.9333, 'Recall': 0.9333}
+  const possibleKeys = [];
+
+  switch(metricName) {
+    case 'accuracy':
+      possibleKeys.push('Accuracy', 'accuracy', 'ACCURACY');
+      break;
+    case 'precision':
+      possibleKeys.push('Precision', 'precision', 'PRECISION');
+      break;
+    case 'recall':
+      possibleKeys.push('Recall', 'recall', 'RECALL');
+      break;
+    case 'f1score':
+      possibleKeys.push('F1-Score', 'f1_score', 'f1score', 'F1Score', 'f1-score');
+      break;
+    case 'roc_auc':
+      possibleKeys.push('ROC AUC', 'roc_auc', 'ROC_AUC', 'roc-auc');
+      break;
+    default:
+      possibleKeys.push(
+        metricName,
+        metricName.toLowerCase(),
+        metricName.toUpperCase(),
+        metricName.replace('_', '-'),
+        metricName.replace('_', ' '),
+        metricName.charAt(0).toUpperCase() + metricName.slice(1)
+      );
+  }
+
+  for (const key of possibleKeys) {
+    if (metrics[key] !== undefined && metrics[key] !== null) {
+      return typeof metrics[key] === 'number' ? metrics[key] : 0;
+    }
+  }
+
+  console.warn(`Metric '${metricName}' not found in:`, Object.keys(metrics));
+  return 0;
+};
+
+// Unique results alma fonksiyonu
+const getUniqueResults = (results) => {
+  const seen = new Set();
+  return results.filter(result => {
+    if (!result.metrics || Object.keys(result.metrics).length === 0) {
+      console.warn('Result has no metrics:', result.modelName, result.datasetName);
+      return false;
+    }
+
+    const key = `${result.modelName}-${result.datasetName}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 const MetricsChart = ({ results }) => {
   const chartRef = useRef(null);
 
-  // FIXED: Chart cleanup effect with proper dependency
   useEffect(() => {
     return () => {
-      // Copy ref value to variable inside effect to avoid ESLint warnings
       const currentChart = chartRef.current;
       if (currentChart) {
         currentChart.destroy();
@@ -47,161 +126,242 @@ const MetricsChart = ({ results }) => {
   }, []);
 
   if (!results || results.length === 0) {
-      return <div className="chart-placeholder">No metrics data available</div>;
+    return <div className="chart-placeholder">No metrics data available</div>;
   }
 
-  // Filter results that have actual metrics data
   const resultsWithMetrics = results.filter(r => r.metrics && Object.keys(r.metrics).length > 0);
 
   if (resultsWithMetrics.length === 0) {
-      return (
-          <div className="chart-placeholder">
-              <p>No evaluation metrics available for charting.</p>
-              <p>Please run some evaluations first to see performance charts.</p>
-          </div>
-      );
+    return (
+      <div className="chart-placeholder">
+        <p>No evaluation metrics available for charting.</p>
+        <p>Please run some evaluations first to see performance charts.</p>
+        <p style={{fontSize: '0.8rem', color: '#666', marginTop: '10px'}}>
+          Debug: {results.length} total results, but none have metrics data
+        </p>
+      </div>
+    );
   }
 
-  const metricsData = resultsWithMetrics.map(result => ({
-    label: `${result.modelName} (${result.datasetName})`,
-    accuracy: result.metrics?.accuracy || result.metrics?.Accuracy || 0,
-    precision: result.metrics?.precision || result.metrics?.Precision || 0,
-    recall: result.metrics?.recall || result.metrics?.Recall || 0,
-    f1_score: result.metrics?.f1_score || result.metrics?.['F1-Score'] || 0,
-    roc_auc: result.metrics?.roc_auc || result.metrics?.['ROC AUC'] || 0  // BU SATIRI EKLE
-  }));
+  const uniqueResults = getUniqueResults(resultsWithMetrics);
 
+  // DEBUG: Log metrics keys
+  if (uniqueResults.length > 0) {
+    console.log('Available metrics keys:', Object.keys(uniqueResults[0].metrics));
+    console.log('Sample result metrics:', uniqueResults[0].metrics);
+  }
+
+  const metricKeys = ['accuracy', 'precision', 'recall', 'f1score', 'roc_auc'];
+  const metricLabels = ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC AUC'];
+  const metricColors = [
+    'rgba(239, 68, 68, 0.8)',   // Red
+    'rgba(59, 130, 246, 0.8)',  // Blue
+    'rgba(245, 158, 11, 0.8)',  // Yellow
+    'rgba(75, 85, 99, 0.8)',    // Gray
+    'rgba(168, 85, 247, 0.8)'   // Purple
+  ];
+
+  // Bar Chart Data
   const barData = {
-    labels: metricsData.map(d => d.label),
-    datasets: [
-      {
-        "label": "Accuracy",
-        "data": metricsData.map(d => d.accuracy),
-        "backgroundColor": "rgba(255, 99, 132, 0.6)",
-        "borderColor": "rgba(255, 99, 132, 1)",
-        "borderWidth": 1
-      },
-      {
-        "label": "Precision",
-        "data": metricsData.map(d => d.precision),
-        "backgroundColor": "rgba(54, 162, 235, 0.6)",
-        "borderColor": "rgba(54, 162, 235, 1)",
-        "borderWidth": 1
-      },
-      {
-        "label": "Recall",
-        "data": metricsData.map(d => d.recall),
-        "backgroundColor": "rgba(255, 205, 86, 0.6)",
-        "borderColor": "rgba(255, 205, 86, 1)",
-        "borderWidth": 1
-      },
-      {
-        "label": "F1-Score",
-        "data": metricsData.map(d => d.f1_score),
-        "backgroundColor": "rgba(0, 0, 0, 0.6)",
-        "borderColor": "rgba(0, 0, 0, 1)",
-        "borderWidth": 1
-      },
-      {
-        "label": "ROC AUC",
-        "data": metricsData.map(d => d.roc_auc),
-        "backgroundColor": "rgba(139, 0, 255, 0.6)",
-        "borderColor": "rgba(139, 0, 255, 1)",
-        "borderWidth": 1
-      }
-    ]
+    labels: uniqueResults.map(r => shortenLabel(r.modelName, r.datasetName)),
+    datasets: metricKeys.map((metric, index) => {
+      const data = uniqueResults.map(r => {
+        const value = getMetricValue(r, metric);
+        console.log(`${metric} for ${r.modelName}: ${value}`);
+        return value;
+      });
+
+      return {
+        label: metricLabels[index],
+        data: data,
+        backgroundColor: metricColors[index],
+        borderColor: metricColors[index].replace('0.8', '1'),
+        borderWidth: 1
+      };
+    })
   };
 
+  // Radar Chart Data
+  const generateColors = (count) => {
+    const colors = [];
+    for (let i = 0; i < count; i++) {
+      const hue = (i * 360 / count) % 360;
+      colors.push({
+        border: `hsl(${hue}, 70%, 50%)`,
+        bg: `hsla(${hue}, 70%, 50%, 0.2)`
+      });
+    }
+    return colors;
+  };
+
+  const colors = generateColors(uniqueResults.length);
+
   const radarData = {
-    labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC AUC'],
-    datasets: metricsData.slice(0, 5).map((data, index) => ({
-      label: data.label,
-      data: [data.accuracy, data.precision, data.recall, data.f1_score, data.roc_auc],
-      backgroundColor: index === 0 ? 'rgba(255, 99, 132, 0.2)' :
-                      index === 1 ? 'rgba(54, 162, 235, 0.2)' :
-                      index === 2 ? 'rgba(255, 205, 86, 0.2)' :
-                      index === 3 ? 'rgba(0, 0, 0, 0.2)' :
-                      'rgba(139, 0, 255, 0.2)',
-      borderColor: index === 0 ? 'rgba(255, 99, 132, 1)' :
-                     index === 1 ? 'rgba(54, 162, 235, 1)' :
-                     index === 2 ? 'rgba(255, 205, 86, 1)' :
-                     index === 3 ? 'rgba(0, 0, 0, 1)' :
-                     'rgba(139, 0, 255, 1)',
-      borderWidth: 2,
-      pointBackgroundColor: index === 0 ? 'rgba(255, 99, 132, 1)' :
-                           index === 1 ? 'rgba(54, 162, 235, 1)' :
-                           index === 2 ? 'rgba(255, 205, 86, 1)' :
-                           index === 3 ? 'rgba(0, 0, 0, 1)' :
-                           'rgba(139, 0, 255, 1)'
-    }))
+    labels: metricLabels,
+    datasets: uniqueResults.map((result, index) => {
+      const color = colors[index];
+      const data = metricKeys.map(metric => getMetricValue(result, metric));
+
+      return {
+        label: shortenLabel(result.modelName, result.datasetName),
+        data: data,
+        borderColor: color.border,
+        backgroundColor: color.bg,
+        borderWidth: 2,
+        pointBackgroundColor: color.border,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: color.border,
+        pointHoverBorderWidth: 2
+      };
+    })
   };
 
   return (
     <div className="metrics-chart-container">
       <h4>Performance Metrics Comparison</h4>
       <div className="chart-tabs">
+
+        {/* Bar Chart Section */}
         <div className="chart-section">
           <h5>Bar Chart Comparison</h5>
-          <Bar
-            ref={chartRef}
-            data={barData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              interaction: {
-                intersect: false,
-              },
-              plugins: {
-                legend: { position: 'top' },
-                title: { display: true, text: 'Model Performance Metrics' }
-              },
-              scales: {
-                y: { beginAtZero: true, max: 1 }
-              },
-              // FIXED: Add size constraints
-              aspectRatio: 2,
-              layout: {
-                padding: 10
-              }
-            }}
-            height={300}
-          />
+
+          {/* Chart */}
+          <div style={{ height: '350px', marginBottom: '20px' }}>
+            <Bar
+              ref={chartRef}
+              data={barData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false },
+                plugins: {
+                  legend: { position: 'top' },
+                  title: { display: true, text: 'Model Performance Metrics' }
+                },
+                scales: {
+                  y: { beginAtZero: true, max: 1.1 },
+                  x: {
+                    ticks: {
+                      maxRotation: 45,
+                      minRotation: 45,
+                      font: { size: 10 }
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
+
+          {/* Değerler Tablosu */}
+          <div className="chart-values-section">
+            <h6 style={{ margin: '0 0 12px 0', color: '#374151', fontSize: '1rem' }}>Exact Values</h6>
+            <div className="values-table-wrapper">
+              <table className="chart-values-table">
+                <thead>
+                  <tr>
+                    <th style={{ minWidth: '200px' }}>Model (Dataset)</th>
+                    <th>Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1-Score</th>
+                    <th>ROC AUC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {uniqueResults.map((result, index) => (
+                    <tr key={index}>
+                      <td className="model-name-cell">
+                        <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>
+                          {result.modelName}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                          {result.datasetName}
+                        </div>
+                      </td>
+                      {metricKeys.map((metric, metricIndex) => {
+                        const value = getMetricValue(result, metric);
+                        return (
+                          <td key={metricIndex} className="metric-value-cell">
+                            {value.toFixed(3)}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
-        {metricsData.length <= 5 && (
-          <div className="chart-section">
-            <h5>Radar Chart Comparison</h5>
+        {/* Radar Chart Section */}
+        <div className="chart-section">
+          <h5>Radar Chart Comparison</h5>
+          <div style={{ height: '400px', position: 'relative' }}>
             <Radar
               data={radarData}
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                  intersect: false,
-                },
                 plugins: {
-                  legend: { position: 'top' },
-                  title: { display: true, text: 'Performance Radar' }
+                  legend: {
+                    position: 'bottom',
+                    labels: {
+                      boxWidth: 12,
+                      font: { size: 10 },
+                      padding: 8,
+                      usePointStyle: true
+                    }
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        return `${context.dataset.label}: ${context.parsed.r.toFixed(3)}`;
+                      }
+                    }
+                  }
                 },
                 scales: {
                   r: {
                     beginAtZero: true,
                     max: 1,
+                    min: 0,
                     ticks: {
-                      stepSize: 0.2
+                      stepSize: 0.2,
+                      font: { size: 10 },
+                      backdropColor: 'transparent'
+                    },
+                    grid: {
+                      color: 'rgba(0, 0, 0, 0.1)',
+                      lineWidth: 1
+                    },
+                    angleLines: {
+                      color: 'rgba(0, 0, 0, 0.1)',
+                      lineWidth: 1
+                    },
+                    pointLabels: {
+                      font: { size: 11, weight: '500' },
+                      color: '#374151'
                     }
                   }
                 },
-                // FIXED: Add size constraints
-                aspectRatio: 1,
-                layout: {
-                  padding: 10
+                elements: {
+                  line: { borderWidth: 2 },
+                  point: { radius: 3, hoverRadius: 5 }
+                },
+                interaction: {
+                  intersect: false,
+                  mode: 'nearest'
                 }
               }}
-              height={300}
             />
           </div>
-        )}
+        </div>
+
       </div>
     </div>
   );
@@ -211,10 +371,8 @@ const PerformanceChart = ({ results }) => {
   const scatterChartRef = useRef(null);
   const lineChartRef = useRef(null);
 
-  // FIXED: Chart cleanup effect with proper dependencies
   useEffect(() => {
     return () => {
-      // Copy ref values to variables inside effect to avoid ESLint warnings
       const currentScatterChart = scatterChartRef.current;
       const currentLineChart = lineChartRef.current;
 
@@ -231,30 +389,117 @@ const PerformanceChart = ({ results }) => {
     return <div className="chart-placeholder">No performance data available</div>;
   }
 
-  const performanceData = results.map((result, index) => ({
-    x: result.fit_time_seconds || result.score_time_seconds || 0,
-    y: result.metrics?.accuracy || result.metrics?.Accuracy || 0,
-    label: result.modelName,
-    dataset: result.datasetName,
-    memory: result.memory_usage_mb || 0,
-    index
-  }));
-
-  const scatterData = {
-    datasets: [{
-      label: 'Accuracy vs Training Time',
-      data: performanceData,
-      backgroundColor: 'rgba(255, 99, 132, 0.6)',
-      borderColor: 'rgba(255, 99, 132, 1)',
-    }]
+  // Accuracy değerini almak için düzeltilmiş fonksiyon
+  const getAccuracy = (result) => {
+    const metrics = result.metrics || {};
+    return metrics.Accuracy || metrics.accuracy || metrics.ACCURACY || 0;
   };
 
+  // Dataset bazında gruplandırma
+  const datasetGroups = {};
+  results.forEach(result => {
+    const datasetName = result.datasetName;
+    if (!datasetGroups[datasetName]) {
+      datasetGroups[datasetName] = [];
+    }
+    datasetGroups[datasetName].push(result);
+  });
+
+  // Model renklerini tanımlama
+  const modelColors = {
+    'Decision Tree': 'rgba(255, 99, 132, 0.8)',
+    'Logistic Regression': 'rgba(54, 162, 235, 0.8)',
+    'SVM': 'rgba(255, 205, 86, 0.8)',
+    'K-Nearest Neighbor': 'rgba(75, 192, 192, 0.8)',
+    'Artificial Neural Network': 'rgba(153, 102, 255, 0.8)',
+    'Random Forest': 'rgba(255, 159, 64, 0.8)',
+    'Naive Bayes': 'rgba(199, 199, 199, 0.8)',
+    'Gradient Boosting': 'rgba(83, 102, 255, 0.8)'
+  };
+
+  const modelBorderColors = {
+    'Decision Tree': 'rgba(255, 99, 132, 1)',
+    'Logistic Regression': 'rgba(54, 162, 235, 1)',
+    'SVM': 'rgba(255, 205, 86, 1)',
+    'K-Nearest Neighbor': 'rgba(75, 192, 192, 1)',
+    'Artificial Neural Network': 'rgba(153, 102, 255, 1)',
+    'Random Forest': 'rgba(255, 159, 64, 1)',
+    'Naive Bayes': 'rgba(199, 199, 199, 1)',
+    'Gradient Boosting': 'rgba(83, 102, 255, 1)'
+  };
+
+  // Her dataset için scatter chart oluşturma
+  const renderScatterChart = (datasetName, datasetResults) => {
+    const modelGroups = {};
+    datasetResults.forEach(result => {
+      const modelName = result.modelName;
+      if (!modelGroups[modelName]) {
+        modelGroups[modelName] = [];
+      }
+      modelGroups[modelName].push({
+        x: result.fit_time_seconds || result.score_time_seconds || 0,
+        y: getAccuracy(result),
+        label: modelName,
+        dataset: datasetName,
+        memory: result.memory_usage_mb || 0
+      });
+    });
+
+    const datasets = Object.keys(modelGroups).map(modelName => ({
+      label: modelName,
+      data: modelGroups[modelName],
+      backgroundColor: modelColors[modelName] || 'rgba(128, 128, 128, 0.8)',
+      borderColor: modelBorderColors[modelName] || 'rgba(128, 128, 128, 1)',
+      borderWidth: 1,
+      pointRadius: 4,
+      pointHoverRadius: 5
+    }));
+
+    return (
+      <div key={`scatter-${datasetName}`} className="chart-section dataset-chart">
+        <h5>Accuracy vs Training Time - {datasetName}</h5>
+        <Scatter
+          data={{ datasets }}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { intersect: false },
+            plugins: {
+              legend: {
+                position: 'top',
+                display: true,
+                labels: { usePointStyle: true, padding: 20 }
+              },
+              title: { display: true, text: `Performance Trade-offs for ${datasetName}` },
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    const point = context.raw;
+                    return `${point.label}: Accuracy: ${point.y.toFixed(4)}, Time: ${point.x.toFixed(4)}s`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: { title: { display: true, text: 'Training Time (seconds)' }, beginAtZero: true },
+              y: { title: { display: true, text: 'Accuracy' }, beginAtZero: true, max: 1 }
+            },
+            aspectRatio: 1.5,
+            layout: { padding: 10 }
+          }}
+          height={350}
+        />
+      </div>
+    );
+  };
+
+  // Line chart için veri hazırlama
   const timeSeriesData = {
-    labels: results.map((_, idx) => `Run ${idx + 1}`),
+    labels: results.map(r => shortenLabel(r.modelName, r.datasetName)),
     datasets: [
       {
         label: 'Accuracy',
-        data: results.map(r => r.metrics?.accuracy || r.metrics?.Accuracy || 0),
+        data: results.map(r => getAccuracy(r)),
         borderColor: 'rgba(75, 192, 192, 1)',
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         yAxisID: 'y'
@@ -273,60 +518,23 @@ const PerformanceChart = ({ results }) => {
     <div className="performance-chart-container">
       <h4>Performance Analysis</h4>
 
-      <div className="chart-section">
-        <h5>Accuracy vs Training Time</h5>
-        <Scatter
-          ref={scatterChartRef}
-          data={scatterData}
-          options={{
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-              intersect: false,
-            },
-            plugins: {
-              legend: { position: 'top' },
-              title: { display: true, text: 'Performance Trade-offs' },
-              tooltip: {
-                callbacks: {
-                  label: (context) => {
-                    const point = performanceData[context.dataIndex];
-                    return `${point.label} (${point.dataset}): Accuracy: ${point.y.toFixed(3)}, Time: ${point.x.toFixed(3)}s`;
-                  }
-                }
-              }
-            },
-            scales: {
-              x: {
-                title: { display: true, text: 'Training Time (seconds)' }
-              },
-              y: {
-                title: { display: true, text: 'Accuracy' },
-                beginAtZero: true,
-                max: 1
-              }
-            },
-            // FIXED: Add size constraints
-            aspectRatio: 2,
-            layout: {
-              padding: 10
-            }
-          }}
-          height={300}
-        />
+      {/* Dataset bazında scatter plotlar */}
+      <div className="dataset-charts-grid">
+        {Object.keys(datasetGroups).map(datasetName =>
+          renderScatterChart(datasetName, datasetGroups[datasetName])
+        )}
       </div>
 
+      {/* Genel trend analizi */}
       <div className="chart-section">
-        <h5>Performance Over Time</h5>
+        <h5>Performance Over Time (All Results)</h5>
         <Line
           ref={lineChartRef}
           data={timeSeriesData}
           options={{
             responsive: true,
             maintainAspectRatio: false,
-            interaction: {
-              intersect: false,
-            },
+            interaction: { intersect: false },
             plugins: {
               legend: { position: 'top' },
               title: { display: true, text: 'Accuracy and Training Time Trends' }
@@ -349,11 +557,8 @@ const PerformanceChart = ({ results }) => {
                 beginAtZero: true
               }
             },
-            // FIXED: Add size constraints
             aspectRatio: 2,
-            layout: {
-              padding: 10
-            }
+            layout: { padding: 10 }
           }}
           height={300}
         />
@@ -367,9 +572,7 @@ const ConfusionMatrix = ({ results }) => {
     return <div className="chart-placeholder">No confusion matrix data available</div>;
   }
 
-  // FIXED: Better search for confusion matrix data in multiple possible locations
-  const resultWithMatrix = results.find(r => {
-    // Check multiple possible locations for confusion matrix data
+  const resultsWithMatrix = results.filter(r => {
     const locations = [
       r.plot_data?.confusion_matrix,
       r.enhanced_results?.visualization_data?.confusion_matrix,
@@ -386,130 +589,117 @@ const ConfusionMatrix = ({ results }) => {
     );
   });
 
-  if (!resultWithMatrix) {
+  if (resultsWithMatrix.length === 0) {
     return (
       <div className="confusion-matrix-container">
         <h4>Confusion Matrix</h4>
         <div className="no-matrix-data">
           <p>Confusion matrix data not available</p>
           <p>Backend might not be generating plot data correctly</p>
-          <p>Available data keys in first result:</p>
-          <pre style={{fontSize: '0.8em', maxHeight: '100px', overflow: 'auto'}}>
-            {results[0] ? JSON.stringify(Object.keys(results[0]), null, 2) : 'No results'}
-          </pre>
-          {results[0]?.plot_data && (
-            <>
-              <p>plot_data keys:</p>
-              <pre style={{fontSize: '0.8em', maxHeight: '100px', overflow: 'auto'}}>
-                {JSON.stringify(Object.keys(results[0].plot_data), null, 2)}
-              </pre>
-            </>
-          )}
         </div>
       </div>
     );
   }
 
-  // Find the confusion matrix data from the available locations
-  let matrixData = null;
-  const locations = [
-    resultWithMatrix.plot_data?.confusion_matrix,
-    resultWithMatrix.enhanced_results?.visualization_data?.confusion_matrix,
-    resultWithMatrix.enhanced_results?.plot_data?.confusion_matrix,
-    resultWithMatrix.plotData?.confusion_matrix
-  ];
+  const renderSingleConfusionMatrix = (result) => {
+    let matrixData = null;
+    const locations = [
+      result.plot_data?.confusion_matrix,
+      result.enhanced_results?.visualization_data?.confusion_matrix,
+      result.enhanced_results?.plot_data?.confusion_matrix,
+      result.plotData?.confusion_matrix
+    ];
 
-  for (const location of locations) {
-    if (location && location.matrix && location.labels) {
-      matrixData = location;
-      break;
+    for (const location of locations) {
+      if (location && location.matrix && location.labels) {
+        matrixData = location;
+        break;
+      }
     }
-  }
 
-  if (!matrixData) {
+    if (!matrixData) return null;
+
+    const matrix = matrixData.matrix;
+    const labels = matrixData.labels;
+
+    const getIntensityColor = (value, max) => {
+      const intensity = value / max;
+      return `rgba(59, 130, 246, ${0.1 + intensity * 0.8})`;
+    };
+
+    const maxValue = Math.max(...matrix.flat());
+
     return (
-      <div className="confusion-matrix-container">
-        <h4>Confusion Matrix</h4>
-        <div className="no-matrix-data">
-          <p>Confusion matrix structure invalid</p>
-          <p>Expected: {"{matrix: [[...]], labels: [...]}"}</p>
-        </div>
-      </div>
-    );
-  }
-
-  const matrix = matrixData.matrix;
-  const labels = matrixData.labels;
-
-  const getIntensityColor = (value, max) => {
-    const intensity = value / max;
-    return `rgba(59, 130, 246, ${0.1 + intensity * 0.8})`;
-  };
-
-  const maxValue = Math.max(...matrix.flat());
-
-  return (
-    <div className="confusion-matrix-container">
-      <h4>Confusion Matrix</h4>
-      <div className="matrix-info">
-        <span className="model-info">
-          {resultWithMatrix.modelName} on {resultWithMatrix.datasetName}
-        </span>
-      </div>
-
-      <div className="matrix-wrapper">
-        <div className="matrix-labels y-labels">
-          <div className="label-header">Actual</div>
-          {labels.map((label, idx) => (
-            <div key={idx} className="label">{label}</div>
-          ))}
+      <div key={result.configId || result.modelName} className="single-confusion-matrix">
+        <div className="matrix-info">
+          <h5>{result.modelName} on {result.datasetName}</h5>
         </div>
 
-        <div className="matrix-content">
-          <div className="matrix-labels x-labels">
-            <div className="label-header">Predicted</div>
+        <div className="matrix-wrapper">
+          <div className="matrix-labels y-labels">
+            <div className="label-header">Actual</div>
             {labels.map((label, idx) => (
               <div key={idx} className="label">{label}</div>
             ))}
           </div>
 
-          <div className="matrix-grid">
-            {matrix.map((row, rowIdx) => (
-              <div key={rowIdx} className="matrix-row">
-                {row.map((value, colIdx) => (
-                  <div
-                    key={`${rowIdx}-${colIdx}`}
-                    className={`matrix-cell ${rowIdx === colIdx ? 'diagonal' : ''}`}
-                    style={{ backgroundColor: getIntensityColor(value, maxValue) }}
-                  >
-                    {value}
-                  </div>
-                ))}
-              </div>
-            ))}
+          <div className="matrix-content">
+            <div className="matrix-labels x-labels">
+              <div className="label-header">Predicted</div>
+              {labels.map((label, idx) => (
+                <div key={idx} className="label">{label}</div>
+              ))}
+            </div>
+
+            <div className="matrix-grid">
+              {matrix.map((row, rowIdx) => (
+                <div key={rowIdx} className="matrix-row">
+                  {row.map((value, colIdx) => (
+                    <div
+                      key={`${rowIdx}-${colIdx}`}
+                      className={`matrix-cell ${rowIdx === colIdx ? 'diagonal' : ''}`}
+                      style={{ backgroundColor: getIntensityColor(value, maxValue) }}
+                    >
+                      {value}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="matrix-stats">
+          <div className="stat">
+            <span className="stat-label">Total Predictions:</span>
+            <span className="stat-value" style={{color: '#374151'}}>{matrix.flat().reduce((a, b) => a + b, 0)}</span>
+          </div>
+          <div className="stat">
+            <span className="stat-label">Correct Predictions:</span>
+            <span className="stat-value" style={{color: '#374151'}}>{matrix.reduce((sum, row, idx) => sum + row[idx], 0)}</span>
+          </div>
+          <div className="stat">
+            <span className="stat-label">Accuracy:</span>
+            <span className="stat-value" style={{color: '#374151'}}>
+              {((matrix.reduce((sum, row, idx) => sum + row[idx], 0) / matrix.flat().reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%
+            </span>
           </div>
         </div>
       </div>
+    );
+  };
 
-      <div className="matrix-stats">
-        <div className="stat">
-          <span className="stat-label">Total Predictions:</span>
-          <span className="stat-value" style={{color: '#374151'}}>{matrix.flat().reduce((a, b) => a + b, 0)}</span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Correct Predictions:</span>
-          <span className="stat-value" style={{color: '#374151'}}>{matrix.reduce((sum, row, idx) => sum + row[idx], 0)}</span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Accuracy:</span>
-          <span className="stat-value" style={{color: '#374151'}}>
-            {((matrix.reduce((sum, row, idx) => sum + row[idx], 0) / matrix.flat().reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%
-          </span>
-        </div>
+  return (
+    <div className="confusion-matrix-container">
+      <h4>Confusion Matrix</h4>
+      <div className="confusion-matrices-grid">
+        {resultsWithMatrix.map(result => renderSingleConfusionMatrix(result))}
       </div>
     </div>
   );
 };
+
+// MetricsChart.js dosyasındaki ComparisonTable component'ini bu kodla değiştir:
 
 const ComparisonTable = ({ results }) => {
   const [sortColumn, setSortColumn] = useState('accuracy');
@@ -526,35 +716,66 @@ const ComparisonTable = ({ results }) => {
     );
   }
 
-  const handleSort = (column) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('desc');
+  // Metrik değerlerini almak için düzeltilmiş fonksiyonlar
+  const getMetricValue = (result, metricType) => {
+    const metrics = result.metrics || {};
+
+    switch(metricType) {
+      case 'accuracy':
+        return metrics.Accuracy || metrics.accuracy || metrics.ACCURACY || 0;
+      case 'precision':
+        return metrics.Precision || metrics.precision || metrics.PRECISION || 0;
+      case 'recall':
+        return metrics.Recall || metrics.recall || metrics.RECALL || 0;
+      case 'f1_score':
+        return metrics['F1-Score'] || metrics.f1_score || metrics.f1score || metrics['F1Score'] || 0;
+      case 'roc_auc':
+        return metrics['ROC AUC'] || metrics.roc_auc || metrics['ROC_AUC'] || 0;
+      default:
+        return 0;
     }
   };
 
-  const getSortedResults = () => {
-    const sorted = [...results].sort((a, b) => {
+  // Dataset bazında gruplama
+  const datasetGroups = {};
+  results.forEach(result => {
+    const datasetName = result.datasetName;
+    if (!datasetGroups[datasetName]) {
+      datasetGroups[datasetName] = [];
+    }
+    datasetGroups[datasetName].push(result);
+  });
+
+  // Her dataset için en iyi modeli bulma
+  const getBestModelForDataset = (datasetResults) => {
+    return datasetResults.reduce((best, current) => {
+      const currentAcc = getMetricValue(current, 'accuracy');
+      const bestAcc = getMetricValue(best, 'accuracy');
+      return currentAcc > bestAcc ? current : best;
+    });
+  };
+
+  // Sorting fonksiyonu
+  const getSortedResults = (datasetResults) => {
+    return [...datasetResults].sort((a, b) => {
       let aVal, bVal;
 
       switch (sortColumn) {
         case 'accuracy':
-          aVal = a.metrics?.accuracy || a.metrics?.Accuracy || 0;
-          bVal = b.metrics?.accuracy || b.metrics?.Accuracy || 0;
+          aVal = getMetricValue(a, 'accuracy');
+          bVal = getMetricValue(b, 'accuracy');
           break;
         case 'precision':
-          aVal = a.metrics?.precision || a.metrics?.Precision || 0;
-          bVal = b.metrics?.precision || b.metrics?.Precision || 0;
+          aVal = getMetricValue(a, 'precision');
+          bVal = getMetricValue(b, 'precision');
           break;
         case 'recall':
-          aVal = a.metrics?.recall || a.metrics?.Recall || 0;
-          bVal = b.metrics?.recall || b.metrics?.Recall || 0;
+          aVal = getMetricValue(a, 'recall');
+          bVal = getMetricValue(b, 'recall');
           break;
         case 'f1_score':
-          aVal = a.metrics?.f1_score || a.metrics?.['F1-Score'] || 0;
-          bVal = b.metrics?.f1_score || b.metrics?.['F1-Score'] || 0;
+          aVal = getMetricValue(a, 'f1_score');
+          bVal = getMetricValue(b, 'f1_score');
           break;
         case 'time':
           aVal = a.fit_time_seconds || a.score_time_seconds || 0;
@@ -575,157 +796,226 @@ const ComparisonTable = ({ results }) => {
         return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
       }
     });
-
-    return sorted;
   };
 
-  const sortedResults = getSortedResults();
-  const bestResult = sortedResults[0];
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
 
   const SortIcon = ({ column }) => {
     if (sortColumn !== column) return <span className="sort-icon">⇅</span>;
     return sortDirection === 'asc' ? <span className="sort-icon">↑</span> : <span className="sort-icon">↓</span>;
   };
 
+  // Dataset bazında tablo render etme
+  const renderDatasetTable = (datasetName, datasetResults) => {
+    const sortedResults = getSortedResults(datasetResults);
+    const bestModel = getBestModelForDataset(datasetResults);
+
+    // Dataset istatistikleri
+    const avgAccuracy = datasetResults.reduce((sum, r) => sum + getMetricValue(r, 'accuracy'), 0) / datasetResults.length;
+    const bestAccuracy = Math.max(...datasetResults.map(r => getMetricValue(r, 'accuracy')));
+    const fastestTime = Math.min(...datasetResults.map(r => r.fit_time_seconds || r.score_time_seconds || Infinity));
+
+    return (
+      <div key={datasetName} className="dataset-comparison-section">
+        {/* Dataset Header */}
+        <div className="dataset-header">
+          <div className="dataset-info">
+            <h4>📊 {datasetName}</h4>
+            <div className="dataset-stats">
+              <span className="stat-chip">
+                <span className="stat-label">Models:</span>
+                <span className="stat-value">{datasetResults.length}</span>
+              </span>
+              <span className="stat-chip">
+                <span className="stat-label">Avg Accuracy:</span>
+                <span className="stat-value">{avgAccuracy.toFixed(3)}</span>
+              </span>
+              <span className="stat-chip">
+                <span className="stat-label">Best Accuracy:</span>
+                <span className="stat-value">{bestAccuracy.toFixed(3)}</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Best Performer for this dataset */}
+          <div className="dataset-best-performer">
+            <span className="best-crown"></span>
+            <div className="best-info">
+              <span className="best-label">Best Performer:</span>
+              <span className="best-model">{bestModel.modelName}</span>
+              <span className="best-accuracy">
+                ({getMetricValue(bestModel, 'accuracy').toFixed(3)} accuracy)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Dataset Table */}
+        <div className="comparison-table-wrapper">
+          <table className="comparison-table">
+            <thead>
+              <tr>
+                <th onClick={() => handleSort('model')} className="sortable">
+                  Model <SortIcon column="model" />
+                </th>
+                <th onClick={() => handleSort('accuracy')} className="sortable">
+                  Accuracy <SortIcon column="accuracy" />
+                </th>
+                <th onClick={() => handleSort('precision')} className="sortable">
+                  Precision <SortIcon column="precision" />
+                </th>
+                <th onClick={() => handleSort('recall')} className="sortable">
+                  Recall <SortIcon column="recall" />
+                </th>
+                <th onClick={() => handleSort('f1_score')} className="sortable">
+                  F1-Score <SortIcon column="f1_score" />
+                </th>
+                <th onClick={() => handleSort('time')} className="sortable">
+                  Time (s) <SortIcon column="time" />
+                </th>
+                <th>Memory (MB)</th>
+                <th>Cache</th>
+                <th>Performance</th>
+                <th>Rank</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedResults.map((result, index) => {
+                const accuracy = getMetricValue(result, 'accuracy');
+                const precision = getMetricValue(result, 'precision');
+                const recall = getMetricValue(result, 'recall');
+                const f1Score = getMetricValue(result, 'f1_score');
+                const time = result.fit_time_seconds || result.score_time_seconds || 0;
+                const memory = result.memory_usage_mb || 0;
+
+                const performanceLevel = accuracy >= 0.95 ? 'excellent' :
+                                       accuracy >= 0.90 ? 'good' :
+                                       accuracy >= 0.80 ? 'fair' : 'poor';
+
+                const isBest = result.configId === bestModel.configId;
+
+                return (
+                  <tr
+                    key={result.configId || index}
+                    className={isBest ? 'best-row dataset-best' : ''}
+                  >
+                    <td className="model-cell">
+                      <div className="model-name">{result.modelName}</div>
+                      {isBest && (
+                        <div className="dataset-best-badge">
+                          <span className="crown-icon"></span>
+                          BEST FOR {datasetName.toUpperCase()}
+                        </div>
+                      )}
+                    </td>
+                    <td className="metric-cell">
+                      <div className="metric-value">{accuracy.toFixed(4)}</div>
+                      <div className="metric-bar">
+                        <div
+                          className="metric-fill accuracy"
+                          style={{ width: `${accuracy * 100}%` }}
+                        ></div>
+                      </div>
+                    </td>
+                    <td className="metric-cell">
+                      <div className="metric-value">{precision.toFixed(4)}</div>
+                      <div className="metric-bar">
+                        <div
+                          className="metric-fill precision"
+                          style={{ width: `${precision * 100}%` }}
+                        ></div>
+                      </div>
+                    </td>
+                    <td className="metric-cell">
+                      <div className="metric-value">{recall.toFixed(4)}</div>
+                      <div className="metric-bar">
+                        <div
+                          className="metric-fill recall"
+                          style={{ width: `${recall * 100}%` }}
+                        ></div>
+                      </div>
+                    </td>
+                    <td className="metric-cell">
+                      <div className="metric-value">{f1Score.toFixed(4)}</div>
+                      <div className="metric-bar">
+                        <div
+                          className="metric-fill f1score"
+                          style={{ width: `${f1Score * 100}%` }}
+                        ></div>
+                      </div>
+                    </td>
+                    <td>{time.toFixed(3)}</td>
+                    <td>{memory.toFixed(1)}</td>
+                    <td>
+                      <span className={`cache-badge ${result.from_cache ? 'hit' : 'miss'}`}>
+                        {result.from_cache ? 'HIT' : 'MISS'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`performance-badge ${performanceLevel}`}>
+                        {performanceLevel.toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`rank-badge rank-${index + 1}`}>
+                        #{index + 1}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  // Genel özet istatistikler
+  const totalResults = results.length;
+  const datasetsCount = Object.keys(datasetGroups).length;
+  const overallBest = results.reduce((best, current) => {
+    const currentAcc = getMetricValue(current, 'accuracy');
+    const bestAcc = getMetricValue(best, 'accuracy');
+    return currentAcc > bestAcc ? current : best;
+  });
+
   return (
-    <div className="comparison-table-container">
-      <div className="comparison-header">
-        <h4>Model Comparison ({results.length} selected)</h4>
-        {bestResult && (
-          <div className="best-performer">
-            <span className="best-label">Best Performer:</span>
-            <span className="best-model">{bestResult.modelName}</span>
-            <span className="best-accuracy">
-              ({(bestResult.metrics?.accuracy || bestResult.metrics?.Accuracy || 0).toFixed(3)} accuracy)
+    <div className="comparison-tab">
+      {/* Global Header */}
+      <div className="comparison-global-header">
+        <div className="global-info">
+          <h3>🏆 Model Performance Comparison</h3>
+          <div className="global-stats">
+            <span className="global-stat">
+              <span className="stat-label">Total Models:</span>
+              <span className="stat-value">{totalResults}</span>
             </span>
-          </div>
-        )}
-      </div>
-
-      <div className="comparison-table-wrapper">
-        <table className="comparison-table">
-          <thead>
-            <tr>
-              <th onClick={() => handleSort('model')} className="sortable">
-                Model <SortIcon column="model" />
-              </th>
-              <th>Dataset</th>
-              <th onClick={() => handleSort('accuracy')} className="sortable">
-                Accuracy <SortIcon column="accuracy" />
-              </th>
-              <th onClick={() => handleSort('precision')} className="sortable">
-                Precision <SortIcon column="precision" />
-              </th>
-              <th onClick={() => handleSort('recall')} className="sortable">
-                Recall <SortIcon column="recall" />
-              </th>
-              <th onClick={() => handleSort('f1_score')} className="sortable">
-                F1-Score <SortIcon column="f1_score" />
-              </th>
-              <th onClick={() => handleSort('time')} className="sortable">
-                Time (s) <SortIcon column="time" />
-              </th>
-              <th>Memory (MB)</th>
-              <th>Cache</th>
-              <th>Performance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedResults.map((result, index) => {
-              const accuracy = result.metrics?.accuracy || result.metrics?.Accuracy || 0;
-              const precision = result.metrics?.precision || result.metrics?.Precision || 0;
-              const recall = result.metrics?.recall || result.metrics?.Recall || 0;
-              const f1Score = result.metrics?.f1_score || result.metrics?.['F1-Score'] || 0;
-              const time = result.fit_time_seconds || result.score_time_seconds || 0;
-              const memory = result.memory_usage_mb || 0;
-
-              const performanceLevel = accuracy >= 0.9 ? 'excellent' :
-                                     accuracy >= 0.8 ? 'good' :
-                                     accuracy >= 0.7 ? 'fair' : 'poor';
-
-              return (
-                <tr key={result.configId || index} className={index === 0 ? 'best-row' : ''}>
-                  <td className="model-cell">
-                    <div className="model-name">{result.modelName}</div>
-                    {index === 0 && <div className="best-badge">BEST</div>}
-                  </td>
-                  <td>{result.datasetName}</td>
-                  <td className="metric-cell">
-                    <div className="metric-value">{accuracy.toFixed(4)}</div>
-                    <div className="metric-bar">
-                      <div
-                        className="metric-fill accuracy"
-                        style={{ width: `${accuracy * 100}%` }}
-                      ></div>
-                    </div>
-                  </td>
-                  <td className="metric-cell">
-                    <div className="metric-value">{precision.toFixed(4)}</div>
-                    <div className="metric-bar">
-                      <div
-                        className="metric-fill precision"
-                        style={{ width: `${precision * 100}%` }}
-                      ></div>
-                    </div>
-                  </td>
-                  <td className="metric-cell">
-                    <div className="metric-value">{recall.toFixed(4)}</div>
-                    <div className="metric-bar">
-                      <div
-                        className="metric-fill recall"
-                        style={{ width: `${recall * 100}%` }}
-                      ></div>
-                    </div>
-                  </td>
-                  <td className="metric-cell">
-                    <div className="metric-value">{f1Score.toFixed(4)}</div>
-                    <div className="metric-bar">
-                      <div
-                        className="metric-fill f1score"
-                        style={{ width: `${f1Score * 100}%` }}
-                      ></div>
-                    </div>
-                  </td>
-                  <td>{time.toFixed(3)}</td>
-                  <td>{memory.toFixed(1)}</td>
-                  <td>
-                    <span className={`cache-badge ${result.from_cache ? 'hit' : 'miss'}`}>
-                      {result.from_cache ? 'HIT' : 'MISS'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`performance-badge ${performanceLevel}`}>
-                      {performanceLevel.toUpperCase()}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="comparison-summary">
-        <div className="summary-stats">
-          <div className="stat-item">
-            <span className="stat-label">Average Accuracy:</span>
-            <span className="stat-value">
-              {(sortedResults.reduce((sum, r) => sum + (r.metrics?.accuracy || r.metrics?.Accuracy || 0), 0) / sortedResults.length).toFixed(3)}
+            <span className="global-stat">
+              <span className="stat-label">Datasets:</span>
+              <span className="stat-value">{datasetsCount}</span>
             </span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Best Accuracy:</span>
-            <span className="stat-value">
-              {Math.max(...sortedResults.map(r => r.metrics?.accuracy || r.metrics?.Accuracy || 0)).toFixed(3)}
-            </span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Fastest Training:</span>
-            <span className="stat-value">
-              {Math.min(...sortedResults.map(r => r.fit_time_seconds || r.score_time_seconds || Infinity)).toFixed(3)}s
+            <span className="global-stat">
+              <span className="stat-label">Overall Champion:</span>
+              <span className="stat-value champion">{overallBest.modelName}</span>
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Dataset Sections */}
+      <div className="datasets-comparison-container">
+        {Object.keys(datasetGroups)
+          .sort()
+          .map(datasetName => renderDatasetTable(datasetName, datasetGroups[datasetName]))
+        }
       </div>
     </div>
   );

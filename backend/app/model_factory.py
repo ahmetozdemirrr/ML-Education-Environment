@@ -78,18 +78,35 @@ def run_model_pipeline(
             "enhanced_results": {"error": error_message}
         }
 
-    # FIXED: Convert numpy types to Python types for JSON serialization
+    # FIXED: Enhanced Convert numpy types to Python types for JSON serialization
     def convert_numpy_types(obj):
+        import math
+
         if isinstance(obj, dict):
             return {k: convert_numpy_types(v) for k, v in obj.items()}
         elif isinstance(obj, list):
             return [convert_numpy_types(item) for item in obj]
+        elif isinstance(obj, tuple):
+            return tuple(convert_numpy_types(item) for item in obj)
         elif isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):
-            return float(obj)
+            val = float(obj)
+            # Check for invalid float values that aren't JSON compliant
+            if math.isnan(val) or math.isinf(val):
+                return "N/A"
+            return val
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, (np.complex64, np.complex128)):
+            return str(obj)  # Complex numbers as strings
+        # Handle Python float edge cases
+        elif isinstance(obj, float):
+            if math.isnan(obj) or math.isinf(obj):
+                return "N/A"
+            return obj
         else:
             return obj
 
@@ -175,6 +192,92 @@ def run_model_pipeline(
                     lr_sklearn_params['random_state'] = int(random_state_val)
 
                 model_instance = LogisticRegression(**lr_sklearn_params)
+                model_instance.fit(data_dict.get("X_train"), data_dict.get("y_train"))
+
+            # FIXED: Add KNN implementation
+            elif algorithm_name == "K-Nearest Neighbor":
+                from sklearn.neighbors import KNeighborsClassifier
+
+                knn_sklearn_params = {}
+                knn_sklearn_params['n_neighbors'] = int(current_model_params.get('N Neighbors', 5))
+                weights_str = current_model_params.get('Weights', 'Uniform').lower()
+                knn_sklearn_params['weights'] = weights_str
+                knn_sklearn_params['algorithm'] = current_model_params.get('Algorithm', 'auto')
+                knn_sklearn_params['metric'] = current_model_params.get('Metric', 'minkowski')
+
+                # Minkowski metriği için p parametresi (varsayılan olarak 2 - euclidean)
+                if knn_sklearn_params['metric'] == 'minkowski':
+                    knn_sklearn_params['p'] = 2
+
+                model_instance = KNeighborsClassifier(**knn_sklearn_params)
+                model_instance.fit(data_dict.get("X_train"), data_dict.get("y_train"))
+
+            # FIXED: Add ANN implementation
+            elif algorithm_name == "Artificial Neural Network":
+                from sklearn.neural_network import MLPClassifier
+
+                ann_sklearn_params = {}
+
+                # Hidden layer sizes parsing (e.g., "100" -> (100,) or "50,20" -> (50, 20))
+                hidden_layers_str = current_model_params.get('Hidden Layer Sizes', '100').strip()
+                try:
+                    if ',' in hidden_layers_str:
+                        hidden_layers = tuple(int(x.strip()) for x in hidden_layers_str.split(',') if x.strip())
+                    else:
+                        hidden_layers = (int(hidden_layers_str),)
+                    ann_sklearn_params['hidden_layer_sizes'] = hidden_layers
+                except ValueError:
+                    ann_sklearn_params['hidden_layer_sizes'] = (100,)  # Varsayılan
+
+                activation_str = current_model_params.get('Activation', 'ReLU').lower()
+                if activation_str == 'relu':
+                    ann_sklearn_params['activation'] = 'relu'
+                elif activation_str == 'tanh':
+                    ann_sklearn_params['activation'] = 'tanh'
+                elif activation_str == 'logistic':
+                    ann_sklearn_params['activation'] = 'logistic'
+                elif activation_str == 'identity':
+                    ann_sklearn_params['activation'] = 'identity'
+                else:
+                    ann_sklearn_params['activation'] = 'relu'  # Varsayılan
+
+                solver_str = current_model_params.get('Solver', 'Adam').lower()
+                if solver_str == 'adam':
+                    ann_sklearn_params['solver'] = 'adam'
+                elif solver_str == 'sgd':
+                    ann_sklearn_params['solver'] = 'sgd'
+                elif solver_str == 'l-bfgs':
+                    ann_sklearn_params['solver'] = 'lbfgs'
+                else:
+                    ann_sklearn_params['solver'] = 'adam'  # Varsayılan
+
+                ann_sklearn_params['alpha'] = float(current_model_params.get('Alpha (L2 Penalty)', 0.0001))
+
+                # SGD için özel learning rate ayarı
+                if ann_sklearn_params['solver'] == 'sgd':
+                    learning_rate_str = current_model_params.get('Learning Rate (SGD)', 'Constant').lower()
+                    if learning_rate_str == 'constant':
+                        ann_sklearn_params['learning_rate'] = 'constant'
+                    elif learning_rate_str == 'invscaling':
+                        ann_sklearn_params['learning_rate'] = 'invscaling'
+                    elif learning_rate_str == 'adaptive':
+                        ann_sklearn_params['learning_rate'] = 'adaptive'
+                    else:
+                        ann_sklearn_params['learning_rate'] = 'constant'
+
+                # Max iterations (convergence için)
+                ann_sklearn_params['max_iter'] = 200
+
+                # Early stopping (büyük datasetler için yararlı)
+                ann_sklearn_params['early_stopping'] = True
+                ann_sklearn_params['validation_fraction'] = 0.1
+                ann_sklearn_params['n_iter_no_change'] = 10
+
+                random_state_val = global_settings.get('randomSeed')
+                if random_state_val is not None:
+                    ann_sklearn_params['random_state'] = int(random_state_val)
+
+                model_instance = MLPClassifier(**ann_sklearn_params)
                 model_instance.fit(data_dict.get("X_train"), data_dict.get("y_train"))
 
             else:

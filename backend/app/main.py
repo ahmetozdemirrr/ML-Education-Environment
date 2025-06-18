@@ -300,6 +300,7 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
     except Exception as e:
         return handle_error(e, simulation_data)
 
+# Update the create_enhanced_training_response function
 def create_enhanced_training_response(unique_run_id, simulation_data, ml_results, from_cache=False):
     """Create enhanced training response with additional metadata and insights"""
 
@@ -345,8 +346,64 @@ def create_enhanced_training_response(unique_run_id, simulation_data, ml_results
         "mode": "training"
     }
 
-    return response_payload
+    # FIXED: Validate response for JSON serialization
+    validated_response = validate_response_for_json(response_payload)
+    return validated_response
 
+def validate_response_for_json(response_payload):
+    """
+    Validate response payload for JSON serialization
+    """
+    import math
+    import numpy as np
+    import json
+
+    def clean_for_json(obj):
+        if isinstance(obj, dict):
+            return {k: clean_for_json(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [clean_for_json(item) for item in obj]
+        elif isinstance(obj, tuple):
+            return tuple(clean_for_json(item) for item in obj)
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            val = float(obj)
+            if math.isnan(val) or math.isinf(val):
+                return "N/A"
+            return val
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, (np.complex64, np.complex128)):
+            return str(obj)
+        elif isinstance(obj, float):
+            if math.isnan(obj) or math.isinf(obj):
+                return "N/A"
+            return obj
+        else:
+            return obj
+
+    cleaned_payload = clean_for_json(response_payload)
+
+    # Test JSON serialization
+    try:
+        json.dumps(cleaned_payload)
+        return cleaned_payload
+    except (ValueError, TypeError) as e:
+        print(f"WARNING: Response validation failed: {e}")
+        # Return a safe fallback response
+        return {
+            "status": "error",
+            "errorMessage": "JSON serialization error - response contained invalid values",
+            "execution_metadata": {
+                "timestamp": time.time(),
+                "error": True
+            }
+        }
+
+# Update the create_enhanced_evaluation_response function
 def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_results, from_cache=False):
     """Create enhanced evaluation response with additional metadata and insights"""
 
@@ -403,7 +460,9 @@ def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_resul
         "selected_metrics": simulation_data.params.get("selectedMetrics", [])
     }
 
-    return response_payload
+    # FIXED: Validate response for JSON serialization
+    validated_response = validate_response_for_json(response_payload)
+    return validated_response
 
 @app.get("/cache-stats")
 async def get_cache_statistics():

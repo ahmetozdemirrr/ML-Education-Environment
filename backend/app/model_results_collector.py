@@ -241,6 +241,8 @@ class ModelResultsCollector:
 
     def _calculate_basic_metrics(self, y_true, y_pred, y_pred_proba=None, selected_metrics=None):
         """Calculate basic evaluation metrics"""
+        import math
+
         metrics = {}
 
         if selected_metrics is None:
@@ -252,36 +254,52 @@ class ModelResultsCollector:
         for metric in selected_metrics:
             try:
                 if metric == "Accuracy":
-                    metrics["accuracy"] = round(accuracy_score(y_true, y_pred), 4)
+                    val = accuracy_score(y_true, y_pred)
+                    metrics["accuracy"] = float(round(val, 4))
                     print(f"DEBUG - Accuracy: {metrics['accuracy']}")
                 elif metric == "Precision":
-                    metrics["precision"] = round(precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
+                    val = precision_score(y_true, y_pred, average='macro', zero_division=0)
+                    metrics["precision"] = float(round(val, 4))
                     print(f"DEBUG - Precision: {metrics['precision']}")
                 elif metric == "Recall":
-                    metrics["recall"] = round(recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
+                    val = recall_score(y_true, y_pred, average='macro', zero_division=0)
+                    metrics["recall"] = float(round(val, 4))
                     print(f"DEBUG - Recall: {metrics['recall']}")
                 elif metric == "F1-Score":
-                    metrics["f1_score"] = round(f1_score(y_true, y_pred, average='macro', zero_division=0), 4)
+                    val = f1_score(y_true, y_pred, average='macro', zero_division=0)
+                    metrics["f1_score"] = float(round(val, 4))
                     print(f"DEBUG - F1-Score: {metrics['f1_score']}")
                 elif metric == "ROC AUC":
-                    # FIXED: Enhanced ROC AUC calculation with better debugging
+                    # FIXED: Enhanced ROC AUC calculation with proper type conversion
                     try:
                         if y_pred_proba is not None:
                             unique_classes = len(np.unique(y_true))
                             print(f"DEBUG - ROC AUC calculation: {unique_classes} classes, proba shape: {y_pred_proba.shape}")
 
                             if unique_classes == 2:
-                                metrics["roc_auc"] = round(roc_auc_score(y_true, y_pred_proba[:, 1]), 4)
-                                print(f"DEBUG - Binary ROC AUC: {metrics['roc_auc']}")
+                                val = roc_auc_score(y_true, y_pred_proba[:, 1])
+                                # FIXED: Check for invalid values before conversion
+                                if math.isnan(val) or math.isinf(val):
+                                    print(f"DEBUG - ROC AUC invalid value detected: {val}")
+                                    metrics["roc_auc"] = "N/A"
+                                else:
+                                    metrics["roc_auc"] = float(round(val, 4))
+                                    print(f"DEBUG - Binary ROC AUC: {metrics['roc_auc']}")
                             else:
-                                metrics["roc_auc"] = round(roc_auc_score(y_true, y_pred_proba, average='weighted', multi_class='ovr'), 4)
-                                print(f"DEBUG - Multi-class ROC AUC: {metrics['roc_auc']}")
+                                val = roc_auc_score(y_true, y_pred_proba, average='weighted', multi_class='ovr')
+                                # FIXED: Check for invalid values before conversion
+                                if math.isnan(val) or math.isinf(val):
+                                    print(f"DEBUG - ROC AUC invalid value detected: {val}")
+                                    metrics["roc_auc"] = "N/A"
+                                else:
+                                    metrics["roc_auc"] = float(round(val, 4))
+                                    print(f"DEBUG - Multi-class ROC AUC: {metrics['roc_auc']}")
                         else:
                             print(f"DEBUG - ROC AUC skipped: no probability predictions available")
                             metrics["roc_auc"] = "N/A"
                     except Exception as e:
                         print(f"DEBUG - ROC AUC calculation failed: {e}")
-                        metrics["roc_auc"] = f"Error: {str(e)}"
+                        metrics["roc_auc"] = "N/A"
 
             except Exception as e:
                 error_key = metric.lower().replace('-', '_').replace(' ', '_')
