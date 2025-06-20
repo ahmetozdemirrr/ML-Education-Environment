@@ -32,6 +32,10 @@ ChartJS.register(
   Filler
 );
 
+// =================================== //
+// HELPER FUNCTIONS
+// =================================== //
+
 // Etiket kısaltma fonksiyonu
 const shortenLabel = (modelName, datasetName) => {
   const modelShort = modelName
@@ -53,11 +57,30 @@ const shortenLabel = (modelName, datasetName) => {
   return `${modelShort} (${datasetShort})`;
 };
 
-// FIXED: Metric değeri alma yardımcı fonksiyonu - Backend format'ına göre
+// Gemini API çağrısı
+const callGeminiAnalysis = async (chartData, chartType, context = '') => {
+  try {
+    const response = await fetch('http://localhost:8000/analyze-with-gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chart_data: chartData,
+        chart_type: chartType,
+        context: context
+      })
+    });
+
+    const result = await response.json();
+    return result.analysis;
+  } catch (error) {
+    return `Analiz sırasında hata: ${error.message}`;
+  }
+};
+
+// Metric değeri alma - Backend format'ına uygun
 const getMetricValue = (result, metricName) => {
   const metrics = result.metrics || {};
 
-  // Backend'den gelen format: {'Accuracy': 0.9333, 'Precision': 0.9333, 'ROC AUC': 0.95, 'F1-Score': 0.9333, 'Recall': 0.9333}
   const possibleKeys = [];
 
   switch(metricName) {
@@ -93,16 +116,14 @@ const getMetricValue = (result, metricName) => {
     }
   }
 
-  console.warn(`Metric '${metricName}' not found in:`, Object.keys(metrics));
   return 0;
 };
 
-// Unique results alma fonksiyonu
+// Unique results alma
 const getUniqueResults = (results) => {
   const seen = new Set();
   return results.filter(result => {
     if (!result.metrics || Object.keys(result.metrics).length === 0) {
-      console.warn('Result has no metrics:', result.modelName, result.datasetName);
       return false;
     }
 
@@ -113,15 +134,22 @@ const getUniqueResults = (results) => {
   });
 };
 
+// =================================== //
+// METRICS CHART COMPONENT
+// =================================== //
+
 const MetricsChart = ({ results }) => {
-  const chartRef = useRef(null);
+  const barChartRef = useRef(null);
+  const radarChartRef = useRef(null);
+  const [geminiAnalysisBar, setGeminiAnalysisBar] = useState('');
+  const [geminiAnalysisRadar, setGeminiAnalysisRadar] = useState('');
+  const [isAnalyzingBar, setIsAnalyzingBar] = useState(false);
+  const [isAnalyzingRadar, setIsAnalyzingRadar] = useState(false);
 
   useEffect(() => {
     return () => {
-      const currentChart = chartRef.current;
-      if (currentChart) {
-        currentChart.destroy();
-      }
+      if (barChartRef.current) barChartRef.current.destroy();
+      if (radarChartRef.current) radarChartRef.current.destroy();
     };
   }, []);
 
@@ -136,20 +164,11 @@ const MetricsChart = ({ results }) => {
       <div className="chart-placeholder">
         <p>No evaluation metrics available for charting.</p>
         <p>Please run some evaluations first to see performance charts.</p>
-        <p style={{fontSize: '0.8rem', color: '#666', marginTop: '10px'}}>
-          Debug: {results.length} total results, but none have metrics data
-        </p>
       </div>
     );
   }
 
   const uniqueResults = getUniqueResults(resultsWithMetrics);
-
-  // DEBUG: Log metrics keys
-  if (uniqueResults.length > 0) {
-    console.log('Available metrics keys:', Object.keys(uniqueResults[0].metrics));
-    console.log('Sample result metrics:', uniqueResults[0].metrics);
-  }
 
   const metricKeys = ['accuracy', 'precision', 'recall', 'f1score', 'roc_auc'];
   const metricLabels = ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC AUC'];
@@ -165,11 +184,7 @@ const MetricsChart = ({ results }) => {
   const barData = {
     labels: uniqueResults.map(r => shortenLabel(r.modelName, r.datasetName)),
     datasets: metricKeys.map((metric, index) => {
-      const data = uniqueResults.map(r => {
-        const value = getMetricValue(r, metric);
-        console.log(`${metric} for ${r.modelName}: ${value}`);
-        return value;
-      });
+      const data = uniqueResults.map(r => getMetricValue(r, metric));
 
       return {
         label: metricLabels[index],
@@ -223,165 +238,242 @@ const MetricsChart = ({ results }) => {
   return (
     <div className="metrics-chart-container">
       <h4>Performance Metrics Comparison</h4>
-      <div className="chart-tabs">
 
-        {/* Bar Chart Section */}
-        <div className="chart-section">
-          <h5>Bar Chart Comparison</h5>
+      {/* Bar Chart Section */}
+      <div className="chart-section">
+        <h5>Bar Chart Comparison</h5>
 
-          {/* Chart */}
-          <div style={{ height: '350px', marginBottom: '20px' }}>
-            <Bar
-              ref={chartRef}
-              data={barData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { intersect: false },
-                plugins: {
-                  legend: { position: 'top' },
-                  title: { display: true, text: 'Model Performance Metrics' }
-                },
-                scales: {
-                  y: { beginAtZero: true, max: 1.1 },
-                  x: {
-                    ticks: {
-                      maxRotation: 45,
-                      minRotation: 45,
-                      font: { size: 10 }
-                    }
+        {/* Chart Container - SADECE CHART */}
+        <div style={{ height: '350px', marginBottom: '20px' }}>
+          <Bar
+            ref={barChartRef}
+            data={barData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { intersect: false },
+              plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Model Performance Metrics' }
+              },
+              scales: {
+                y: { beginAtZero: true, max: 1.1 },
+                x: {
+                  ticks: {
+                    maxRotation: 45,
+                    minRotation: 45,
+                    font: { size: 10 }
                   }
                 }
-              }}
-            />
-          </div>
+              }
+            }}
+          />
+        </div>
 
-          {/* Değerler Tablosu */}
-          <div className="chart-values-section">
-            <h6 style={{ margin: '0 0 12px 0', color: '#374151', fontSize: '1rem' }}>Exact Values</h6>
-            <div className="values-table-wrapper">
-              <table className="chart-values-table">
-                <thead>
-                  <tr>
-                    <th style={{ minWidth: '200px' }}>Model (Dataset)</th>
-                    <th>Accuracy</th>
-                    <th>Precision</th>
-                    <th>Recall</th>
-                    <th>F1-Score</th>
-                    <th>ROC AUC</th>
+        {/* Değerler Tablosu */}
+        <div className="chart-values-section">
+          <h6 style={{ margin: '0 0 12px 0', color: '#374151', fontSize: '1rem' }}>Exact Values</h6>
+          <div className="values-table-wrapper">
+            <table className="chart-values-table">
+              <thead>
+                <tr>
+                  <th style={{ minWidth: '200px' }}>Model (Dataset)</th>
+                  <th>Accuracy</th>
+                  <th>Precision</th>
+                  <th>Recall</th>
+                  <th>F1-Score</th>
+                  <th>ROC AUC</th>
+                </tr>
+              </thead>
+              <tbody>
+                {uniqueResults.map((result, index) => (
+                  <tr key={index}>
+                    <td className="model-name-cell">
+                      <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>
+                        {result.modelName}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                        {result.datasetName}
+                      </div>
+                    </td>
+                    {metricKeys.map((metric, metricIndex) => {
+                      const value = getMetricValue(result, metric);
+                      return (
+                        <td key={metricIndex} className="metric-value-cell">
+                          {value.toFixed(3)}
+                        </td>
+                      );
+                    })}
                   </tr>
-                </thead>
-                <tbody>
-                  {uniqueResults.map((result, index) => (
-                    <tr key={index}>
-                      <td className="model-name-cell">
-                        <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                          {result.modelName}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                          {result.datasetName}
-                        </div>
-                      </td>
-                      {metricKeys.map((metric, metricIndex) => {
-                        const value = getMetricValue(result, metric);
-                        return (
-                          <td key={metricIndex} className="metric-value-cell">
-                            {value.toFixed(3)}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Bar Chart Gemini Analysis - CHART SECTION İÇİNDE */}
+        <div className="gemini-analysis-section">
+          <button
+            className="gemini-explain-btn"
+            onClick={async () => {
+              setIsAnalyzingBar(true);
+              const chartData = {
+                models: uniqueResults.map(r => ({
+                  name: shortenLabel(r.modelName, r.datasetName),
+                  metrics: {
+                    accuracy: getMetricValue(r, 'accuracy'),
+                    precision: getMetricValue(r, 'precision'),
+                    recall: getMetricValue(r, 'recall'),
+                    f1_score: getMetricValue(r, 'f1score'),
+                    roc_auc: getMetricValue(r, 'roc_auc')
+                  }
+                }))
+              };
+              const analysis = await callGeminiAnalysis(chartData, 'bar_chart', 'Bar chart - model performans karşılaştırması');
+              setGeminiAnalysisBar(analysis);
+              setIsAnalyzingBar(false);
+            }}
+            disabled={isAnalyzingBar}
+          >
+            {isAnalyzingBar ? '🤖 Analiz ediliyor...' : '🤖 Explain With Gemini'}
+          </button>
+
+          {geminiAnalysisBar && (
+            <div className="gemini-analysis-result">
+              <h6>🤖 Gemini AI Analysis:</h6>
+              <div className="analysis-content">
+                {geminiAnalysisBar.split('\n').map((line, index) => (
+                  <p key={index}>{line}</p>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
+      </div>
 
-        {/* Radar Chart Section */}
-        <div className="chart-section">
-          <h5>Radar Chart Comparison</h5>
-          <div style={{ height: '400px', position: 'relative' }}>
-            <Radar
-              data={radarData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: 'bottom',
-                    labels: {
-                      boxWidth: 12,
-                      font: { size: 10 },
-                      padding: 8,
-                      usePointStyle: true
-                    }
-                  },
-                  tooltip: {
-                    callbacks: {
-                      label: function(context) {
-                        return `${context.dataset.label}: ${context.parsed.r.toFixed(3)}`;
-                      }
-                    }
+      {/* Radar Chart Section */}
+      <div className="chart-section">
+        <h5>Radar Chart Comparison</h5>
+
+        {/* Chart Container - SADECE CHART */}
+        <div style={{ height: '400px' }}>
+          <Radar
+            ref={radarChartRef}
+            data={radarData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: {
+                    boxWidth: 12,
+                    font: { size: 10 },
+                    padding: 8,
+                    usePointStyle: true
                   }
                 },
-                scales: {
-                  r: {
-                    beginAtZero: true,
-                    max: 1,
-                    min: 0,
-                    ticks: {
-                      stepSize: 0.2,
-                      font: { size: 10 },
-                      backdropColor: 'transparent'
-                    },
-                    grid: {
-                      color: 'rgba(0, 0, 0, 0.1)',
-                      lineWidth: 1
-                    },
-                    angleLines: {
-                      color: 'rgba(0, 0, 0, 0.1)',
-                      lineWidth: 1
-                    },
-                    pointLabels: {
-                      font: { size: 11, weight: '500' },
-                      color: '#374151'
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      return `${context.dataset.label}: ${context.parsed.r.toFixed(3)}`;
                     }
                   }
-                },
-                elements: {
-                  line: { borderWidth: 2 },
-                  point: { radius: 3, hoverRadius: 5 }
-                },
-                interaction: {
-                  intersect: false,
-                  mode: 'nearest'
                 }
-              }}
-            />
-          </div>
+              },
+              scales: {
+                r: {
+                  beginAtZero: true,
+                  max: 1,
+                  min: 0,
+                  ticks: {
+                    stepSize: 0.2,
+                    font: { size: 10 },
+                    backdropColor: 'transparent'
+                  },
+                  grid: {
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    lineWidth: 1
+                  },
+                  angleLines: {
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    lineWidth: 1
+                  },
+                  pointLabels: {
+                    font: { size: 11, weight: '500' },
+                    color: '#374151'
+                  }
+                }
+              },
+              elements: {
+                line: { borderWidth: 2 },
+                point: { radius: 3, hoverRadius: 5 }
+              },
+              interaction: {
+                intersect: false,
+                mode: 'nearest'
+              }
+            }}
+          />
         </div>
 
+        {/* Radar Chart Gemini Analysis - CHART SECTION İÇİNDE */}
+        <div className="gemini-analysis-section">
+          <button
+            className="gemini-explain-btn"
+            onClick={async () => {
+              setIsAnalyzingRadar(true);
+              const chartData = {
+                models: uniqueResults.map(r => ({
+                  name: shortenLabel(r.modelName, r.datasetName),
+                  metrics: {
+                    accuracy: getMetricValue(r, 'accuracy'),
+                    precision: getMetricValue(r, 'precision'),
+                    recall: getMetricValue(r, 'recall'),
+                    f1_score: getMetricValue(r, 'f1score'),
+                    roc_auc: getMetricValue(r, 'roc_auc')
+                  }
+                }))
+              };
+              const analysis = await callGeminiAnalysis(chartData, 'radar_chart', 'Radar chart - tüm modellerin performans karşılaştırması');
+              setGeminiAnalysisRadar(analysis);
+              setIsAnalyzingRadar(false);
+            }}
+            disabled={isAnalyzingRadar}
+          >
+            {isAnalyzingRadar ? '🤖 Analiz ediliyor...' : '🤖 Explain With Gemini'}
+          </button>
+
+          {geminiAnalysisRadar && (
+            <div className="gemini-analysis-result">
+              <h6>🤖 Gemini AI Analysis:</h6>
+              <div className="analysis-content">
+                {geminiAnalysisRadar.split('\n').map((line, index) => (
+                  <p key={index}>{line}</p>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
+// =================================== //
+// PERFORMANCE CHART COMPONENT
+// =================================== //
+
 const PerformanceChart = ({ results }) => {
   const scatterChartRef = useRef(null);
   const lineChartRef = useRef(null);
+  const [geminiAnalysis, setGeminiAnalysis] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     return () => {
-      const currentScatterChart = scatterChartRef.current;
-      const currentLineChart = lineChartRef.current;
-
-      if (currentScatterChart) {
-        currentScatterChart.destroy();
-      }
-      if (currentLineChart) {
-        currentLineChart.destroy();
-      }
+      if (scatterChartRef.current) scatterChartRef.current.destroy();
+      if (lineChartRef.current) lineChartRef.current.destroy();
     };
   }, []);
 
@@ -389,7 +481,7 @@ const PerformanceChart = ({ results }) => {
     return <div className="chart-placeholder">No performance data available</div>;
   }
 
-  // Accuracy değerini almak için düzeltilmiş fonksiyon
+  // Accuracy değerini alma
   const getAccuracy = (result) => {
     const metrics = result.metrics || {};
     return metrics.Accuracy || metrics.accuracy || metrics.ACCURACY || 0;
@@ -405,7 +497,7 @@ const PerformanceChart = ({ results }) => {
     datasetGroups[datasetName].push(result);
   });
 
-  // Model renklerini tanımlama
+  // Model renkleri
   const modelColors = {
     'Decision Tree': 'rgba(255, 99, 132, 0.8)',
     'Logistic Regression': 'rgba(54, 162, 235, 0.8)',
@@ -428,7 +520,7 @@ const PerformanceChart = ({ results }) => {
     'Gradient Boosting': 'rgba(83, 102, 255, 1)'
   };
 
-  // Her dataset için scatter chart oluşturma
+  // Dataset scatter chart render
   const renderScatterChart = (datasetName, datasetResults) => {
     const modelGroups = {};
     datasetResults.forEach(result => {
@@ -458,42 +550,43 @@ const PerformanceChart = ({ results }) => {
     return (
       <div key={`scatter-${datasetName}`} className="chart-section dataset-chart">
         <h5>Accuracy vs Training Time - {datasetName}</h5>
-        <Scatter
-          data={{ datasets }}
-          options={{
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { intersect: false },
-            plugins: {
-              legend: {
-                position: 'top',
-                display: true,
-                labels: { usePointStyle: true, padding: 20 }
-              },
-              title: { display: true, text: `Performance Trade-offs for ${datasetName}` },
-              tooltip: {
-                callbacks: {
-                  label: (context) => {
-                    const point = context.raw;
-                    return `${point.label}: Accuracy: ${point.y.toFixed(4)}, Time: ${point.x.toFixed(4)}s`;
+
+        {/* Chart Container - SADECE CHART */}
+        <div style={{ height: '350px' }}>
+          <Scatter
+            data={{ datasets }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { intersect: false },
+              plugins: {
+                legend: {
+                  position: 'top',
+                  display: true,
+                  labels: { usePointStyle: true, padding: 20 }
+                },
+                title: { display: true, text: `Performance Trade-offs for ${datasetName}` },
+                tooltip: {
+                  callbacks: {
+                    label: (context) => {
+                      const point = context.raw;
+                      return `${point.label}: Accuracy: ${point.y.toFixed(4)}, Time: ${point.x.toFixed(4)}s`;
+                    }
                   }
                 }
+              },
+              scales: {
+                x: { title: { display: true, text: 'Training Time (seconds)' }, beginAtZero: true },
+                y: { title: { display: true, text: 'Accuracy' }, beginAtZero: true, max: 1 }
               }
-            },
-            scales: {
-              x: { title: { display: true, text: 'Training Time (seconds)' }, beginAtZero: true },
-              y: { title: { display: true, text: 'Accuracy' }, beginAtZero: true, max: 1 }
-            },
-            aspectRatio: 1.5,
-            layout: { padding: 10 }
-          }}
-          height={350}
-        />
+            }}
+          />
+        </div>
       </div>
     );
   };
 
-  // Line chart için veri hazırlama
+  // Line chart data
   const timeSeriesData = {
     labels: results.map(r => shortenLabel(r.modelName, r.datasetName)),
     datasets: [
@@ -528,46 +621,90 @@ const PerformanceChart = ({ results }) => {
       {/* Genel trend analizi */}
       <div className="chart-section">
         <h5>Performance Over Time (All Results)</h5>
-        <Line
-          ref={lineChartRef}
-          data={timeSeriesData}
-          options={{
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { intersect: false },
-            plugins: {
-              legend: { position: 'top' },
-              title: { display: true, text: 'Accuracy and Training Time Trends' }
-            },
-            scales: {
-              y: {
-                type: 'linear',
-                display: true,
-                position: 'left',
-                title: { display: true, text: 'Accuracy' },
-                beginAtZero: true,
-                max: 1
+
+        {/* Chart Container - SADECE CHART */}
+        <div style={{ height: '300px' }}>
+          <Line
+            ref={lineChartRef}
+            data={timeSeriesData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { intersect: false },
+              plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Accuracy and Training Time Trends' }
               },
-              y1: {
-                type: 'linear',
-                display: true,
-                position: 'right',
-                title: { display: true, text: 'Training Time (s)' },
-                grid: { drawOnChartArea: false },
-                beginAtZero: true
+              scales: {
+                y: {
+                  type: 'linear',
+                  display: true,
+                  position: 'left',
+                  title: { display: true, text: 'Accuracy' },
+                  beginAtZero: true,
+                  max: 1
+                },
+                y1: {
+                  type: 'linear',
+                  display: true,
+                  position: 'right',
+                  title: { display: true, text: 'Training Time (s)' },
+                  grid: { drawOnChartArea: false },
+                  beginAtZero: true
+                }
               }
-            },
-            aspectRatio: 2,
-            layout: { padding: 10 }
-          }}
-          height={300}
-        />
+            }}
+          />
+        </div>
+
+        {/* Performance Trends Gemini Analysis */}
+        <div className="gemini-analysis-section">
+          <button
+            className="gemini-explain-btn"
+            onClick={async () => {
+              setIsAnalyzing(true);
+              const trendsData = {
+                time_series: results.map((result, index) => ({
+                  run: index + 1,
+                  model: result.modelName,
+                  dataset: result.datasetName,
+                  accuracy: getAccuracy(result),
+                  time: result.fit_time_seconds || result.score_time_seconds || 0
+                }))
+              };
+              const analysis = await callGeminiAnalysis(trendsData, 'performance_trends', 'Zaman içinde performans trendleri analizi');
+              setGeminiAnalysis(analysis);
+              setIsAnalyzing(false);
+            }}
+            disabled={isAnalyzing}
+          >
+            {isAnalyzing ? '🤖 Analiz ediliyor...' : '🤖 Explain With Gemini'}
+          </button>
+
+          {geminiAnalysis && (
+            <div className="gemini-analysis-result">
+              <h6>🤖 Gemini AI Analysis:</h6>
+              <div className="analysis-content">
+                {geminiAnalysis.split('\n').map((line, index) => (
+                  <p key={index}>{line}</p>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
+// =================================== //
+// CONFUSION MATRIX COMPONENT
+// =================================== //
+
 const ConfusionMatrix = ({ results }) => {
+  const [geminiAnalysis, setGeminiAnalysis] = useState({});
+  const [isAnalyzing, setIsAnalyzing] = useState({});
+
   if (!results || results.length === 0) {
     return <div className="chart-placeholder">No confusion matrix data available</div>;
   }
@@ -621,6 +758,7 @@ const ConfusionMatrix = ({ results }) => {
 
     const matrix = matrixData.matrix;
     const labels = matrixData.labels;
+    const resultId = result.configId || result.modelName;
 
     const getIntensityColor = (value, max) => {
       const intensity = value / max;
@@ -630,11 +768,13 @@ const ConfusionMatrix = ({ results }) => {
     const maxValue = Math.max(...matrix.flat());
 
     return (
-      <div key={result.configId || result.modelName} className="single-confusion-matrix">
+      <div key={resultId} className="single-confusion-matrix">
+        {/* Matrix Info */}
         <div className="matrix-info">
           <h5>{result.modelName} on {result.datasetName}</h5>
         </div>
 
+        {/* Matrix Wrapper */}
         <div className="matrix-wrapper">
           <div className="matrix-labels y-labels">
             <div className="label-header">Actual</div>
@@ -669,6 +809,7 @@ const ConfusionMatrix = ({ results }) => {
           </div>
         </div>
 
+        {/* Matrix Stats */}
         <div className="matrix-stats">
           <div className="stat">
             <span className="stat-label">Total Predictions:</span>
@@ -685,6 +826,42 @@ const ConfusionMatrix = ({ results }) => {
             </span>
           </div>
         </div>
+
+        {/* Confusion Matrix Gemini Analysis */}
+        <div className="gemini-analysis-section">
+          <button
+            className="gemini-explain-btn"
+            onClick={async () => {
+              setIsAnalyzing(prev => ({ ...prev, [resultId]: true }));
+              const confusionData = {
+                matrix: matrix,
+                labels: labels,
+                model: result.modelName,
+                dataset: result.datasetName,
+                total_predictions: matrix.flat().reduce((a, b) => a + b, 0),
+                correct_predictions: matrix.reduce((sum, row, idx) => sum + row[idx], 0),
+                accuracy: ((matrix.reduce((sum, row, idx) => sum + row[idx], 0) / matrix.flat().reduce((a, b) => a + b, 0)) * 100).toFixed(1)
+              };
+              const analysis = await callGeminiAnalysis(confusionData, 'confusion_matrix', `${result.modelName} modeli için confusion matrix analizi`);
+              setGeminiAnalysis(prev => ({ ...prev, [resultId]: analysis }));
+              setIsAnalyzing(prev => ({ ...prev, [resultId]: false }));
+            }}
+            disabled={isAnalyzing[resultId]}
+          >
+            {isAnalyzing[resultId] ? '🤖 Analiz ediliyor...' : '🤖 Explain With Gemini'}
+          </button>
+
+          {geminiAnalysis[resultId] && (
+            <div className="gemini-analysis-result">
+              <h6>🤖 Gemini AI Analysis:</h6>
+              <div className="analysis-content">
+                {geminiAnalysis[resultId].split('\n').map((line, index) => (
+                  <p key={index}>{line}</p>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -699,7 +876,9 @@ const ConfusionMatrix = ({ results }) => {
   );
 };
 
-// MetricsChart.js dosyasındaki ComparisonTable component'ini bu kodla değiştir:
+// =================================== //
+// COMPARISON TABLE COMPONENT
+// =================================== //
 
 const ComparisonTable = ({ results }) => {
   const [sortColumn, setSortColumn] = useState('accuracy');
@@ -716,7 +895,7 @@ const ComparisonTable = ({ results }) => {
     );
   }
 
-  // Metrik değerlerini almak için düzeltilmiş fonksiyonlar
+  // Metrik değerlerini almak için fonksiyonlar
   const getMetricValue = (result, metricType) => {
     const metrics = result.metrics || {};
 
@@ -820,7 +999,6 @@ const ComparisonTable = ({ results }) => {
     // Dataset istatistikleri
     const avgAccuracy = datasetResults.reduce((sum, r) => sum + getMetricValue(r, 'accuracy'), 0) / datasetResults.length;
     const bestAccuracy = Math.max(...datasetResults.map(r => getMetricValue(r, 'accuracy')));
-    const fastestTime = Math.min(...datasetResults.map(r => r.fit_time_seconds || r.score_time_seconds || Infinity));
 
     return (
       <div key={datasetName} className="dataset-comparison-section">
@@ -846,7 +1024,7 @@ const ComparisonTable = ({ results }) => {
 
           {/* Best Performer for this dataset */}
           <div className="dataset-best-performer">
-            <span className="best-crown"></span>
+            <span className="best-crown">👑</span>
             <div className="best-info">
               <span className="best-label">Best Performer:</span>
               <span className="best-model">{bestModel.modelName}</span>
@@ -910,7 +1088,7 @@ const ComparisonTable = ({ results }) => {
                       <div className="model-name">{result.modelName}</div>
                       {isBest && (
                         <div className="dataset-best-badge">
-                          <span className="crown-icon"></span>
+                          <span className="crown-icon">👑</span>
                           BEST FOR {datasetName.toUpperCase()}
                         </div>
                       )}
@@ -1020,6 +1198,10 @@ const ComparisonTable = ({ results }) => {
     </div>
   );
 };
+
+// =================================== //
+// EXPORTS
+// =================================== //
 
 export default MetricsChart;
 export { PerformanceChart, ConfusionMatrix, ComparisonTable };

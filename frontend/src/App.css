@@ -10,6 +10,13 @@ body {
   color: #1f2937;
   font-size: 14px;
   line-height: 1.5;
+  transition: all 0.3s ease;
+}
+
+/* Dark mode body */
+.dark-mode body {
+  background-color: #111827;
+  color: #f9fafb;
 }
 
 code {
@@ -25,6 +32,12 @@ code {
   min-height: calc(100vh - 40px);
   box-sizing: border-box;
   align-items: flex-start;
+  transition: all 0.3s ease;
+}
+
+/* Dark mode app container */
+.dark-mode .app-container {
+  background-color: #111827;
 }
 
 /* --- Sütunlar --- */
@@ -64,9 +77,15 @@ code {
   border-radius: 4px;
   transition: background-color 0.15s ease;
 }
+
 .model-label-container:hover,
 .dataset-label-container:hover {
    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .model-label-container:hover,
+.dark-mode .dataset-label-container:hover {
+   background-color: rgba(255, 255, 255, 0.1);
 }
 
 .model-label-container input[type="checkbox"],
@@ -99,8 +118,17 @@ code {
   transition: color 0.2s ease;
   user-select: none;
 }
+
 .info-icon:hover {
   color: #e2e8f0;
+}
+
+.dark-mode .info-icon {
+  color: #d1d5db;
+}
+
+.dark-mode .info-icon:hover {
+  color: #f3f4f6;
 }
 
 /* Tooltip - Portal İçin Sadeleştirilmiş Stil */
@@ -117,6 +145,13 @@ code {
   box-shadow: 0 4px 8px rgba(0,0,0,0.4);
   z-index: 1100;
   position: fixed;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .tooltip {
+  background-color: #374151;
+  color: #f9fafb;
+  border: 1px solid #4b5563;
 }
 
 /* --- Genel Panel Stilleri --- */
@@ -125,6 +160,13 @@ code {
   background-color: #ffffff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
   padding: 0;
+  transition: all 0.3s ease;
+}
+
+/* Dark mode panel */
+.dark-mode .panel {
+  background-color: #1f2937;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
 }
 
 /* --- Yan Paneller (Models, Datasets, Settings) --- */
@@ -137,18 +179,28 @@ code {
   display: flex;
   flex-direction: column;
   border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .models-panel,
+.dark-mode .datasets-panel,
+.dark-mode .settings-panel {
+  background-color: #374151;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
 }
 
 .models-panel {
-  max-height: 50vh; /* 45vh'den 50vh'ye artırıldı */
+  max-height: 50vh;
   overflow-y: auto;
   flex-shrink: 0;
 }
+
 .settings-panel {
-  max-height: 55vh; /* 40vh'den 55vh'ye artırıldı */
+  max-height: 55vh;
   overflow-y: auto;
   flex-shrink: 0;
 }
+
 .datasets-panel {
   max-height: 55vh;
   overflow-y: auto;
@@ -161,7 +213,9 @@ code {
   font-weight: 600;
   flex-shrink: 0;
   border-bottom: 1px solid #718096;
+  transition: all 0.3s ease;
 }
+
 .models-panel h2,
 .datasets-panel h2,
 .settings-panel h2 {
@@ -170,6 +224,14 @@ code {
   top: 0;
   background-color: #4a5568;
   z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .models-panel h2,
+.dark-mode .datasets-panel h2,
+.dark-mode .settings-panel h2 {
+  background-color: #374151;
+  border-bottom-color: #6b7280;
 }
 
 /* Liste Stilleri */
@@ -180,42 +242,74 @@ code {
   padding: 0 0 10px 0;
   margin: 0;
 }
-.models-panel ul, .datasets-panel ul {
-    padding-bottom: 10px;
-    padding-right: 5px;
-    &::-webkit-scrollbar { width: 8px; }
-    &::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
-    &::-webkit-scrollbar-thumb { background-color: rgba(160, 174, 192, 0.6); border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
-    &::-webkit-scrollbar-thumb:hover { background-color: rgba(160, 174, 192, 0.8); }
-    scrollbar-width: thin;
-    scrollbar-color: rgba(160, 174, 192, 0.6) rgba(255, 255, 255, 0.05);
+
+.models-panel ul,
+.datasets-panel ul {
+  padding-bottom: 10px;
+  padding-right: 5px;
 }
+
+.models-panel ul::-webkit-scrollbar,
+.datasets-panel ul::-webkit-scrollbar {
+  width: 8px;
+}
+
+.models-panel ul::-webkit-scrollbar-track,
+.datasets-panel ul::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.models-panel ul::-webkit-scrollbar-thumb,
+.datasets-panel ul::-webkit-scrollbar-thumb {
+  background-color: rgba(160, 174, 192, 0.6);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.models-panel ul::-webkit-scrollbar-thumb:hover,
+.datasets-panel ul::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(160, 174, 192, 0.8);
+}
+
 .settings-list {
   padding: 10px 20px 15px 20px;
 }
 
-/* Radio Group Stilleri - DÜZELTİLDİ */
+/* Radio Group Stilleri */
 .radio-group {
   display: flex;
-  gap: 10px; /* 15px'den 10px'ye düşürüldü */
+  gap: 10px;
   align-items: center;
-  flex-wrap: wrap; /* Uzun metinler için wrap eklendi */
+  flex-wrap: wrap;
 }
+
 .radio-group label {
   display: flex;
   align-items: center;
   gap: 5px;
   color: #a0aec0;
   font-size: 0.85rem;
-  white-space: nowrap; /* Metin kırılmasını engelle */
-  min-width: fit-content; /* Minimum genişlik içeriğe göre ayarla */
+  white-space: nowrap;
+  min-width: fit-content;
+  transition: color 0.3s ease;
 }
+
+.dark-mode .radio-group label {
+  color: #d1d5db;
+}
+
 .radio-group input[type="radio"] {
   margin: 0;
   width: 15px;
   height: 15px;
   accent-color: #a0aec0;
-  flex-shrink: 0; /* Radio button'ın küçülmesini engelle */
+  flex-shrink: 0;
+}
+
+.dark-mode .radio-group input[type="radio"] {
+  accent-color: #60a5fa;
 }
 
 .panel li {
@@ -233,38 +327,135 @@ code {
   flex-shrink: 0;
 }
 
-/* --- Global Settings Panel İç Stilleri - DÜZELTİLDİ --- */
-.setting-group { margin-bottom: 18px; }
-.setting-group:last-child { margin-bottom: 5px; }
-.setting-group-title { display: flex; align-items: center; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; color: #cbd5e0; }
-.setting-group-title input[type="checkbox"] + span { cursor: pointer; margin-left: 0; }
-.setting-group-title.full-width { margin-bottom: 10px; }
-.setting-group-title input[type="checkbox"] { margin-right: 8px; width: 15px; height: 15px; accent-color: #a0aec0; cursor: pointer; flex-shrink: 0; }
+.dark-mode .models-panel input[type="checkbox"],
+.dark-mode .datasets-panel input[type="checkbox"] {
+  accent-color: #60a5fa;
+}
 
-/* Setting Item Stilleri - DÜZELTİLDİ */
+/* --- Global Settings Panel İç Stilleri --- */
+.setting-group {
+  margin-bottom: 18px;
+  transition: all 0.3s ease;
+}
+
+.setting-group:last-child {
+  margin-bottom: 5px;
+}
+
+.setting-group-title {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  color: #cbd5e0;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .setting-group-title {
+  color: #e5e7eb;
+}
+
+.setting-group-title input[type="checkbox"] + span {
+  cursor: pointer;
+  margin-left: 0;
+}
+
+.setting-group-title.full-width {
+  margin-bottom: 10px;
+}
+
+.setting-group-title input[type="checkbox"] {
+  margin-right: 8px;
+  width: 15px;
+  height: 15px;
+  accent-color: #a0aec0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.dark-mode .setting-group-title input[type="checkbox"] {
+  accent-color: #60a5fa;
+}
+
+/* Setting Item Stilleri */
 .setting-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px; /* 10px'den 8px'ye düşürüldü */
+  gap: 8px;
   padding-left: 5px;
-  transition: opacity 0.2s ease-out, max-height 0.3s ease-out;
+  transition: all 0.3s ease;
   overflow: hidden;
-  min-height: 32px; /* Minimum yükseklik eklendi */
+  min-height: 32px;
 }
-.setting-item.indented { padding-left: 25px; margin-top: 5px; }
-.setting-item.hidden { max-height: 0; opacity: 0; margin-top: 0; padding-top: 0; padding-bottom: 0; pointer-events: none; }
-.setting-item.visible { max-height: 70px; /* 40px'den 70px'ye artırıldı radio group için */; opacity: 1; }
+
+.setting-item.indented {
+  padding-left: 25px;
+  margin-top: 5px;
+}
+
+.setting-item.hidden {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  pointer-events: none;
+}
+
+.setting-item.visible {
+  max-height: 70px;
+  opacity: 1;
+}
+
 .setting-item label {
   white-space: nowrap;
   font-size: 0.85rem;
   color: #a0aec0;
   flex-shrink: 0;
-  min-width: fit-content; /* Eklendi */
+  min-width: fit-content;
+  transition: color 0.3s ease;
 }
-.setting-item input[type="number"] { padding: 5px 8px; border: 1px solid #718096; background-color: #edf2f7; color: #2d3748; border-radius: 4px; font-size: 0.85rem; width: 75px; text-align: right; }
-.setting-item input:disabled { background-color: #718096; color: #a0aec0; cursor: not-allowed; opacity: 0.7; }
 
+.dark-mode .setting-item label {
+  color: #d1d5db;
+}
+
+.setting-item input[type="number"] {
+  padding: 5px 8px;
+  border: 1px solid #718096;
+  background-color: #edf2f7;
+  color: #2d3748;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  width: 75px;
+  text-align: right;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .setting-item input[type="number"] {
+  background-color: #374151;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+.dark-mode .setting-item input[type="number"]:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.setting-item input:disabled {
+  background-color: #718096;
+  color: #a0aec0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.dark-mode .setting-item input:disabled {
+  background-color: #4b5563;
+  color: #9ca3af;
+}
 
 /* --- Orta Panel (Simulation Screen) --- */
 .simulation-panel {
@@ -279,7 +470,15 @@ code {
   align-self: stretch;
   overflow: hidden;
   position: relative;
+  transition: all 0.3s ease;
 }
+
+.dark-mode .simulation-panel {
+  border-color: #4b5563;
+  background-color: #1f2937;
+  color: #e5e7eb;
+}
+
 .simulation-panel-header {
   display: flex;
   justify-content: space-between;
@@ -291,7 +490,14 @@ code {
   position: sticky;
   top: 0;
   z-index: 50;
+  transition: all 0.3s ease;
 }
+
+.dark-mode .simulation-panel-header {
+  border-bottom-color: #4b5563;
+  background-color: #1f2937;
+}
+
 .simulation-panel-header h2 {
   margin: 0;
   padding: 0 0 12px 0;
@@ -299,138 +505,894 @@ code {
   color: #374151;
   font-size: 1.1rem;
   font-weight: 600;
+  transition: color 0.3s ease;
 }
+
+.dark-mode .simulation-panel-header h2 {
+  color: #e5e7eb;
+}
+
 .fullscreen-button {
-  background: none; border: none; padding: 5px; margin: 0 0 10px 15px; cursor: pointer; color: #6b7280; border-radius: 4px; line-height: 1; transition: background-color 0.2s ease, color 0.2s ease; }
-.fullscreen-button:hover { background-color: #f3f4f6; color: #374151; }
-.fullscreen-button svg { display: block; }
-.simulation-panel-content { padding: 20px; flex-grow: 1; overflow-y: auto; }
-.simulation-panel-content p { color: #6b7280; margin-top: 0; margin-bottom: 20px; }
-.loading-indicator { padding: 20px; text-align: center; font-style: italic; color: #6b7280; }
-.simulation-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px 25px; width: 100%; text-align: left; margin-top: 15px; font-size: 0.85rem; padding-top: 15px; border-top: 1px solid #e5e7eb; }
-.simulation-summary h4 { margin-top: 0; margin-bottom: 8px; color: #4b5563; font-size: 0.9rem; font-weight: 600; padding-bottom: 0px; }
-.simulation-summary ul { text-align: left; margin: 0; padding-left: 0; list-style: none; font-size: 0.85em; }
-.simulation-summary li { margin-bottom: 5px; color: #374151; }
-.simulation-summary small { color: #6b7280; font-style: italic; }
-.simulation-summary > div > pre {
-  font-size: 0.8em !important; text-align: left !important; background: #f3f4f6 !important; padding: 10px !important; border-radius: 4px; white-space: pre-wrap; word-break: break-all; max-height: 150px; overflow-y: auto; color: #1f2937; border: 1px solid #e5e7eb; margin-top: 5px;
+  background: none;
+  border: none;
+  padding: 5px;
+  margin: 0 0 10px 15px;
+  cursor: pointer;
+  color: #6b7280;
+  border-radius: 4px;
+  line-height: 1;
+  transition: all 0.3s ease;
 }
-.simulation-summary > div:last-child { grid-column: 1 / -1; }
+
+.fullscreen-button:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.dark-mode .fullscreen-button {
+  color: #9ca3af;
+}
+
+.dark-mode .fullscreen-button:hover {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
+.fullscreen-button svg {
+  display: block;
+}
+
+.simulation-panel-content {
+  padding: 20px;
+  flex-grow: 1;
+  overflow-y: auto;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .simulation-panel-content {
+  background-color: #1f2937;
+}
+
+.simulation-panel-content p {
+  color: #6b7280;
+  margin-top: 0;
+  margin-bottom: 20px;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .simulation-panel-content p {
+  color: #9ca3af;
+}
+
+.loading-indicator {
+  padding: 20px;
+  text-align: center;
+  font-style: italic;
+  color: #6b7280;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .loading-indicator {
+  color: #9ca3af;
+}
+
+.simulation-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px 25px;
+  width: 100%;
+  text-align: left;
+  margin-top: 15px;
+  font-size: 0.85rem;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+  transition: border-color 0.3s ease;
+}
+
+.dark-mode .simulation-summary {
+  border-top-color: #4b5563;
+}
+
+.simulation-summary h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #4b5563;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding-bottom: 0px;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .simulation-summary h4 {
+  color: #d1d5db;
+}
+
+.simulation-summary ul {
+  text-align: left;
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 0.85em;
+}
+
+.simulation-summary li {
+  margin-bottom: 5px;
+  color: #374151;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .simulation-summary li {
+  color: #e5e7eb;
+}
+
+.simulation-summary small {
+  color: #6b7280;
+  font-style: italic;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .simulation-summary small {
+  color: #9ca3af;
+}
+
+.simulation-summary > div > pre {
+  font-size: 0.8em !important;
+  text-align: left !important;
+  background: #f3f4f6 !important;
+  padding: 10px !important;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 150px;
+  overflow-y: auto;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+  margin-top: 5px;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .simulation-summary > div > pre {
+  background: #374151 !important;
+  color: #e5e7eb !important;
+  border-color: #4b5563 !important;
+}
+
+.simulation-summary > div:last-child {
+  grid-column: 1 / -1;
+}
 
 /* Configured Instances List Stilleri */
 .configured-instances-list {
-    list-style: none; padding-left: 0; margin-top: 5px; max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 4px; padding: 5px; background-color: #f9fafb;
+  list-style: none;
+  padding-left: 0;
+  margin-top: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 5px;
+  background-color: #f9fafb;
+  transition: all 0.3s ease;
 }
+
+.dark-mode .configured-instances-list {
+  border-color: #4b5563;
+  background-color: #374151;
+}
+
 .config-item {
-    background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.85rem;
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; /* İkonlar için flex-wrap önemli */
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  transition: all 0.3s ease;
 }
-.config-item:last-child { margin-bottom: 0; }
-.config-item-name { /* Model adı ve instance no'yu sarmak için */
-    flex-grow: 1; /* Mümkün olduğunca yer kaplasın */
-    margin-right: 10px; /* Aksiyon butonlarından boşluk */
-}
-.config-item-name > span { font-weight: 500; color: #374151; }
 
-/* YENİ: Konfigürasyon aksiyon butonları için */
+.dark-mode .config-item {
+  background-color: #1f2937;
+  border-color: #4b5563;
+}
+
+.config-item:last-child {
+  margin-bottom: 0;
+}
+
+.config-item-name {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.config-item-name > span {
+  font-weight: 500;
+  color: #374151;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .config-item-name > span {
+  color: #e5e7eb;
+}
+
+/* Konfigürasyon aksiyon butonları */
 .config-item-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px; /* Butonlar arası boşluk */
-    flex-shrink: 0; /* Butonların küçülmesini engelle */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
+
 .config-action-button {
-    background: none;
-    border: none;
-    color: #6b7280; /* İkon rengi */
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    font-size: 1rem; /* İkon boyutu için */
-    line-height: 1;
-    transition: background-color 0.2s ease, color 0.2s ease;
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 1rem;
+  line-height: 1;
+  transition: all 0.3s ease;
 }
+
 .config-action-button:hover {
-    background-color: #f3f4f6; /* Hafif arka plan */
-    color: #374151; /* Koyu renk */
+  background-color: #f3f4f6;
+  color: #374151;
 }
-.edit-button:hover { color: #4f46e5; } /* Düzenle ikonu için özel hover rengi */
-.delete-button:hover { color: #ef4444; } /* Silme ikonu için özel hover rengi */
 
+.dark-mode .config-action-button {
+  color: #9ca3af;
+}
 
-.config-details { font-size: 0.9em; flex-basis: 100%; margin-top: 8px; }
-.config-details summary { cursor: pointer; font-weight: 500; color: #4f46e5; display: inline-block; padding: 2px 0; }
+.dark-mode .config-action-button:hover {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
+.edit-button:hover {
+  color: #4f46e5;
+}
+
+.delete-button:hover {
+  color: #ef4444;
+}
+
+.config-details {
+  font-size: 0.9em;
+  flex-basis: 100%;
+  margin-top: 8px;
+}
+
+.config-details summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: #4f46e5;
+  display: inline-block;
+  padding: 2px 0;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .config-details summary {
+  color: #60a5fa;
+}
+
 .config-details pre {
-    margin-top: 5px; padding: 8px !important; font-size: 0.95em !important; max-height: 150px !important; background-color: #f3f4f6 !important; border: 1px solid #e5e7eb !important; color: #1f2937 !important; white-space: pre-wrap; word-break: break-all; overflow-y: auto; border-radius: 4px;
+  margin-top: 5px;
+  padding: 8px !important;
+  font-size: 0.95em !important;
+  max-height: 150px !important;
+  background-color: #f3f4f6 !important;
+  border: 1px solid #e5e7eb !important;
+  color: #1f2937 !important;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-y: auto;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .config-details pre {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #e5e7eb !important;
+}
+
+.no-data-text {
+  color: #6b7280;
+  font-style: italic;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .no-data-text {
+  color: #9ca3af;
 }
 
 /* --- Sağ Sütun Altındaki Aksiyon Butonları --- */
 .action-buttons-bottom {
-  display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; padding: 0 5px 5px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 0 5px 5px 5px;
 }
+
 .action-buttons-bottom button {
-  width: 100%; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: background-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  width: 100%;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
-.action-buttons-bottom button:hover:not(:disabled) { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
-.action-buttons-bottom button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #9ca3af; }
 
-.train-button { background-color: #00B7EB; color: white; }
-.train-button:hover:not(:disabled) { background-color: #009ac9; }
-.evaluate-button { background-color: #32CD32; color: white; }
-.evaluate-button:hover:not(:disabled) { background-color: #28a745; }
+.action-buttons-bottom button:hover:not(:disabled) {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
 
-/* YENİ: Reset Workspace Butonu Stili */
-.reset-button {
-  background-color: #ef4444; /* Kırmızı tonu */
+.action-buttons-bottom button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #9ca3af;
+}
+
+.train-button {
+  background-color: #00B7EB;
   color: white;
 }
-.reset-button:hover:not(:disabled) {
-  background-color: #dc2626; /* Daha koyu kırmızı */
+
+.train-button:hover:not(:disabled) {
+  background-color: #009ac9;
 }
 
+.evaluate-button {
+  background-color: #32CD32;
+  color: white;
+}
+
+.evaluate-button:hover:not(:disabled) {
+  background-color: #28a745;
+}
+
+.reset-button {
+  background-color: #ef4444;
+  color: white;
+}
+
+.reset-button:hover:not(:disabled) {
+  background-color: #dc2626;
+}
 
 /* --- Pop-up Stilleri (Parameter & Confirmation) --- */
-/* ... (Mevcut Popup Stilleri aynı kalır) ... */
-.popup-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(17, 24, 39, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
-.popup-content { background-color: #ffffff; padding: 25px 30px 30px 30px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); position: relative; min-width: 450px; max-width: 550px; max-height: 85vh; overflow-y: auto; color: #1f2937; }
-.popup-content h3 { margin-top: 0; margin-bottom: 20px; color: #111827; text-align: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 15px; font-size: 1.2rem; font-weight: 600; }
-.popup-close-button { position: absolute; top: 12px; right: 12px; background: transparent; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; line-height: 1; cursor: pointer; color: #9ca3af; transition: background-color 0.2s ease, color 0.2s ease; }
-.popup-close-button:hover { background-color: #f3f4f6; color: #4b5563; }
-.popup-content h4 { font-size: 1rem; font-weight: 600; color: #374151; margin-top: 20px; margin-bottom: 12px; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
-.popup-content h4:first-of-type { margin-top: 0; }
-.existing-configs-info { font-size: 0.8rem; color: #6b7280; background-color: #f3f4f6; padding: 5px 10px; border-radius: 4px; margin-bottom: 15px; text-align: center; }
-.param-list { display: flex; flex-direction: column; gap: 16px; }
-.param-item { display: grid; grid-template-columns: minmax(150px, auto) 1fr; align-items: center; gap: 15px; }
-.param-item label { white-space: nowrap; font-weight: 500; font-size: 0.9rem; color: #4b5563; text-align: right; }
-.param-item input[type="number"], .param-item input[type="text"], .param-item select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background-color: #f9fafb; color: #1f2937; width: 100%; box-sizing: border-box; }
-.param-item select { cursor: pointer; }
-.param-item input::placeholder { color: #9ca3af; }
-.slider-container { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; width: 100%; }
-.slider-container input[type="range"] { width: 100%; cursor: pointer; height: 6px; accent-color: #4f46e5; }
-.slider-value { font-weight: 600; font-size: 0.9rem; color: #4f46e5; min-width: 30px; text-align: right; }
-.metrics-section-popup { margin-top: 20px; }
-.metrics-checkboxes-popup { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px 12px; padding-left: 5px; }
-.metric-label-popup { display: flex; align-items: center; font-size: 0.85rem; cursor: pointer; background-color: #f9fafb; padding: 6px 10px; border-radius: 5px; border: 1px solid #e5e7eb; transition: background-color 0.15s ease, border-color 0.15s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #374151; }
-.metric-label-popup:hover { background-color: #f3f4f6; border-color: #d1d5db; }
-.metric-label-popup input[type="checkbox"] { margin-right: 8px; width: 14px; height: 14px; accent-color: #4f46e5; flex-shrink: 0; }
-.metrics-section-popup small { font-size: 0.85rem; color: #6b7280; font-style: italic; display: block; padding-left: 5px; margin-top: 5px; }
-.popup-ok-button { background-color: #4f46e5; color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; display: block; width: 100%; margin-top: 25px; font-weight: 600; font-size: 0.95rem; transition: background-color 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-.popup-ok-button:hover { background-color: #4338ca; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(17, 24, 39, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
 
-.confirmation-overlay { z-index: 1010; background-color: rgba(17, 24, 39, 0.75); position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-.confirmation-content { background-color: #ffffff; padding: 30px 35px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); text-align: center; max-width: 400px; color: #1f2937; }
-.confirmation-content h4 { margin-top: 0; margin-bottom: 10px; font-size: 1.2rem; color: #111827; border-bottom: none; padding-bottom: 0; }
-.confirmation-content p { margin-bottom: 25px; color: #4b5563; line-height: 1.6; }
-.confirmation-content p strong { color: #374151; font-weight: 600; }
-.confirmation-buttons { display: flex; justify-content: center; gap: 15px; }
-.confirmation-buttons button { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: background-color 0.2s ease, box-shadow 0.2s ease; min-width: 120px; }
-.confirm-yes-button { background-color: #4f46e5; color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-.confirm-yes-button:hover { background-color: #4338ca; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
-.confirm-no-button { background-color: #e5e7eb; color: #374151; border: 1px solid #d1d5db; }
-.confirm-no-button:hover { background-color: #d1d5db; }
+.popup-content {
+  background-color: #ffffff;
+  padding: 25px 30px 30px 30px;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  position: relative;
+  min-width: 450px;
+  max-width: 550px;
+  max-height: 85vh;
+  overflow-y: auto;
+  color: #1f2937;
+  transition: all 0.3s ease;
+}
 
+.dark-mode .popup-content {
+  background-color: #1f2937;
+  color: #e5e7eb;
+  border: 1px solid #4b5563;
+}
+
+.popup-close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: all 0.3s ease;
+}
+
+.popup-close-button:hover {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.dark-mode .popup-close-button {
+  color: #d1d5db;
+}
+
+.dark-mode .popup-close-button:hover {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
+.popup-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #111827;
+  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 15px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .popup-content h3 {
+  color: #e5e7eb;
+  border-bottom-color: #4b5563;
+}
+
+.popup-content h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 20px;
+  margin-bottom: 12px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .popup-content h4 {
+  color: #e5e7eb;
+  border-bottom-color: #4b5563;
+}
+
+.popup-content h4:first-of-type {
+  margin-top: 0;
+}
+
+.existing-configs-info {
+  font-size: 0.8rem;
+  color: #6b7280;
+  background-color: #f3f4f6;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .existing-configs-info {
+  color: #d1d5db;
+  background-color: #374151;
+}
+
+.param-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.param-item {
+  display: grid;
+  grid-template-columns: minmax(150px, auto) 1fr;
+  align-items: center;
+  gap: 15px;
+}
+
+.param-item label {
+  white-space: nowrap;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #4b5563;
+  text-align: right;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .param-item label {
+  color: #d1d5db;
+}
+
+.param-item input[type="number"],
+.param-item input[type="text"],
+.param-item select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: #f9fafb;
+  color: #1f2937;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .param-item input[type="number"],
+.dark-mode .param-item input[type="text"],
+.dark-mode .param-item select {
+  background-color: #374151;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+.dark-mode .param-item input[type="number"]:focus,
+.dark-mode .param-item input[type="text"]:focus,
+.dark-mode .param-item select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.param-item select {
+  cursor: pointer;
+}
+
+.param-item input::placeholder {
+  color: #9ca3af;
+}
+
+.dark-mode .param-item input::placeholder {
+  color: #6b7280;
+}
+
+.slider-container {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.slider-container input[type="range"] {
+  width: 100%;
+  cursor: pointer;
+  height: 6px;
+  accent-color: #4f46e5;
+}
+
+.dark-mode .slider-container input[type="range"] {
+  accent-color: #60a5fa;
+}
+
+.slider-value {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #4f46e5;
+  min-width: 30px;
+  text-align: right;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .slider-value {
+  color: #60a5fa;
+}
+
+.metrics-section-popup {
+  margin-top: 20px;
+}
+
+.metrics-checkboxes-popup {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px 12px;
+  padding-left: 5px;
+}
+
+.metric-label-popup {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background-color: #f9fafb;
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #374151;
+}
+
+.metric-label-popup:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.dark-mode .metric-label-popup {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.dark-mode .metric-label-popup:hover {
+  background-color: #4b5563;
+  border-color: #6b7280;
+}
+
+.metric-label-popup input[type="checkbox"] {
+  margin-right: 8px;
+  width: 14px;
+  height: 14px;
+  accent-color: #4f46e5;
+  flex-shrink: 0;
+}
+
+.dark-mode .metric-label-popup input[type="checkbox"] {
+  accent-color: #60a5fa;
+}
+
+.metrics-section-popup small {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-style: italic;
+  display: block;
+  padding-left: 5px;
+  margin-top: 5px;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .metrics-section-popup small {
+  color: #9ca3af;
+}
+
+.popup-ok-button {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  margin-top: 25px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.popup-ok-button:hover {
+  background-color: #4338ca;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dark-mode .popup-ok-button {
+  background-color: #60a5fa;
+}
+
+.dark-mode .popup-ok-button:hover {
+  background-color: #3b82f6;
+}
+
+.confirmation-overlay {
+  z-index: 1010;
+  background-color: rgba(17, 24, 39, 0.75);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+.confirmation-content {
+  background-color: #ffffff;
+  padding: 30px 35px;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  max-width: 400px;
+  color: #1f2937;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .confirmation-content {
+  background-color: #1f2937;
+  color: #e5e7eb;
+  border: 1px solid #4b5563;
+}
+
+.confirmation-content h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  color: #111827;
+  border-bottom: none;
+  padding-bottom: 0;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .confirmation-content h4 {
+  color: #e5e7eb;
+}
+
+.confirmation-content p {
+  margin-bottom: 25px;
+  color: #4b5563;
+  line-height: 1.6;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .confirmation-content p {
+  color: #d1d5db;
+}
+
+.confirmation-content p strong {
+  color: #374151;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .confirmation-content p strong {
+  color: #f3f4f6;
+}
+
+.confirmation-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.confirmation-buttons button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.confirm-yes-button {
+  background-color: #4f46e5;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.confirm-yes-button:hover {
+  background-color: #4338ca;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dark-mode .confirm-yes-button {
+  background-color: #60a5fa;
+}
+
+.dark-mode .confirm-yes-button:hover {
+  background-color: #3b82f6;
+}
+
+.confirm-no-button {
+  background-color: #e5e7eb;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.confirm-no-button:hover {
+  background-color: #d1d5db;
+}
+
+.dark-mode .confirm-no-button {
+  background-color: #4b5563;
+  color: #e5e7eb;
+  border-color: #6b7280;
+}
+
+.dark-mode .confirm-no-button:hover {
+  background-color: #374151;
+}
 
 /* Fullscreen specific style */
-.simulation-panel:fullscreen { background-color: #ffffff; padding: 0; border: none; overflow: hidden; }
-.simulation-panel:fullscreen .simulation-panel-header { background-color: #ffffff; padding: 15px 20px 0 20px; border-bottom: 1px solid #e5e7eb; position: sticky; top:0; z-index: 1;}
-.simulation-panel:fullscreen .simulation-panel-content { height: calc(100% - 58px); padding: 20px; overflow-y: auto; }
+.simulation-panel:fullscreen {
+  background-color: #ffffff;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+}
+
+.dark-mode .simulation-panel:fullscreen {
+  background-color: #1f2937;
+}
+
+.simulation-panel:fullscreen .simulation-panel-header {
+  background-color: #ffffff;
+  padding: 15px 20px 0 20px;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.dark-mode .simulation-panel:fullscreen .simulation-panel-header {
+  background-color: #1f2937;
+  border-bottom-color: #4b5563;
+}
+
+.simulation-panel:fullscreen .simulation-panel-content {
+  height: calc(100% - 58px);
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+.dark-mode .simulation-panel:fullscreen .simulation-panel-content {
+  background-color: #1f2937;
+}
+
+/* =================================== */
+/* YENİ DARK MODE BUTTON STİLLERİ */
+/* =================================== */
+.dark-mode-toggle-fixed {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.dark-mode-btn-fixed {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  font-size: 0;
+}
+
+.dark-mode-btn-fixed:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+}
+
+.dark-mode-btn-fixed svg {
+  transition: transform 0.3s ease;
+}
+
+.dark-mode-btn-fixed:hover svg {
+  transform: rotate(180deg);
+}
+
+/* Sol alt köşe için (isteğe bağlı) */
+.dark-mode-toggle-fixed.bottom-left {
+  bottom: 20px;
+  left: 20px;
+  right: auto;
+}
+
+/* Dark mode geçişleri */
+.dark-mode {
+  transition: all 0.3s ease;
+}

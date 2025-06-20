@@ -13,6 +13,16 @@ services:
       - ./cache_data:/app/cache_data
     environment:
       - PYTHONUNBUFFERED=1
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    env_file:
+      - .env
+    networks:
+      - default
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "generativelanguage.googleapis.com:142.250.184.138"
   ###############################
 
   ###############################
@@ -30,9 +40,7 @@ services:
     user: "node" 
   ###############################
 
-  ###############################
-  # redis:
-  #  image: redis:latest
-  #  ports:
-  #    - "6379:6379"
-  ###############################
+networks:
+  default:
+    driver: bridge
+

@@ -5,3 +5,4 @@ pandas
 scikit-learn
 python-multipart
 psutil==5.9.6
+requests==2.31.0

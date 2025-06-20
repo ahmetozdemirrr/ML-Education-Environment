@@ -53,80 +53,89 @@ function GlobalSettingsPanel({ settings, onChange }) {
     <div className="panel settings-panel">
       <h2>Global Settings</h2>
       <div className="settings-list">
-        {/* Cross-Validation Section */}
+
+        {/* Evaluation Method */}
         <div className="setting-group">
-          <label className="setting-group-title">
-            <input
-              type="checkbox"
-              name="useCrossValidation"
-              checked={settings.useCrossValidation || false}
-              onChange={handleCheckboxChange}
-            />
-            <span>Use Cross-Validation</span>
-          </label>
+          <div className="setting-group-title full-width">
+            <span>Evaluation Method</span>
+          </div>
+
+          <div className="setting-item visible">
+            <label>Method:</label>
+            <div className="radio-group">
+              <label>
+                <input
+                  type="radio"
+                  name="evaluation-method"
+                  checked={settings.useCrossValidation}
+                  onChange={() => onChange('useCrossValidation', true)}
+                />
+                Cross-Validation
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="evaluation-method"
+                  checked={settings.useTrainTestSplit}
+                  onChange={() => onChange('useTrainTestSplit', true)}
+                />
+                Train/Test Split
+              </label>
+            </div>
+          </div>
+
+          {/* Cross-Validation specific settings */}
           <div className={`setting-item indented ${settings.useCrossValidation ? 'visible' : 'hidden'}`}>
-            <label htmlFor="cvFolds">Number of Folds:</label>
+            <label htmlFor="cv-folds">CV Folds:</label>
             <input
               type="number"
-              id="cvFolds"
-              name="cvFolds"
-              value={settings.cvFolds || 5}
-              onChange={handleValueChange}
+              id="cv-folds"
+              value={settings.cvFolds}
               min="2"
-              step="1"
+              max="20"
+              onChange={(e) => onChange('cvFolds', parseInt(e.target.value, 10))}
               disabled={!settings.useCrossValidation}
             />
           </div>
-        </div>
 
-        {/* Train/Test Split Section */}
-        <div className="setting-group">
-          <label className="setting-group-title">
-            <input
-              type="checkbox"
-              name="useTrainTestSplit"
-              checked={settings.useTrainTestSplit || false}
-              onChange={handleCheckboxChange}
-            />
-            <span>Use Train/Test Split</span>
-          </label>
+          {/* Train/Test Split specific settings */}
           <div className={`setting-item indented ${settings.useTrainTestSplit ? 'visible' : 'hidden'}`}>
-            <label htmlFor="testSplitRatio">Test Set Ratio (0-1):</label>
+            <label htmlFor="test-split-ratio">Test Size:</label>
             <input
               type="number"
-              id="testSplitRatio"
-              name="testSplitRatio"
-              value={settings.testSplitRatio || 0.2}
-              onChange={handleValueChange}
-              min="0.01"
-              max="0.99"
-              step="0.01"
+              id="test-split-ratio"
+              value={settings.testSplitRatio}
+              min="0.1"
+              max="0.5"
+              step="0.05"
+              onChange={(e) => onChange('testSplitRatio', parseFloat(e.target.value))}
               disabled={!settings.useTrainTestSplit}
             />
           </div>
         </div>
 
-        {/* Feature Scaling Section */}
+        {/* Feature Scaling */}
         <div className="setting-group">
-          <label className="setting-group-title">
+          <div className="setting-group-title">
             <input
               type="checkbox"
-              name="applyFeatureScaling"
-              checked={settings.applyFeatureScaling || false}
-              onChange={handleCheckboxChange}
+              id="feature-scaling"
+              checked={settings.applyFeatureScaling}
+              onChange={(e) => onChange('applyFeatureScaling', e.target.checked)}
             />
             <span>Feature Scaling</span>
-          </label>
+          </div>
+
           <div className={`setting-item indented ${settings.applyFeatureScaling ? 'visible' : 'hidden'}`}>
             <label>Scaler Type:</label>
             <div className="radio-group">
               <label>
                 <input
                   type="radio"
-                  name="scalerType"
+                  name="scaler-type"
                   value="standard"
-                  checked={(settings.scalerType || 'standard') === "standard"}
-                  onChange={handleValueChange}
+                  checked={settings.scalerType === 'standard'}
+                  onChange={(e) => onChange('scalerType', e.target.value)}
                   disabled={!settings.applyFeatureScaling}
                 />
                 Standard
@@ -134,10 +143,10 @@ function GlobalSettingsPanel({ settings, onChange }) {
               <label>
                 <input
                   type="radio"
-                  name="scalerType"
+                  name="scaler-type"
                   value="minmax"
-                  checked={(settings.scalerType || 'standard') === "minmax"}
-                  onChange={handleValueChange}
+                  checked={settings.scalerType === 'minmax'}
+                  onChange={(e) => onChange('scalerType', e.target.value)}
                   disabled={!settings.applyFeatureScaling}
                 />
                 MinMax
@@ -146,35 +155,39 @@ function GlobalSettingsPanel({ settings, onChange }) {
           </div>
         </div>
 
-        {/* Reproducibility Section */}
+        {/* Reproducibility */}
         <div className="setting-group">
-          <label className="setting-group-title full-width">Reproducibility:</label>
-          <div className="setting-item indented visible">
+          <div className="setting-group-title full-width">
+            <span>Reproducibility</span>
+          </div>
+
+          <div className="setting-item visible">
             <label>Seed Type:</label>
             <div className="radio-group">
               <label>
                 <input
                   type="radio"
-                  name="randomSeedType"
-                  value="random"
-                  checked={(settings.randomSeedType || "fixed") === "random"}
-                  onChange={handleValueChange}
+                  name="seed-type"
+                  value="fixed"
+                  checked={settings.randomSeedType === 'fixed'}
+                  onChange={(e) => onChange('randomSeedType', e.target.value)}
                 />
-                Random
+                Fixed
               </label>
               <label>
                 <input
                   type="radio"
-                  name="randomSeedType"
-                  value="fixed"
-                  checked={(settings.randomSeedType || "fixed") === "fixed"}
-                  onChange={handleValueChange}
+                  name="seed-type"
+                  value="random"
+                  checked={settings.randomSeedType === 'random'}
+                  onChange={(e) => onChange('randomSeedType', e.target.value)}
                 />
-                Fixed
+                Random
               </label>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import time
 from app import data_processor
 from app import model_factory
 from app.cache_manager import cache_manager
+from .gemini_service import gemini_service
 
 app = FastAPI()
 
@@ -631,3 +632,31 @@ async def system_info():
         }
     except Exception as e:
         return {"error": f"System info alınırken hata: {str(e)}"}
+
+@app.post("/analyze-with-gemini")
+async def analyze_chart_with_gemini(request: Request):
+    """Gemini API ile chart analizi"""
+    try:
+        body = await request.json()
+        chart_data = body.get("chart_data", {})
+        chart_type = body.get("chart_type", "unknown")
+        context = body.get("context", "")
+
+        if not chart_data:
+            raise HTTPException(status_code=400, detail="Chart data is required")
+
+        analysis = gemini_service.analyze_chart_data(chart_data, chart_type, context)
+
+        return {
+            "analysis": analysis,
+            "status": "success"
+        }
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "analysis": f"Analiz sırasında hata oluştu: {str(e)}",
+                "status": "error"
+            }
+        )
