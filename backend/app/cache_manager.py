@@ -226,7 +226,11 @@ class TrainingCacheManager:
                 # Cached metrics'i al
                 cached_metrics = entry.get("metrics", {})
 
-                # Eğer selected_metrics varsa filtrele
+                # DEBUG: Cache'de hangi metrikler var
+                print(f"DEBUG - Cached metrics keys: {list(cached_metrics.keys())}")
+                print(f"DEBUG - Selected metrics from frontend: {selected_metrics}")
+
+                # FIXED: Eğer selected_metrics varsa filtrele
                 if selected_metrics:
                     # Frontend'den gelen metrik adlarını backend format'ına çevir
                     metric_mapping = {
@@ -238,9 +242,26 @@ class TrainingCacheManager:
                     }
 
                     backend_selected = [metric_mapping.get(m, m.lower()) for m in selected_metrics]
-                    filtered_metrics = {k: v for k, v in cached_metrics.items() if k in backend_selected}
+                    print(f"DEBUG - Backend selected metrics: {backend_selected}")
+
+                    # FIXED: Cache'de bulunan tüm metrikleri kontrol et ve eşleşenleri al
+                    filtered_metrics = {}
+                    for backend_metric in backend_selected:
+                        if backend_metric in cached_metrics:
+                            filtered_metrics[backend_metric] = cached_metrics[backend_metric]
+                            print(f"DEBUG - Found cached metric: {backend_metric} = {cached_metrics[backend_metric]}")
+                        else:
+                            print(f"DEBUG - Missing cached metric: {backend_metric}")
+
+                    # FIXED: Eğer filtrelenmiş metrikler boşsa, tüm cache'i döndür
+                    if not filtered_metrics and cached_metrics:
+                        print(f"DEBUG - No filtered metrics found, returning all cached metrics")
+                        filtered_metrics = cached_metrics
+
                 else:
                     filtered_metrics = cached_metrics
+
+                print(f"DEBUG - Final filtered metrics: {filtered_metrics}")
 
                 return {
                     "metrics": filtered_metrics,
@@ -255,6 +276,8 @@ class TrainingCacheManager:
 
         except Exception as e:
             print(f"Evaluation cache okuma hatası: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def save_evaluation_result(
