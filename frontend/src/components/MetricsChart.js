@@ -1,4 +1,4 @@
-// frontend/src/components/MetricsChart.js - COMPLETE FIXED VERSION
+// frontend/src/components/MetricsChart.js - GÜNCELLENMIŞ VERSİYON
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -16,6 +16,7 @@ import {
   Filler
 } from 'chart.js';
 import { Bar, Radar, Line, Scatter } from 'react-chartjs-2';
+import { MarkdownRenderer } from '../utils/markdownUtils'; // YENİ IMPORT
 
 // Register all Chart.js components
 ChartJS.register(
@@ -138,13 +139,17 @@ const getUniqueResults = (results) => {
 // METRICS CHART COMPONENT
 // =================================== //
 
-const MetricsChart = ({ results }) => {
+const MetricsChart = ({ results, isDarkMode = false  }) => {
   const barChartRef = useRef(null);
   const radarChartRef = useRef(null);
   const [geminiAnalysisBar, setGeminiAnalysisBar] = useState('');
   const [geminiAnalysisRadar, setGeminiAnalysisRadar] = useState('');
   const [isAnalyzingBar, setIsAnalyzingBar] = useState(false);
   const [isAnalyzingRadar, setIsAnalyzingRadar] = useState(false);
+
+  // YENİ: Açıp kapama state'leri
+  const [isBarAnalysisExpanded, setIsBarAnalysisExpanded] = useState(true);
+  const [isRadarAnalysisExpanded, setIsRadarAnalysisExpanded] = useState(true);
 
   useEffect(() => {
     return () => {
@@ -244,13 +249,11 @@ const MetricsChart = ({ results }) => {
         <h5>Bar Chart Comparison</h5>
 
         {/* Chart Container - SADECE CHART */}
-        <div style={{ height: '350px', marginBottom: '20px' }}>
+        <div style={{ height: '350px', marginBottom: '20px', backgroundColor: isDarkMode ? '#1f2937' : '#ffffff'}}>
           <Bar
             ref={barChartRef}
             data={barData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
+            options={getChartOptions(isDarkMode, {
               interaction: { intersect: false },
               plugins: {
                 legend: { position: 'top' },
@@ -266,7 +269,7 @@ const MetricsChart = ({ results }) => {
                   }
                 }
               }
-            }}
+            })}
           />
         </div>
 
@@ -311,7 +314,7 @@ const MetricsChart = ({ results }) => {
           </div>
         </div>
 
-        {/* Bar Chart Gemini Analysis - CHART SECTION İÇİNDE */}
+        {/* Bar Chart Gemini Analysis - GÜNCELLENMIŞ */}
         <div className="gemini-analysis-section">
           <button
             className="gemini-explain-btn"
@@ -332,6 +335,7 @@ const MetricsChart = ({ results }) => {
               const analysis = await callGeminiAnalysis(chartData, 'bar_chart', 'Bar chart - model performans karşılaştırması');
               setGeminiAnalysisBar(analysis);
               setIsAnalyzingBar(false);
+              setIsBarAnalysisExpanded(true); // Analiz geldiğinde otomatik aç
             }}
             disabled={isAnalyzingBar}
           >
@@ -339,13 +343,25 @@ const MetricsChart = ({ results }) => {
           </button>
 
           {geminiAnalysisBar && (
-            <div className="gemini-analysis-result">
-              <h6>🤖 Gemini AI Analysis:</h6>
-              <div className="analysis-content">
-                {geminiAnalysisBar.split('\n').map((line, index) => (
-                  <p key={index}>{line}</p>
-                ))}
-              </div>
+            <div className="gemini-analysis-header">
+              <h6 style={{ margin: 0, color: '#fbbf24', fontWeight: 600, fontSize: '15px' }}>🤖 Gemini AI Analysis:</h6>
+              <button
+                className="gemini-toggle-btn"
+                onClick={() => setIsBarAnalysisExpanded(!isBarAnalysisExpanded)}
+              >
+                <span className="gemini-toggle-text">
+                  {isBarAnalysisExpanded ? 'Hide' : 'Show'}
+                </span>
+                <span className="gemini-toggle-icon">
+                  {isBarAnalysisExpanded ? '⊟' : '⊞'}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {geminiAnalysisBar && (
+            <div className={`gemini-analysis-result ${isBarAnalysisExpanded ? 'expanded' : 'collapsed'}`}>
+              <MarkdownRenderer content={geminiAnalysisBar} />
             </div>
           )}
         </div>
@@ -360,9 +376,7 @@ const MetricsChart = ({ results }) => {
           <Radar
             ref={radarChartRef}
             data={radarData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
+            options={getChartOptions(isDarkMode, {
               plugins: {
                 legend: {
                   position: 'bottom',
@@ -390,18 +404,6 @@ const MetricsChart = ({ results }) => {
                     stepSize: 0.2,
                     font: { size: 10 },
                     backdropColor: 'transparent'
-                  },
-                  grid: {
-                    color: 'rgba(0, 0, 0, 0.1)',
-                    lineWidth: 1
-                  },
-                  angleLines: {
-                    color: 'rgba(0, 0, 0, 0.1)',
-                    lineWidth: 1
-                  },
-                  pointLabels: {
-                    font: { size: 11, weight: '500' },
-                    color: '#374151'
                   }
                 }
               },
@@ -413,16 +415,16 @@ const MetricsChart = ({ results }) => {
                 intersect: false,
                 mode: 'nearest'
               }
-            }}
+            })}
           />
         </div>
 
-        {/* Radar Chart Gemini Analysis - CHART SECTION İÇİNDE */}
+        {/* Radar Chart Gemini Analysis - GÜNCELLENMIŞ */}
         <div className="gemini-analysis-section">
           <button
             className="gemini-explain-btn"
             onClick={async () => {
-              setIsAnalyzingRadar(true);
+              setIsAnalyzingRadar(true); // DÜZELTİLDİ
               const chartData = {
                 models: uniqueResults.map(r => ({
                   name: shortenLabel(r.modelName, r.datasetName),
@@ -438,6 +440,7 @@ const MetricsChart = ({ results }) => {
               const analysis = await callGeminiAnalysis(chartData, 'radar_chart', 'Radar chart - tüm modellerin performans karşılaştırması');
               setGeminiAnalysisRadar(analysis);
               setIsAnalyzingRadar(false);
+              setIsRadarAnalysisExpanded(true); // Analiz geldiğinde otomatik aç
             }}
             disabled={isAnalyzingRadar}
           >
@@ -445,13 +448,25 @@ const MetricsChart = ({ results }) => {
           </button>
 
           {geminiAnalysisRadar && (
-            <div className="gemini-analysis-result">
-              <h6>🤖 Gemini AI Analysis:</h6>
-              <div className="analysis-content">
-                {geminiAnalysisRadar.split('\n').map((line, index) => (
-                  <p key={index}>{line}</p>
-                ))}
-              </div>
+            <div className="gemini-analysis-header">
+              <h6 style={{ margin: 0, color: '#fbbf24', fontWeight: 600, fontSize: '15px' }}>🤖 Gemini AI Analysis:</h6>
+              <button
+                className="gemini-toggle-btn"
+                onClick={() => setIsRadarAnalysisExpanded(!isRadarAnalysisExpanded)}
+              >
+                <span className="gemini-toggle-text">
+                  {isRadarAnalysisExpanded ? 'Hide' : 'Show'}
+                </span>
+                <span className="gemini-toggle-icon">
+                  {isRadarAnalysisExpanded ? '⊟' : '⊞'}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {geminiAnalysisRadar && (
+            <div className={`gemini-analysis-result ${isRadarAnalysisExpanded ? 'expanded' : 'collapsed'}`}>
+              <MarkdownRenderer content={geminiAnalysisRadar} />
             </div>
           )}
         </div>
@@ -464,11 +479,14 @@ const MetricsChart = ({ results }) => {
 // PERFORMANCE CHART COMPONENT
 // =================================== //
 
-const PerformanceChart = ({ results }) => {
+const PerformanceChart = ({ results, isDarkMode = false }) => {
   const scatterChartRef = useRef(null);
   const lineChartRef = useRef(null);
   const [geminiAnalysis, setGeminiAnalysis] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // YENİ: Açıp kapama state'i
+  const [isPerformanceAnalysisExpanded, setIsPerformanceAnalysisExpanded] = useState(true);
 
   useEffect(() => {
     return () => {
@@ -555,9 +573,7 @@ const PerformanceChart = ({ results }) => {
         <div style={{ height: '350px' }}>
           <Scatter
             data={{ datasets }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
+            options={getChartOptions(isDarkMode, {
               interaction: { intersect: false },
               plugins: {
                 legend: {
@@ -579,7 +595,7 @@ const PerformanceChart = ({ results }) => {
                 x: { title: { display: true, text: 'Training Time (seconds)' }, beginAtZero: true },
                 y: { title: { display: true, text: 'Accuracy' }, beginAtZero: true, max: 1 }
               }
-            }}
+            })}
           />
         </div>
       </div>
@@ -627,9 +643,7 @@ const PerformanceChart = ({ results }) => {
           <Line
             ref={lineChartRef}
             data={timeSeriesData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
+            options={getChartOptions(isDarkMode, {
               interaction: { intersect: false },
               plugins: {
                 legend: { position: 'top' },
@@ -653,11 +667,11 @@ const PerformanceChart = ({ results }) => {
                   beginAtZero: true
                 }
               }
-            }}
+            })}
           />
         </div>
 
-        {/* Performance Trends Gemini Analysis */}
+        {/* Performance Trends Gemini Analysis - GÜNCELLENMIŞ */}
         <div className="gemini-analysis-section">
           <button
             className="gemini-explain-btn"
@@ -675,6 +689,7 @@ const PerformanceChart = ({ results }) => {
               const analysis = await callGeminiAnalysis(trendsData, 'performance_trends', 'Zaman içinde performans trendleri analizi');
               setGeminiAnalysis(analysis);
               setIsAnalyzing(false);
+              setIsPerformanceAnalysisExpanded(true); // Analiz geldiğinde otomatik aç
             }}
             disabled={isAnalyzing}
           >
@@ -682,13 +697,25 @@ const PerformanceChart = ({ results }) => {
           </button>
 
           {geminiAnalysis && (
-            <div className="gemini-analysis-result">
-              <h6>🤖 Gemini AI Analysis:</h6>
-              <div className="analysis-content">
-                {geminiAnalysis.split('\n').map((line, index) => (
-                  <p key={index}>{line}</p>
-                ))}
-              </div>
+            <div className="gemini-analysis-header">
+              <h6 style={{ margin: 0, color: '#fbbf24', fontWeight: 600, fontSize: '15px' }}>🤖 Gemini AI Analysis:</h6>
+              <button
+                className="gemini-toggle-btn"
+                onClick={() => setIsPerformanceAnalysisExpanded(!isPerformanceAnalysisExpanded)}
+              >
+                <span className="gemini-toggle-text">
+                  {isPerformanceAnalysisExpanded ? 'Hide' : 'Show'}
+                </span>
+                <span className="gemini-toggle-icon">
+                  {isPerformanceAnalysisExpanded ? '⊟' : '⊞'}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {geminiAnalysis && (
+            <div className={`gemini-analysis-result ${isPerformanceAnalysisExpanded ? 'expanded' : 'collapsed'}`}>
+              <MarkdownRenderer content={geminiAnalysis} />
             </div>
           )}
         </div>
@@ -701,9 +728,12 @@ const PerformanceChart = ({ results }) => {
 // CONFUSION MATRIX COMPONENT
 // =================================== //
 
-const ConfusionMatrix = ({ results }) => {
+const ConfusionMatrix = ({ results, isDarkMode = false  }) => {
   const [geminiAnalysis, setGeminiAnalysis] = useState({});
   const [isAnalyzing, setIsAnalyzing] = useState({});
+
+  // YENİ: Her matrix için açıp kapama state'i
+  const [expandedAnalysis, setExpandedAnalysis] = useState({});
 
   if (!results || results.length === 0) {
     return <div className="chart-placeholder">No confusion matrix data available</div>;
@@ -827,7 +857,7 @@ const ConfusionMatrix = ({ results }) => {
           </div>
         </div>
 
-        {/* Confusion Matrix Gemini Analysis */}
+        {/* Confusion Matrix Gemini Analysis - GÜNCELLENMIŞ */}
         <div className="gemini-analysis-section">
           <button
             className="gemini-explain-btn"
@@ -845,6 +875,7 @@ const ConfusionMatrix = ({ results }) => {
               const analysis = await callGeminiAnalysis(confusionData, 'confusion_matrix', `${result.modelName} modeli için confusion matrix analizi`);
               setGeminiAnalysis(prev => ({ ...prev, [resultId]: analysis }));
               setIsAnalyzing(prev => ({ ...prev, [resultId]: false }));
+              setExpandedAnalysis(prev => ({ ...prev, [resultId]: true })); // Analiz geldiğinde otomatik aç
             }}
             disabled={isAnalyzing[resultId]}
           >
@@ -852,13 +883,28 @@ const ConfusionMatrix = ({ results }) => {
           </button>
 
           {geminiAnalysis[resultId] && (
-            <div className="gemini-analysis-result">
-              <h6>🤖 Gemini AI Analysis:</h6>
-              <div className="analysis-content">
-                {geminiAnalysis[resultId].split('\n').map((line, index) => (
-                  <p key={index}>{line}</p>
-                ))}
-              </div>
+            <div className="gemini-analysis-header">
+              <h6 style={{ margin: 0, color: '#fbbf24', fontWeight: 600, fontSize: '15px' }}>🤖 Gemini AI Analysis:</h6>
+              <button
+                className="gemini-toggle-btn"
+                onClick={() => setExpandedAnalysis(prev => ({
+                  ...prev,
+                  [resultId]: !prev[resultId]
+                }))}
+              >
+                <span className="gemini-toggle-text">
+                  {expandedAnalysis[resultId] ? 'Hide' : 'Show'}
+                </span>
+                <span className="gemini-toggle-icon">
+                  {expandedAnalysis[resultId] ? '⊟' : '⊞'}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {geminiAnalysis[resultId] && (
+            <div className={`gemini-analysis-result ${expandedAnalysis[resultId] ? 'expanded' : 'collapsed'}`}>
+              <MarkdownRenderer content={geminiAnalysis[resultId]} />
             </div>
           )}
         </div>
@@ -877,7 +923,7 @@ const ConfusionMatrix = ({ results }) => {
 };
 
 // =================================== //
-// COMPARISON TABLE COMPONENT
+// COMPARISON TABLE COMPONENT (DEĞİŞİKLİK YOK)
 // =================================== //
 
 const ComparisonTable = ({ results }) => {
@@ -1197,6 +1243,127 @@ const ComparisonTable = ({ results }) => {
       </div>
     </div>
   );
+};
+
+// Dark mode için Chart.js tema ayarları
+const getChartTheme = (isDarkMode) => {
+  if (isDarkMode) {
+    return {
+      backgroundColor: '#1f2937',
+      textColor: '#e5e7eb',
+      gridColor: '#4b5563',
+      borderColor: '#6b7280',
+      tickColor: '#d1d5db',
+      tooltipBackground: '#374151',
+      tooltipBorder: '#4b5563',
+      tooltipText: '#f3f4f6'
+    };
+  } else {
+    return {
+      backgroundColor: '#ffffff',
+      textColor: '#374151',
+      gridColor: '#e5e7eb',
+      borderColor: '#d1d5db',
+      tickColor: '#6b7280',
+      tooltipBackground: '#ffffff',
+      tooltipBorder: '#e5e7eb',
+      tooltipText: '#1f2937'
+    };
+  }
+};
+
+// Chart.js için dark mode options
+const getChartOptions = (isDarkMode, baseOptions = {}) => {
+  const theme = getChartTheme(isDarkMode);
+
+  return {
+    ...baseOptions,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      ...baseOptions.plugins,
+      legend: {
+        ...baseOptions.plugins?.legend,
+        labels: {
+          ...baseOptions.plugins?.legend?.labels,
+          color: theme.textColor,
+          font: {
+            size: 12,
+            family: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
+          }
+        }
+      },
+      tooltip: {
+        ...baseOptions.plugins?.tooltip,
+        backgroundColor: theme.tooltipBackground,
+        titleColor: theme.tooltipText,
+        bodyColor: theme.tooltipText,
+        borderColor: theme.tooltipBorder,
+        borderWidth: 1,
+        cornerRadius: 6
+      }
+    },
+    scales: {
+      ...baseOptions.scales,
+      x: {
+        ...baseOptions.scales?.x,
+        ticks: {
+          ...baseOptions.scales?.x?.ticks,
+          color: theme.tickColor,
+          font: { size: 11 }
+        },
+        grid: {
+          ...baseOptions.scales?.x?.grid,
+          color: theme.gridColor,
+          borderColor: theme.borderColor
+        },
+        title: {
+          ...baseOptions.scales?.x?.title,
+          color: theme.textColor,
+          font: { size: 12, weight: 'bold' }
+        }
+      },
+      y: {
+        ...baseOptions.scales?.y?.ticks,
+        ticks: {
+          color: theme.tickColor,
+          font: { size: 11 }
+        },
+        grid: {
+          ...baseOptions.scales?.y?.grid,
+          color: theme.gridColor,
+          borderColor: theme.borderColor
+        },
+        title: {
+          ...baseOptions.scales?.y?.title,
+          color: theme.textColor,
+          font: { size: 12, weight: 'bold' }
+        }
+      },
+      r: {
+        ...baseOptions.scales?.r,
+        ticks: {
+          ...baseOptions.scales?.r?.ticks,
+          color: theme.tickColor,
+          font: { size: 10 },
+          backdropColor: 'transparent'
+        },
+        grid: {
+          ...baseOptions.scales?.r?.grid,
+          color: theme.gridColor
+        },
+        angleLines: {
+          ...baseOptions.scales?.r?.angleLines,
+          color: theme.gridColor
+        },
+        pointLabels: {
+          ...baseOptions.scales?.r?.pointLabels,
+          color: theme.textColor,
+          font: { size: 11, weight: '500' }
+        }
+      }
+    }
+  };
 };
 
 // =================================== //

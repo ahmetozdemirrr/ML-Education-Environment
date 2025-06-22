@@ -1,4 +1,4 @@
-// frontend/src/components/ResultsViewer.js - FIXED VERSION
+// frontend/src/components/ResultsViewer.js - MARKDOWN SUPPORT ADDED + CODE VIEWER INTEGRATION
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -18,6 +18,8 @@ import {
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import MetricsChart from './MetricsChart';
 import { PerformanceChart, ConfusionMatrix, ComparisonTable } from './MetricsChart';
+import { MarkdownRenderer } from '../utils/markdownUtils'; // YENİ IMPORT
+import CodeViewer from './CodeViewer'; // YENİ IMPORT - CODE VIEWER
 
 import './ResultsViewer.css';
 
@@ -36,12 +38,16 @@ ChartJS.register(
   Filler
 );
 
-const ResultsViewer = ({ results = [], isLoading = false, onClearResults }) => {
+const ResultsViewer = ({ results = [], isLoading = false, onClearResults, isDarkMode = false }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedResults, setSelectedResults] = useState([]);
   const [filterBy, setFilterBy] = useState('all');
   const [sortBy, setSortBy] = useState('timestamp');
   const [expandedResults, setExpandedResults] = useState(new Set());
+
+  // YENİ: Code Viewer State - SOURCE CODE MODAL İÇİN
+  const [codeViewerOpen, setCodeViewerOpen] = useState(false);
+  const [selectedModelForCode, setSelectedModelForCode] = useState(null);
 
   // Move all refs to component level - FIXED
   const barChartRef = useRef(null);
@@ -391,11 +397,36 @@ const renderDetailedMetrics = (result) => {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                  legend: { position: 'top' },
-                  title: { display: true, text: 'Results Distribution by Algorithm' }
+                  legend: {
+                    position: 'top',
+                    labels: {
+                      color: getOverviewChartTheme(isDarkMode).textColor
+                    }
+                  },
+                  title: {
+                    display: true,
+                    text: 'Results Distribution by Algorithm',
+                    color: getOverviewChartTheme(isDarkMode).textColor
+                  }
                 },
                 scales: {
-                  y: { beginAtZero: true }
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      color: getOverviewChartTheme(isDarkMode).textColor
+                    },
+                    grid: {
+                      color: getOverviewChartTheme(isDarkMode).gridColor
+                    }
+                  },
+                  x: {
+                    ticks: {
+                      color: getOverviewChartTheme(isDarkMode).textColor
+                    },
+                    grid: {
+                      color: getOverviewChartTheme(isDarkMode).gridColor
+                    }
+                  }
                 }
               }}
               height={250}
@@ -429,8 +460,17 @@ const renderDetailedMetrics = (result) => {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                  legend: { position: 'top' },
-                  title: { display: true, text: 'Results Distribution by Dataset' }
+                  legend: {
+                    position: 'top',
+                    labels: {
+                      color: getOverviewChartTheme(isDarkMode).textColor
+                    }
+                  },
+                  title: {
+                    display: true,
+                    text: 'Results Distribution by Dataset',
+                    color: getOverviewChartTheme(isDarkMode).textColor
+                  }
                 }
               }}
               height={250}
@@ -508,7 +548,6 @@ const renderDetailedMetrics = (result) => {
   };
 
   const renderChartsTab = () => {
-    // FIXED: Better filtering for charts
     const filteredResults = getFilteredResults().filter(r => r.metrics && Object.keys(r.metrics).length > 0);
 
     if (filteredResults.length === 0) {
@@ -525,13 +564,13 @@ const renderDetailedMetrics = (result) => {
       <div className="charts-tab">
         <div className="charts-grid">
           <div key={`metrics-chart-${filteredResults.length}`}>
-            <MetricsChart results={filteredResults} />
+            <MetricsChart results={filteredResults} isDarkMode={isDarkMode} />
           </div>
           <div key={`performance-chart-${filteredResults.length}`}>
-            <PerformanceChart results={filteredResults} />
+            <PerformanceChart results={filteredResults} isDarkMode={isDarkMode} />
           </div>
           <div key={`confusion-matrix-${filteredResults.length}`}>
-            <ConfusionMatrix results={filteredResults} />
+            <ConfusionMatrix results={filteredResults} isDarkMode={isDarkMode} />
           </div>
         </div>
       </div>
@@ -553,6 +592,17 @@ const renderDetailedMetrics = (result) => {
     );
   };
 
+  // YENİ: Code Viewer Handler Functions - SOURCE CODE MODAL FONKSİYONLARI
+  const handleOpenCodeViewer = (modelName) => {
+    setSelectedModelForCode(modelName);
+    setCodeViewerOpen(true);
+  };
+
+  const handleCloseCodeViewer = () => {
+    setCodeViewerOpen(false);
+    setSelectedModelForCode(null);
+  };
+
   const renderAnalysisTab = () => {
     const filteredResults = getFilteredResults();
 
@@ -567,6 +617,10 @@ const renderDetailedMetrics = (result) => {
     if (!bestResult || (!bestResult.metrics || Object.keys(bestResult.metrics).length === 0)) {
       bestResult = filteredResults.find(r => r.training_metrics && Object.keys(r.training_metrics).length > 0);
     }
+
+    // YENİ: Get unique models used in simulations for source code section
+    // KULLANILAN MODELLERİ OTOMATIK TESPIT ETME
+    const usedModels = [...new Set(filteredResults.map(r => r.modelName))].filter(Boolean);
 
     return (
       <div className="analysis-tab">
@@ -631,6 +685,10 @@ const renderDetailedMetrics = (result) => {
                   <li key={idx}>{rec}</li>
                 ))}
               </ul>
+            ) : bestResult?.enhanced_results?.recommendations ? (
+              <div className="enhanced-recommendations">
+                <MarkdownRenderer content={bestResult.enhanced_results.recommendations} />
+              </div>
             ) : (
               <p>No specific recommendations available.</p>
             )}
@@ -638,33 +696,95 @@ const renderDetailedMetrics = (result) => {
 
           <div className="performance-trends">
             <h4>Performance Trends</h4>
-            <Line
-              key={`trends-${filteredResults.length}`}
-              data={{
-                labels: filteredResults.map((_, idx) => `Run ${idx + 1}`),
-                datasets: [{
-                  label: 'Accuracy',
-                  data: filteredResults.map(r => r.metrics?.accuracy || r.metrics?.Accuracy || 0),
-                  borderColor: 'rgba(75, 192, 192, 1)',
-                  backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                  tension: 0.1
-                }]
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { position: 'top' },
-                  title: { display: true, text: 'Accuracy Trends Over Time' }
-                },
-                scales: {
-                  y: { beginAtZero: true, max: 1 }
-                }
-              }}
-              height={300}
-            />
+              <Line
+                key={`trends-${filteredResults.length}`}
+                data={{
+                  labels: filteredResults.map((_, idx) => `Run ${idx + 1}`),
+                  datasets: [{
+                    label: 'Accuracy',
+                    data: filteredResults.map(r => r.metrics?.accuracy || r.metrics?.Accuracy || 0),
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'top',
+                      labels: {
+                        color: getOverviewChartTheme(isDarkMode).textColor
+                      }
+                    },
+                    title: {
+                      display: true,
+                      text: 'Accuracy Trends Over Time',
+                      color: getOverviewChartTheme(isDarkMode).textColor
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      max: 1,
+                      ticks: {
+                        color: getOverviewChartTheme(isDarkMode).textColor
+                      },
+                      grid: {
+                        color: getOverviewChartTheme(isDarkMode).gridColor
+                      }
+                    },
+                    x: {
+                      ticks: {
+                        color: getOverviewChartTheme(isDarkMode).textColor
+                      },
+                      grid: {
+                        color: getOverviewChartTheme(isDarkMode).gridColor
+                      }
+                    }
+                  }
+                }}
+                height={300}
+              />
           </div>
+
+          {/* YENİ: Model Source Code Section - KAYNAK KOD BÖLÜMÜ */}
+          {usedModels.length > 0 && (
+            <div className="model-source-section">
+              <h4>
+                <span>📝</span>
+                <span>Model Source Code</span>
+              </h4>
+              <p>
+                View the complete Python implementation for the models used in your simulations.
+                Click on any model to see its detailed source code with syntax highlighting.
+              </p>
+              <div className="model-source-buttons">
+                {usedModels.map((modelName) => (
+                  <button
+                    key={modelName}
+                    className="model-source-btn"
+                    onClick={() => handleOpenCodeViewer(modelName)}
+                  >
+                    <span>🔍</span>
+                    <span>{modelName}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* YENİ: Code Viewer Modal - KAYNAK KOD MODAL'I */}
+        {codeViewerOpen && selectedModelForCode && (
+          <CodeViewer
+            isOpen={codeViewerOpen}
+            onClose={handleCloseCodeViewer}
+            modelName={selectedModelForCode}
+            isDarkMode={isDarkMode}
+          />
+        )}
       </div>
     );
   };
@@ -769,6 +889,22 @@ const renderDetailedMetrics = (result) => {
       </div>
     </div>
   );
+};
+
+const getOverviewChartTheme = (isDarkMode) => {
+  if (isDarkMode) {
+    return {
+      textColor: '#e5e7eb',
+      gridColor: '#4b5563',
+      backgroundColor: '#1f2937'
+    };
+  } else {
+    return {
+      textColor: '#374151',
+      gridColor: '#e5e7eb',
+      backgroundColor: '#ffffff'
+    };
+  }
 };
 
 export default ResultsViewer;

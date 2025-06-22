@@ -663,6 +663,7 @@ function App()
             results={simulationResults}
             isLoading={isLoading}
             onClearResults={handleClearResults}
+            isDarkMode={isDarkMode}
           />
         ) : (
           <div className="simulation-content-classic">

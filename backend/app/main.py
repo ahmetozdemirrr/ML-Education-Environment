@@ -105,12 +105,11 @@ async def process_training_request(request: Request, simulation_data: Simulation
     print(f"Cache Key: {cache_key[:16]}...")
 
     # Cache'den kontrol et
-    cached_result = cache_manager.get_cached_evaluation_result(cache_key, selected_metrics)
+    cached_result = cache_manager.get_cached_training_result(cache_key)
 
     # VALIDATE CACHE DATA - boş metrics'leri reddet
     if cached_result and not cached_result.get("metrics"):
         print("⚠️ WARNING: Cache'de boş metrics bulundu, cache entry siliniyor...")
-        cache_manager.delete_cache_entry(cache_key)
         cached_result = None
 
     if cached_result:
