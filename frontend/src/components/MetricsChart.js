@@ -33,9 +33,38 @@ ChartJS.register(
   Filler
 );
 
-// =================================== //
-// HELPER FUNCTIONS
-// =================================== //
+const getAlgorithmColor = (algorithmName) => {
+  const colors = {
+    'Decision Tree': '#ef4444',
+    'Logistic Regression': '#3b82f6',
+    'Random Forest': '#10b981',
+    'SVM': '#f59e0b',
+    'K-Nearest Neighbor': '#8b5cf6',
+    'Artificial Neural Network': '#ec4899',
+    'Naive Bayes': '#6b7280',
+    'Gradient Boosting': '#06b6d4'
+  };
+
+  return colors[algorithmName] || '#64748b';
+};
+
+const createUniqueModelNames = (results) => {
+  const modelCounts = {};
+  return results.map(result => {
+    const originalName = result.modelName;
+    modelCounts[originalName] = (modelCounts[originalName] || 0) + 1;
+
+    const uniqueName = modelCounts[originalName] === 1
+      ? originalName
+      : `${originalName} (${modelCounts[originalName]})`;
+
+    return {
+      ...result,
+      uniqueModelName: uniqueName,
+      instanceNumber: modelCounts[originalName]
+    };
+  });
+};
 
 // Etiket kısaltma fonksiyonu
 const shortenLabel = (modelName, datasetName) => {
@@ -174,9 +203,11 @@ const MetricsChart = ({ results, isDarkMode = false  }) => {
   }
 
   const uniqueResults = getUniqueResults(resultsWithMetrics);
+  const resultsWithUniqueNames = createUniqueModelNames(uniqueResults);
 
   const metricKeys = ['accuracy', 'precision', 'recall', 'f1score', 'roc_auc'];
   const metricLabels = ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC AUC'];
+
   const metricColors = [
     'rgba(239, 68, 68, 0.8)',   // Red
     'rgba(59, 130, 246, 0.8)',  // Blue
@@ -185,11 +216,10 @@ const MetricsChart = ({ results, isDarkMode = false  }) => {
     'rgba(168, 85, 247, 0.8)'   // Purple
   ];
 
-  // Bar Chart Data
   const barData = {
-    labels: uniqueResults.map(r => shortenLabel(r.modelName, r.datasetName)),
+    labels: resultsWithUniqueNames.map(r => shortenLabel(r.uniqueModelName, r.datasetName)), // DEĞİŞTİRİLDİ
     datasets: metricKeys.map((metric, index) => {
-      const data = uniqueResults.map(r => getMetricValue(r, metric));
+      const data = resultsWithUniqueNames.map(r => getMetricValue(r, metric));
 
       return {
         label: metricLabels[index],
@@ -214,16 +244,16 @@ const MetricsChart = ({ results, isDarkMode = false  }) => {
     return colors;
   };
 
-  const colors = generateColors(uniqueResults.length);
+  const colors = generateColors(resultsWithUniqueNames.length);
 
   const radarData = {
     labels: metricLabels,
-    datasets: uniqueResults.map((result, index) => {
+    datasets: resultsWithUniqueNames.map((result, index) => {
       const color = colors[index];
       const data = metricKeys.map(metric => getMetricValue(result, metric));
 
       return {
-        label: shortenLabel(result.modelName, result.datasetName),
+        label: shortenLabel(result.uniqueModelName, result.datasetName),
         data: data,
         borderColor: color.border,
         backgroundColor: color.bg,
@@ -289,14 +319,14 @@ const MetricsChart = ({ results, isDarkMode = false  }) => {
                 </tr>
               </thead>
               <tbody>
-                {uniqueResults.map((result, index) => (
+                {resultsWithUniqueNames.map((result, index) => (
                   <tr key={index}>
                     <td className="model-name-cell">
                       <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                        {result.modelName}
+                        {result.uniqueModelName}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                        {result.datasetName}
+                        Instance #{result.instanceNumber || 1} | {result.datasetName}
                       </div>
                     </td>
                     {metricKeys.map((metric, metricIndex) => {
@@ -321,8 +351,8 @@ const MetricsChart = ({ results, isDarkMode = false  }) => {
             onClick={async () => {
               setIsAnalyzingBar(true);
               const chartData = {
-                models: uniqueResults.map(r => ({
-                  name: shortenLabel(r.modelName, r.datasetName),
+              models: resultsWithUniqueNames.map(r => ({
+                  name: shortenLabel(r.uniqueModelName, r.datasetName),
                   metrics: {
                     accuracy: getMetricValue(r, 'accuracy'),
                     precision: getMetricValue(r, 'precision'),
@@ -426,8 +456,8 @@ const MetricsChart = ({ results, isDarkMode = false  }) => {
             onClick={async () => {
               setIsAnalyzingRadar(true); // DÜZELTİLDİ
               const chartData = {
-                models: uniqueResults.map(r => ({
-                  name: shortenLabel(r.modelName, r.datasetName),
+                models: resultsWithUniqueNames.map(r => ({
+                  name: shortenLabel(r.uniqueModelName, r.datasetName),
                   metrics: {
                     accuracy: getMetricValue(r, 'accuracy'),
                     precision: getMetricValue(r, 'precision'),
@@ -601,21 +631,23 @@ const PerformanceChart = ({ results, isDarkMode = false }) => {
       </div>
     );
   };
+  const resultsWithUniqueNames = createUniqueModelNames(results);
 
   // Line chart data
   const timeSeriesData = {
-    labels: results.map(r => shortenLabel(r.modelName, r.datasetName)),
+    labels: resultsWithUniqueNames.map(r => shortenLabel(r.uniqueModelName, r.datasetName)),
+
     datasets: [
       {
         label: 'Accuracy',
-        data: results.map(r => getAccuracy(r)),
+        data: resultsWithUniqueNames.map(r => getAccuracy(r)),
         borderColor: 'rgba(75, 192, 192, 1)',
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         yAxisID: 'y'
       },
       {
         label: 'Training Time (s)',
-        data: results.map(r => r.fit_time_seconds || r.score_time_seconds || 0),
+        data: resultsWithUniqueNames.map(r => r.fit_time_seconds || r.score_time_seconds || 0), // DEĞİŞTİRİLDİ
         borderColor: 'rgba(255, 99, 132, 1)',
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         yAxisID: 'y1'

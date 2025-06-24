@@ -3011,3 +3011,717 @@
     background: rgba(255, 255, 255, 0.2);
   }
 }
+
+.simulation-stats-summary {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+.simulation-stats-summary span {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 6px 12px;
+  border-radius: 20px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.data-context, .algorithms-context, .network-context, .tree-context, .race-context {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--results-text-tertiary);
+  margin-top: 8px;
+  text-align: center;
+}
+
+.training-animations-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.single-training-animation {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.single-training-animation:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.animation-title {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.animation-title h5 {
+  margin: 0 0 8px 0;
+  color: var(--results-text-primary);
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.animation-title p {
+  margin: 0;
+  color: var(--results-text-tertiary);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Dark Mode için */
+.dark-mode .single-training-animation {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .single-training-animation:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .simulation-stats-summary {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .training-animations-container {
+    gap: 20px;
+    max-height: 70vh;
+  }
+
+  .single-training-animation {
+    padding: 16px;
+  }
+}
+
+/* ResultsViewer.css - Bu stilleri dosyanın sonuna ekleyin */
+
+/* =============================================== */
+/* SIMULATION TAB ENHANCED STYLES */
+/* =============================================== */
+
+.simulation-stats-summary {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+.simulation-stats-summary span {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 6px 12px;
+  border-radius: 20px;
+  color: #667eea;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.data-context,
+.algorithms-context,
+.network-context,
+.tree-context,
+.race-context {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--results-text-tertiary);
+  margin-top: 8px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid var(--results-accent-blue);
+}
+
+.training-animations-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  overflow-y: auto;
+  max-height: 80vh;
+  border-radius: 8px;
+}
+
+.single-training-animation {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.single-training-animation::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.single-training-animation:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.single-training-animation:hover::before {
+  left: 100%;
+}
+
+.animation-title {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.animation-title::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, white, transparent);
+  border-radius: 1px;
+}
+
+.animation-title h5 {
+  margin: 0 0 8px 0;
+  color: var(--results-text-primary);
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.animation-title h5::before {
+  content: "⚡";
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: white;
+}
+
+.animation-title p {
+  margin: 0;
+  color: var(--results-text-tertiary);
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* =============================================== */
+/* ENHANCED CHART STYLES FOR UNIQUE NAMING */
+/* =============================================== */
+
+.chart-container canvas {
+  border-radius: 8px !important;
+}
+
+.overview-charts .chart-container {
+  position: relative;
+  overflow: visible;
+}
+
+.overview-charts .chart-container::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+  border-radius: 12px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.overview-charts .chart-container:hover::before {
+  opacity: 0.1;
+}
+
+/* =============================================== */
+/* DARK MODE ENHANCEMENTS */
+/* =============================================== */
+
+.dark-mode .simulation-stats-summary span {
+  background: rgba(255, 255, 255, 0.1);
+  color: #60a5fa;
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.dark-mode .single-training-animation {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .single-training-animation:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .data-context,
+.dark-mode .algorithms-context,
+.dark-mode .network-context,
+.dark-mode .tree-context,
+.dark-mode .race-context {
+  background: rgba(255, 255, 255, 0.05);
+  border-left-color: var(--results-accent-blue);
+}
+
+/* =============================================== */
+/* LOADING STATES FOR ANIMATIONS */
+/* =============================================== */
+
+.animation-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  margin: 20px 0;
+}
+
+.animation-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-left: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+.animation-loading-text {
+  color: var(--results-text-tertiary);
+  font-style: italic;
+  text-align: center;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* =============================================== */
+/* PERFORMANCE INDICATORS */
+/* =============================================== */
+
+.performance-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  backdrop-filter: blur(5px);
+}
+
+.performance-indicator.excellent {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.performance-indicator.good {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.performance-indicator.fair {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.performance-indicator.poor {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* =============================================== */
+/* INTERACTIVE HOVER EFFECTS */
+/* =============================================== */
+
+.simulation-section:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.simulation-section:hover .section-header::after {
+  width: 80px;
+  transition: width 0.3s ease;
+}
+
+/* =============================================== */
+/* ACCESSIBILITY IMPROVEMENTS */
+/* =============================================== */
+
+.simulation-tab button:focus,
+.simulation-tab input:focus,
+.simulation-tab select:focus {
+  outline: 2px solid var(--results-accent-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.simulation-tab button:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+/* =============================================== */
+/* RESPONSIVE DESIGN ENHANCEMENTS */
+/* =============================================== */
+
+@media (max-width: 768px) {
+  .simulation-stats-summary {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .training-animations-container {
+    gap: 20px;
+    max-height: 70vh;
+  }
+
+  .single-training-animation {
+    padding: 16px;
+  }
+
+  .animation-title h5 {
+    font-size: 1rem;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .data-context,
+  .algorithms-context,
+  .network-context,
+  .tree-context,
+  .race-context {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .simulation-stats-summary span {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+
+  .animation-title h5 {
+    font-size: 0.9rem;
+  }
+
+  .animation-title p {
+    font-size: 0.8rem;
+  }
+
+  .training-animations-container {
+    max-height: 60vh;
+  }
+}
+
+/* =============================================== */
+/* PRINT STYLES */
+/* =============================================== */
+
+@media print {
+  .simulation-tab {
+    background: white !important;
+    color: black !important;
+  }
+
+  .simulation-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    background: white !important;
+    border: 1px solid black !important;
+  }
+
+  .animation-controls,
+  .toggle-stats-btn,
+  .toggle-metrics-btn,
+  .toggle-details-btn {
+    display: none !important;
+  }
+
+  .single-training-animation {
+    background: white !important;
+    border: 1px solid black !important;
+  }
+}
+
+/* =============================================== */
+/* HIGH CONTRAST MODE SUPPORT */
+/* =============================================== */
+
+@media (prefers-contrast: high) {
+  .simulation-section {
+    border: 2px solid;
+  }
+
+  .section-header {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .single-training-animation {
+    border: 2px solid;
+  }
+
+  .animation-title {
+    border-bottom: 3px solid;
+  }
+}
+
+/* =============================================== */
+/* REDUCED MOTION SUPPORT */
+/* =============================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .single-training-animation,
+  .simulation-section,
+  .animation-title h5,
+  .overview-charts .chart-container {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .single-training-animation::before {
+    display: none;
+  }
+
+  .animation-loading-spinner {
+    animation: none !important;
+    border: 4px solid currentColor;
+  }
+}
+
+/* =============================================== */
+/* CUSTOM SCROLLBAR FOR ANIMATION CONTAINER */
+/* =============================================== */
+
+.training-animations-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.training-animations-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.training-animations-container::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.training-animations-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.dark-mode .training-animations-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .training-animations-container::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .training-animations-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* =============================================== */
+/* TOOLTIP ENHANCEMENTS */
+/* =============================================== */
+
+.simulation-section[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.dark-mode .simulation-section[data-tooltip]:hover::after {
+  background: rgba(255, 255, 255, 0.9);
+  color: black;
+}
+
+/* =============================================== */
+/* ANIMATION PERFORMANCE OPTIMIZATIONS */
+/* =============================================== */
+
+.single-training-animation,
+.simulation-section {
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.chart-container {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* =============================================== */
+/* ENHANCED FOCUS STYLES */
+/* =============================================== */
+
+.simulation-tab *:focus {
+  outline: 2px solid var(--results-accent-blue);
+  outline-offset: 2px;
+}
+
+.simulation-tab button:focus {
+  outline-color: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2);
+}
+
+.dark-mode .simulation-tab button:focus {
+  outline-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+/* =============================================== */
+/* LOADING SKELETON ANIMATIONS */
+/* =============================================== */
+
+.skeleton-loading {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.1) 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.dark-mode .skeleton-loading {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+}
+
+/* =============================================== */
+/* NOTIFICATION STYLES */
+/* =============================================== */
+
+.simulation-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--results-accent-blue);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.simulation-notification.show {
+  transform: translateX(0);
+}
+
+.simulation-notification.success {
+  background: var(--results-accent-green);
+}
+
+.simulation-notification.warning {
+  background: var(--results-accent-yellow);
+}
+
+.simulation-notification.error {
+  background: var(--results-accent-red);
+}
+
+/* BASİT ÇÖZÜM - Sadece bunu ekleyin */
+.single-training-animation {
+  margin: 0 0 50px 0 !important;
+  position: relative !important;
+  display: block !important;
+  clear: both !important;
+  overflow: visible !important;
+}
+
+.training-animations-container {
+  padding: 20px 0 !important;
+}
+
+.single-training-animation:last-child {
+  margin-bottom: 20px !important;
+}

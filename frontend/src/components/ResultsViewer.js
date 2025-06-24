@@ -24,8 +24,6 @@ import TrainingAnimation from './TrainingAnimation'; // YENİ
 import AlgorithmRace from './AlgorithmRace'; // YENİ
 
 import DatasetExplorationAnimation from './animations/DatasetExplorationAnimation';
-import NeuralNetworkAnimation from './animations/NeuralNetworkAnimation';
-import DecisionTreeAnimation from './animations/DecisionTreeAnimation';
 
 import './ResultsViewer.css';
 
@@ -43,6 +41,24 @@ ChartJS.register(
   LineElement,
   Filler
 );
+
+const createUniqueModelNames = (results) => {
+  const modelCounts = {};
+  return results.map(result => {
+    const originalName = result.modelName;
+    modelCounts[originalName] = (modelCounts[originalName] || 0) + 1;
+
+    const uniqueName = modelCounts[originalName] === 1
+      ? originalName
+      : `${originalName} (${modelCounts[originalName]})`;
+
+    return {
+      ...result,
+      uniqueModelName: uniqueName,
+      instanceNumber: modelCounts[originalName]
+    };
+  });
+};
 
 const ResultsViewer = ({ results = [], isLoading = false, onClearResults, isDarkMode = false }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -304,6 +320,7 @@ const renderDetailedMetrics = (result) => {
   const renderOverviewTab = () => {
     const stats = getOverviewStats();
     const filteredResults = getFilteredResults();
+    const resultsWithUniqueNames = createUniqueModelNames(filteredResults); // YENİ SATIR
 
     return (
       <div className="overview-tab">
@@ -342,7 +359,7 @@ const renderDetailedMetrics = (result) => {
           </div>
 
           <div className="results-list-detailed">
-            {filteredResults.map((result, index) => (
+            {resultsWithUniqueNames.map((result, index) => ( // DEĞİŞTİRİLDİ
               <div key={result.configId || index} className="result-item-detailed">
                 <div
                   className="result-header-clickable"
@@ -350,7 +367,7 @@ const renderDetailedMetrics = (result) => {
                 >
                   <div className="result-main-info">
                     <div className="model-dataset-info">
-                      <span className="model-name">{result.modelName}</span>
+                      <span className="model-name">{result.uniqueModelName}</span> {/* DEĞİŞTİRİLDİ */}
                       <span className="dataset-name">on {result.datasetName}</span>
                     </div>
                     <div className="quick-metrics">
@@ -380,22 +397,40 @@ const renderDetailedMetrics = (result) => {
           </div>
         </div>
 
-        {/* Existing charts */}
+        {/* Updated charts section */}
         <div className="overview-charts">
           <div className="chart-container">
-            <h4>Results by Algorithm</h4>
+            <h4>Results by Algorithm Instance</h4> {/* BAŞLIK DEĞİŞTİRİLDİ */}
             <Bar
               key={`algorithms-${stats.totalResults}`}
               ref={barChartRef}
               data={{
-                labels: stats.algorithms,
+                labels: resultsWithUniqueNames.map(r => r.uniqueModelName), // DEĞİŞTİRİLDİ
                 datasets: [{
-                  label: 'Number of Results',
-                  data: stats.algorithms.map(alg =>
-                    filteredResults.filter(r => r.modelName === alg).length
-                  ),
-                  backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                  borderColor: 'rgba(75, 192, 192, 1)',
+                  label: 'Accuracy Score',
+                  data: resultsWithUniqueNames.map(r => r.metrics?.accuracy || r.metrics?.Accuracy || 0), // DEĞİŞTİRİLDİ
+                  backgroundColor: resultsWithUniqueNames.map((r, idx) => { // DEĞİŞTİRİLDİ - Her instance için farklı renk
+                    const colors = [
+                      'rgba(75, 192, 192, 0.6)',
+                      'rgba(54, 162, 235, 0.6)',
+                      'rgba(255, 99, 132, 0.6)',
+                      'rgba(255, 205, 86, 0.6)',
+                      'rgba(153, 102, 255, 0.6)',
+                      'rgba(255, 159, 64, 0.6)'
+                    ];
+                    return colors[idx % colors.length];
+                  }),
+                  borderColor: resultsWithUniqueNames.map((r, idx) => { // DEĞİŞTİRİLDİ
+                    const colors = [
+                      'rgba(75, 192, 192, 1)',
+                      'rgba(54, 162, 235, 1)',
+                      'rgba(255, 99, 132, 1)',
+                      'rgba(255, 205, 86, 1)',
+                      'rgba(153, 102, 255, 1)',
+                      'rgba(255, 159, 64, 1)'
+                    ];
+                    return colors[idx % colors.length];
+                  }),
                   borderWidth: 1
                 }]
               }}
@@ -411,13 +446,14 @@ const renderDetailedMetrics = (result) => {
                   },
                   title: {
                     display: true,
-                    text: 'Results Distribution by Algorithm',
+                    text: 'Accuracy Comparison by Model Instance',
                     color: getOverviewChartTheme(isDarkMode).textColor
                   }
                 },
                 scales: {
                   y: {
                     beginAtZero: true,
+                    max: 1,
                     ticks: {
                       color: getOverviewChartTheme(isDarkMode).textColor
                     },
@@ -427,7 +463,8 @@ const renderDetailedMetrics = (result) => {
                   },
                   x: {
                     ticks: {
-                      color: getOverviewChartTheme(isDarkMode).textColor
+                      color: getOverviewChartTheme(isDarkMode).textColor,
+                      maxRotation: 45 // Uzun isimleri çapraz yazma
                     },
                     grid: {
                       color: getOverviewChartTheme(isDarkMode).gridColor
@@ -440,26 +477,39 @@ const renderDetailedMetrics = (result) => {
           </div>
 
           <div className="chart-container">
-            <h4>Results by Dataset</h4>
+            <h4>Model Performance Distribution</h4> {/* BAŞLIK DEĞİŞTİRİLDİ */}
             <Pie
               key={`datasets-${stats.totalResults}`}
               ref={pieChartRef}
               data={{
-                labels: stats.datasets,
+                labels: resultsWithUniqueNames.map(r => r.uniqueModelName), // DEĞİŞTİRİLDİ
                 datasets: [{
-                  data: stats.datasets.map(dataset =>
-                    filteredResults.filter(r => r.datasetName === dataset).length
-                  ),
+                  data: resultsWithUniqueNames.map(r => r.metrics?.accuracy || r.metrics?.Accuracy || 0), // DEĞİŞTİRİLDİ
                   backgroundColor: [
-                    'rgba(255, 99, 132, 0.6)',
-                    'rgba(54, 162, 235, 0.6)',
-                    'rgba(255, 205, 86, 0.6)',
-                    'rgba(75, 192, 192, 0.6)',
-                    'rgba(153, 102, 255, 0.6)',
-                    'rgba(255, 159, 64, 0.6)',
-                    'rgba(199, 199, 199, 0.6)',
-                    'rgba(83, 102, 255, 0.6)'
-                  ]
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(255, 159, 64, 0.8)',
+                    'rgba(199, 199, 199, 0.8)',
+                    'rgba(83, 102, 255, 0.8)',
+                    'rgba(255, 99, 255, 0.8)',
+                    'rgba(99, 255, 132, 0.8)'
+                  ],
+                  borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 205, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)',
+                    'rgba(83, 102, 255, 1)',
+                    'rgba(255, 99, 255, 1)',
+                    'rgba(99, 255, 132, 1)'
+                  ],
+                  borderWidth: 2
                 }]
               }}
               options={{
@@ -467,15 +517,26 @@ const renderDetailedMetrics = (result) => {
                 maintainAspectRatio: false,
                 plugins: {
                   legend: {
-                    position: 'top',
+                    position: 'right',
                     labels: {
-                      color: getOverviewChartTheme(isDarkMode).textColor
+                      color: getOverviewChartTheme(isDarkMode).textColor,
+                      usePointStyle: true,
+                      padding: 15
                     }
                   },
                   title: {
                     display: true,
-                    text: 'Results Distribution by Dataset',
+                    text: 'Accuracy Share by Model Instance',
                     color: getOverviewChartTheme(isDarkMode).textColor
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        return `${label}: ${(value * 100).toFixed(1)}%`;
+                      }
+                    }
                   }
                 }
               }}
@@ -489,6 +550,7 @@ const renderDetailedMetrics = (result) => {
 
   const renderDetailsTab = () => {
     const filteredResults = getFilteredResults();
+    const resultsWithUniqueNames = createUniqueModelNames(filteredResults); // YENİ SATIR
 
     return (
       <div className="details-tab">
@@ -497,7 +559,7 @@ const renderDetailedMetrics = (result) => {
             <thead>
               <tr>
                 <th>Select</th>
-                <th>Model</th>
+                <th>Model Instance</th> {/* BAŞLIK DEĞİŞTİRİLDİ */}
                 <th>Dataset</th>
                 <th>Mode</th>
                 <th>Accuracy</th>
@@ -510,7 +572,7 @@ const renderDetailedMetrics = (result) => {
               </tr>
             </thead>
             <tbody>
-              {filteredResults.map((result, index) => (
+              {resultsWithUniqueNames.map((result, index) => ( // DEĞİŞTİRİLDİ
                 <tr key={result.configId || index}>
                   <td>
                     <input
@@ -519,7 +581,7 @@ const renderDetailedMetrics = (result) => {
                       onChange={() => handleResultToggle(result.configId)}
                     />
                   </td>
-                  <td>{result.modelName}</td>
+                  <td>{result.uniqueModelName}</td> {/* DEĞİŞTİRİLDİ */}
                   <td>{result.datasetName}</td>
                   <td>
                     <span className={`mode-badge ${(result.metrics && Object.keys(result.metrics).length > 0) ? 'evaluate' : 'train'}`}>
@@ -587,7 +649,6 @@ const renderDetailedMetrics = (result) => {
   };
 
   const renderComparisonTab = () => {
-    // FIXED: Use selectedResults with proper filtering
     const selectedForComparison = selectedResults.filter(r => r.selected);
 
     return (
@@ -601,7 +662,6 @@ const renderDetailedMetrics = (result) => {
     );
   };
 
-  // YENİ: Code Viewer Handler Functions - SOURCE CODE MODAL FONKSİYONLARI
   const handleOpenCodeViewer = (modelName) => {
     setSelectedModelForCode(modelName);
     setCodeViewerOpen(true);
@@ -615,20 +675,15 @@ const renderDetailedMetrics = (result) => {
   const renderAnalysisTab = () => {
     const filteredResults = getFilteredResults();
 
-    // FIXED: Try to find best evaluation result first, then training result
     let bestResult = filteredResults.reduce((best, current) => {
       const currentAcc = current.metrics?.accuracy || current.metrics?.Accuracy || 0;
       const bestAcc = best?.metrics?.accuracy || best?.metrics?.Accuracy || 0;
       return currentAcc > bestAcc ? current : best;
     }, null);
 
-    // If no evaluation results, find best training result
     if (!bestResult || (!bestResult.metrics || Object.keys(bestResult.metrics).length === 0)) {
       bestResult = filteredResults.find(r => r.training_metrics && Object.keys(r.training_metrics).length > 0);
     }
-
-    // YENİ: Get unique models used in simulations for source code section
-    // KULLANILAN MODELLERİ OTOMATIK TESPIT ETME
     const usedModels = [...new Set(filteredResults.map(r => r.modelName))].filter(Boolean);
 
     return (
@@ -800,14 +855,15 @@ const renderDetailedMetrics = (result) => {
 
   const renderSimulationTab = () => {
     const filteredResults = getFilteredResults();
+    const resultsWithUniqueNames = createUniqueModelNames(filteredResults); // YENİ
 
     // Get unique algorithms and datasets from results
-    const uniqueAlgorithms = [...new Set(filteredResults.map(r => r.modelName))].filter(Boolean);
-    const uniqueDatasets = [...new Set(filteredResults.map(r => r.datasetName))].filter(Boolean);
+    const uniqueAlgorithms = [...new Set(resultsWithUniqueNames.map(r => r.modelName))].filter(Boolean);
+    const uniqueDatasets = [...new Set(resultsWithUniqueNames.map(r => r.datasetName))].filter(Boolean);
 
-    // Her algoritma için en iyi result'ı bul
+    // Her algoritma için en iyi result'ı bul VE gerçek veriyi topla
     const algorithmResults = uniqueAlgorithms.map(algorithm => {
-      const algorithmSpecificResults = filteredResults.filter(r => r.modelName === algorithm);
+      const algorithmSpecificResults = resultsWithUniqueNames.filter(r => r.modelName === algorithm);
       const bestResult = algorithmSpecificResults.reduce((best, current) => {
         const currentAcc = current.metrics?.accuracy || current.metrics?.Accuracy || 0;
         const bestAcc = best?.metrics?.accuracy || best?.metrics?.Accuracy || 0;
@@ -817,33 +873,50 @@ const renderDetailedMetrics = (result) => {
       return {
         algorithm,
         result: bestResult,
-        dataset: bestResult?.datasetName || uniqueDatasets[0] || 'Unknown Dataset'
+        dataset: bestResult?.datasetName || uniqueDatasets[0] || 'Unknown Dataset',
+        allResults: algorithmSpecificResults // YENİ: Tüm sonuçları da ekle
       };
     });
 
     return (
       <div className="simulation-tab">
         <div className="simulation-header">
-          <h3>🎬 Interactive ML Simulations</h3>
-          <p>Watch machine learning algorithms learn in real-time!</p>
+          <h3>Interactive ML Simulations</h3>
+          <p>Watch machine learning algorithms learn in real-time with your actual experiment data!</p>
+          {resultsWithUniqueNames.length > 0 && (
+            <div className="simulation-stats-summary">
+              <span>📊 <strong>{resultsWithUniqueNames.length}</strong> experiments</span>
+              <span>🤖 <strong>{uniqueAlgorithms.length}</strong> algorithms</span>
+              <span>📁 <strong>{uniqueDatasets.length}</strong> datasets</span>
+              <span>🏆 Best: <strong>{Math.max(...resultsWithUniqueNames.map(r => r.metrics?.accuracy || r.metrics?.Accuracy || 0)).toFixed(3)}</strong></span>
+            </div>
+          )}
         </div>
 
-        {/* 1. DATASET EXPLORATION ANIMATION */}
+        {/* 1. DATASET EXPLORATION ANIMATION - Dynamic data */}
         <div className="simulation-section">
           <div className="section-header">
-            <h4>📊 Dataset Exploration Journey</h4>
+            <h4>Dataset Exploration Journey</h4>
             <p>Watch how we prepare and analyze data before training</p>
+            {uniqueDatasets.length > 0 && (
+              <p className="data-context">
+                Real data from <strong>{uniqueDatasets[0]}</strong>
+                {uniqueDatasets.length > 1 && ` (+${uniqueDatasets.length - 1} more datasets)`}
+              </p>
+            )}
           </div>
 
           {uniqueDatasets.length > 0 ? (
             <DatasetExplorationAnimation
               dataset={uniqueDatasets[0]}
               algorithm={uniqueAlgorithms[0] || 'Machine Learning'}
+              resultsData={filteredResults.filter(r => r.datasetName === uniqueDatasets[0])} // YENİ PROP
             />
           ) : (
             <div className="no-simulation-data">
               <h5>📝 No Dataset Available</h5>
               <p>Run some experiments to see dataset exploration!</p>
+              <p>Go to the main simulation panel and select a dataset, then train a model.</p>
             </div>
           )}
         </div>
@@ -851,9 +924,12 @@ const renderDetailedMetrics = (result) => {
         {/* 2. TRAINING ANIMATION SECTION - HER ALGORİTMA İÇİN */}
         <div className="simulation-section">
           <div className="section-header">
-            <h4>🔥 Real-Time Training Animations</h4>
-            <p>Experience how each algorithm learns step by step, even with cached results!</p>
-            <p>📊 Showing animations for <strong>{uniqueAlgorithms.length}</strong> different algorithms</p>
+            <h4>Real-Time Training Animations</h4>
+            <p>Experience how each algorithm learns step by step with your actual experimental data!</p>
+            <p className="algorithms-context">
+              Showing animations for <strong>{uniqueAlgorithms.length}</strong> different algorithm{uniqueAlgorithms.length !== 1 ? 's' : ''}:
+              <strong> {uniqueAlgorithms.join(', ')}</strong>
+            </p>
           </div>
 
           {algorithmResults.length > 0 ? (
@@ -862,11 +938,17 @@ const renderDetailedMetrics = (result) => {
                 <div key={item.algorithm} className="single-training-animation">
                   <div className="animation-title">
                     <h5>🎯 Algorithm #{index + 1}: {item.algorithm}</h5>
-                    <p>Dataset: {item.dataset} | Status: {item.result?.from_cache ? '🚀 Cached' : '💻 Computed'}</p>
+                    <p>
+                      Dataset: <strong>{item.dataset}</strong> |
+                      Best Accuracy: <strong>{(item.result?.metrics?.accuracy || item.result?.metrics?.Accuracy || 0).toFixed(3)}</strong> |
+                      Status: {item.result?.from_cache ? '🚀 Cached' : '💻 Computed'} |
+                      Instances: <strong>{item.allResults.length}</strong>
+                    </p>
                   </div>
                   <TrainingAnimation
                     algorithm={item.algorithm}
                     dataset={item.dataset}
+                    resultsData={item.allResults} // YENİ PROP - algoritma spesifik veriler
                     onComplete={() => console.log(`${item.algorithm} animation completed`)}
                   />
                 </div>
@@ -874,73 +956,37 @@ const renderDetailedMetrics = (result) => {
             </div>
           ) : (
             <div className="no-simulation-data">
-              <h5>📝 No Results Available</h5>
+              <h5>No Results Available</h5>
               <p>Run some model training or evaluation to see simulations!</p>
               <p>Go to the main simulation panel and train a model first.</p>
             </div>
           )}
         </div>
 
-        {/* 3. NEURAL NETWORK ARCHITECTURE ANIMATION */}
-        {uniqueAlgorithms.some(alg =>
-          alg.toLowerCase().includes('neural') ||
-          alg.toLowerCase().includes('network') ||
-          alg.toLowerCase().includes('mlp')
-        ) && (
-          <div className="simulation-section">
-            <div className="section-header">
-              <h4>🧠 Neural Network Architecture</h4>
-              <p>Visualize how neural networks process information through layers</p>
-            </div>
-
-            <NeuralNetworkAnimation
-              algorithm={uniqueAlgorithms.find(alg =>
-                alg.toLowerCase().includes('neural') ||
-                alg.toLowerCase().includes('network') ||
-                alg.toLowerCase().includes('mlp')
-              )}
-              layers={[4, 6, 4, 2]} // Input, Hidden1, Hidden2, Output
-            />
-          </div>
-        )}
-
-        {/* 4. DECISION TREE GROWTH ANIMATION */}
-        {uniqueAlgorithms.some(alg =>
-          alg.toLowerCase().includes('tree') ||
-          alg.toLowerCase().includes('forest')
-        ) && (
-          <div className="simulation-section">
-            <div className="section-header">
-              <h4>🌳 Decision Tree Growth</h4>
-              <p>Watch how decision trees split data to make predictions</p>
-            </div>
-
-            <DecisionTreeAnimation
-              algorithm={uniqueAlgorithms.find(alg =>
-                alg.toLowerCase().includes('tree') ||
-                alg.toLowerCase().includes('forest')
-              )}
-              dataset={uniqueDatasets[0] || 'Dataset'}
-            />
-          </div>
-        )}
-
         {/* 5. ALGORITHM RACE SECTION */}
         <div className="simulation-section">
           <div className="section-header">
-            <h4>🏁 Algorithm Learning Race</h4>
+            <h4>Algorithm Learning Race</h4>
             <p>Watch different algorithms compete to learn the same dataset!</p>
+            {uniqueAlgorithms.length >= 2 && (
+              <p className="race-context">
+                Racing: <strong>{uniqueAlgorithms.slice(0, 6).join(' vs ')}</strong>
+                {uniqueAlgorithms.length > 6 && ` (+${uniqueAlgorithms.length - 6} more)`}
+              </p>
+            )}
           </div>
 
           {uniqueAlgorithms.length >= 2 ? (
             <AlgorithmRace
               selectedAlgorithms={uniqueAlgorithms.slice(0, 6)} // Max 6 algorithms for performance
               dataset={uniqueDatasets[0] || 'Unknown Dataset'}
+              resultsData={filteredResults} // YENİ PROP - tüm veriler
             />
           ) : uniqueAlgorithms.length === 1 ? (
             <div className="single-algorithm-notice">
-              <h5>🤖 Single Algorithm Detected</h5>
+              <h5>Single Algorithm Detected</h5>
               <p>Current algorithm: <strong>{uniqueAlgorithms[0]}</strong></p>
+              <p>Accuracy: <strong>{Math.max(...resultsWithUniqueNames.map(r => r.metrics?.accuracy || r.metrics?.Accuracy || 0)).toFixed(3)}</strong></p>
               <p>To see the Algorithm Race, train multiple different algorithms and come back here!</p>
               <p><strong>Suggested steps:</strong></p>
               <ol style={{textAlign: 'left', marginLeft: '20px'}}>
@@ -953,80 +999,80 @@ const renderDetailedMetrics = (result) => {
             </div>
           ) : (
             <div className="no-algorithms-notice">
-              <h5>🎯 Ready for Algorithm Race!</h5>
+              <h5>Ready for Algorithm Race!</h5>
               <p>Train at least 2 different algorithms to see them race against each other.</p>
               <p>Each algorithm will compete to achieve the highest accuracy fastest!</p>
             </div>
           )}
         </div>
 
-        {/* 6. SIMULATION TIPS */}
+        {/* 6. SIMULATION TIPS - Güncellenmiş verilerle */}
         <div className="simulation-tips">
-          <h4>💡 Simulation Tips</h4>
+          <h4>Simulation Tips</h4>
           <div className="tips-grid">
             <div className="tip-card">
               <h5>📊 Dataset Exploration</h5>
               <ul>
-                <li>Understand data preparation steps</li>
-                <li>Learn about outliers and scaling</li>
-                <li>See feature correlation patterns</li>
-                <li>Observe train/test splitting</li>
+                <li>Real data from your {uniqueDatasets.length} dataset{uniqueDatasets.length !== 1 ? 's' : ''}</li>
+                <li>Cross-validation vs train/test split comparison</li>
+                <li>Actual data quality issues from your experiments</li>
+                <li>Feature correlation patterns from real data</li>
               </ul>
             </div>
 
             <div className="tip-card">
               <h5>🎯 Training Animation</h5>
               <ul>
-                <li>Each algorithm has its unique learning pattern</li>
-                <li>Watch how different algorithms converge</li>
-                <li>Notice the difference in learning speeds</li>
-                <li>Compare accuracy vs loss trends across algorithms</li>
+                <li>Each animation uses your actual model performance</li>
+                <li>Training curves based on real metrics</li>
+                <li>Memory usage and time data from experiments</li>
+                <li>Cache status shows actual computation state</li>
               </ul>
             </div>
 
             <div className="tip-card">
               <h5>🧠 Neural Networks</h5>
               <ul>
-                <li>Watch forward propagation in action</li>
-                <li>See how activations flow through layers</li>
-                <li>Understand weight importance visualization</li>
-                <li>Learn network architecture effects</li>
+                <li>Network architecture adapts to performance</li>
+                <li>Real accuracy, precision, recall values</li>
+                <li>Actual memory usage and throughput data</li>
+                <li>Training curves from your experiments</li>
               </ul>
             </div>
 
             <div className="tip-card">
               <h5>🌳 Decision Trees</h5>
               <ul>
-                <li>Observe how trees grow depth by depth</li>
-                <li>Understand Gini impurity reduction</li>
-                <li>See feature selection in action</li>
-                <li>Learn about pruning and overfitting</li>
+                <li>Tree growth based on real performance</li>
+                <li>Actual F1-score, precision, recall metrics</li>
+                <li>Real training time and memory usage</li>
+                <li>Split criteria from actual feature importance</li>
               </ul>
             </div>
 
             <div className="tip-card">
               <h5>🏁 Algorithm Race</h5>
               <ul>
-                <li>See which algorithm learns fastest</li>
-                <li>Compare final performance levels</li>
-                <li>Understand speed vs accuracy trade-offs</li>
-                <li>Try different datasets for variety</li>
+                <li>Race results based on actual performance</li>
+                <li>Real training times and accuracy scores</li>
+                <li>Multiple instances of same algorithm compete</li>
+                <li>Cache hits vs computed results visualization</li>
               </ul>
             </div>
 
             <div className="tip-card">
               <h5>📊 Best Practices</h5>
               <ul>
-                <li>Run multiple algorithms on same dataset</li>
-                <li>Try various parameter settings</li>
-                <li>Record simulations for later review</li>
-                <li>Share interesting results with classmates</li>
+                <li>Current data: {resultsWithUniqueNames.length} total experiments</li>
+                <li>Try different hyperparameters for variety</li>
+                <li>Compare cached vs computed performance</li>
+                <li>Export simulation results for reports</li>
               </ul>
             </div>
           </div>
         </div>
 
-        {/* 7. SIMULATION STATISTICS */}
+        {/* 7. SIMULATION STATISTICS - Güncellenmiş gerçek verilerle */}
         {filteredResults.length > 0 && (
           <div className="simulation-stats">
             <h4>📈 Your Simulation History</h4>
@@ -1050,6 +1096,18 @@ const renderDetailedMetrics = (result) => {
                   )).toFixed(3)}
                 </span>
                 <span className="stat-label">Best Accuracy</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">
+                  {(filteredResults.reduce((sum, r) => sum + (r.fit_time_seconds || 0), 0) / filteredResults.length).toFixed(2)}s
+                </span>
+                <span className="stat-label">Avg Training Time</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">
+                  {filteredResults.filter(r => r.from_cache).length}
+                </span>
+                <span className="stat-label">Cache Hits</span>
               </div>
             </div>
           </div>
