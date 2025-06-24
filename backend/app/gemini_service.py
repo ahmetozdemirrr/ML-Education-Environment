@@ -150,6 +150,45 @@ Please provide a detailed analysis following this structure:
 Write in an educational, comprehensive style suitable for both technical and non-technical stakeholders.
 """
 
+        elif chart_type == "roc_curve":
+            return f"""
+You are an expert machine learning analyst. Analyze this ROC curve data for binary classification performance:
+
+DATA: {json.dumps(chart_data, indent=2, ensure_ascii=False)}
+
+Please provide a comprehensive ROC curve analysis following this structure:
+
+**1. ROC CURVE FUNDAMENTALS (2-3 sentences)**
+- Explain what a ROC (Receiver Operating Characteristic) curve represents
+- Describe how to interpret TPR (True Positive Rate) vs FPR (False Positive Rate)
+- Explain what AUC (Area Under Curve) means and why it's important
+
+**2. PERFORMANCE EVALUATION (4-5 sentences)**
+- Analyze the AUC score and what it indicates about model performance
+- Compare the performance to random classification (AUC = 0.5)
+- Evaluate the curve shape and what it reveals about the model's behavior
+- Discuss the trade-off between sensitivity (TPR) and specificity (1-FPR)
+- Comment on whether the model shows good discrimination ability
+
+**3. CURVE ANALYSIS (3-4 sentences)**
+- Analyze specific regions of the ROC curve (e.g., top-left performance)
+- Identify optimal operating points on the curve
+- Discuss any notable characteristics in the curve shape
+- Compare performance at different threshold settings
+
+**4. PRACTICAL IMPLICATIONS (2-3 sentences)**
+- Recommend whether this model is suitable for production use
+- Suggest scenarios where this performance level would be acceptable
+- Provide guidance on threshold selection based on the curve
+
+**5. IMPROVEMENT RECOMMENDATIONS (2-3 sentences)**
+- Suggest specific strategies to improve the ROC curve performance
+- Recommend data collection or model tuning approaches
+- Comment on potential next steps for model optimization
+
+Write in clear, educational English that helps both technical and non-technical stakeholders understand the classification performance.
+"""
+
         elif chart_type == "performance_trends":
             return f"""
 You are an expert machine learning analyst. Analyze this performance trends data over time:

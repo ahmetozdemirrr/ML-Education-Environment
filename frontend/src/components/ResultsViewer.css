@@ -2193,3 +2193,821 @@
   background-color: var(--results-bg-tertiary);
   border-color: var(--results-border-primary);
 }
+
+/* ROC Curve Styles */
+.roc-curve-container {
+  background-color: var(--results-bg-card);
+  border: 1px solid var(--results-border-primary);
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.roc-curve-container h4 {
+  margin: 0 0 16px 0;
+  color: var(--results-text-secondary);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.no-roc-data {
+  text-align: center;
+  padding: 40px;
+  color: var(--results-text-tertiary);
+}
+
+.roc-curves-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-top: 16px;
+}
+
+@media (min-width: 1400px) {
+  .roc-curves-grid {
+    grid-template-columns: repeat(auto-fit, minmax(800px, 1fr));
+  }
+}
+
+.single-roc-curve {
+  background-color: var(--results-bg-card);
+  border: 1px solid var(--results-border-primary);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: var(--results-shadow-light);
+  transition: all 0.3s ease;
+}
+
+.single-roc-curve:hover {
+  box-shadow: var(--results-shadow-medium);
+  transform: translateY(-1px);
+}
+
+.roc-info {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.roc-info h5 {
+  margin: 0 0 12px 0;
+  color: var(--results-text-secondary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--results-border-primary);
+}
+
+.roc-stats {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.roc-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 1200px) {
+  .roc-charts-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.roc-chart-container {
+  background-color: var(--results-bg-secondary);
+  border: 1px solid var(--results-border-primary);
+  border-radius: 6px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.roc-chart-container h6 {
+  margin: 0 0 12px 0;
+  color: var(--results-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--results-border-primary);
+}
+
+.curve-analysis {
+  padding: 16px;
+  background-color: var(--results-bg-secondary);
+  border: 1px solid var(--results-border-primary);
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.analysis-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.analysis-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--results-bg-card);
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.analysis-stat .label {
+  font-size: 0.875rem;
+  color: var(--results-text-tertiary);
+  font-weight: 500;
+}
+
+.analysis-stat .value {
+  font-size: 0.875rem;
+  color: var(--results-text-secondary);
+  font-weight: 600;
+}
+
+.analysis-stat .value.excellent {
+  color: var(--results-accent-green);
+}
+
+.analysis-stat .value.good {
+  color: var(--results-accent-blue);
+}
+
+.analysis-stat .value.fair {
+  color: var(--results-accent-yellow);
+}
+
+.analysis-stat .value.poor {
+  color: var(--results-accent-red);
+}
+
+/* Mobile responsiveness for ROC curves */
+@media (max-width: 768px) {
+  .roc-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .roc-stats {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .analysis-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .single-roc-curve {
+    padding: 16px;
+  }
+}
+
+
+/* ResultsViewer.css dosyasının sonuna ekleyin: */
+
+/* =============================================== */
+/* SIMULATION TAB STYLES */
+/* =============================================== */
+
+.simulation-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  overflow-y: auto;
+  height: auto;
+}
+
+.simulation-header {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.simulation-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.simulation-header p {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.simulation-section {
+  background-color: var(--results-bg-card);
+  border: 1px solid var(--results-border-primary);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--results-shadow-light);
+  transition: all 0.3s ease;
+}
+
+.simulation-section:hover {
+  box-shadow: var(--results-shadow-medium);
+  transform: translateY(-2px);
+}
+
+.simulation-section .section-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--results-border-primary);
+}
+
+.simulation-section .section-header h4 {
+  margin: 0 0 8px 0;
+  color: var(--results-text-primary);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.simulation-section .section-header p {
+  margin: 0;
+  color: var(--results-text-tertiary);
+  font-size: 0.95rem;
+}
+
+.no-simulation-data,
+.single-algorithm-notice,
+.no-algorithms-notice {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-radius: 12px;
+  color: white;
+  margin: 20px 0;
+}
+
+.no-simulation-data h5,
+.single-algorithm-notice h5,
+.no-algorithms-notice h5 {
+  margin: 0 0 12px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.no-simulation-data p,
+.single-algorithm-notice p,
+.no-algorithms-notice p {
+  margin: 8px 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.simulation-tips {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border-radius: 12px;
+  padding: 24px;
+  color: white;
+}
+
+.simulation-tips h4 {
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.tip-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tip-card h5 {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.tip-card ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.tip-card li {
+  margin: 6px 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.simulation-stats {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-radius: 12px;
+  padding: 24px;
+  color: #333;
+}
+
+.simulation-stats h4 {
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-4px);
+}
+
+.stat-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.875rem;
+  color: #4a5568;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Dark Mode Adjustments */
+.dark-mode .simulation-section {
+  background-color: var(--results-bg-card);
+  border-color: var(--results-border-primary);
+}
+
+.dark-mode .simulation-section .section-header h4 {
+  color: var(--results-text-primary);
+}
+
+.dark-mode .simulation-section .section-header p {
+  color: var(--results-text-tertiary);
+}
+
+.dark-mode .tip-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .stat-item {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--results-text-primary);
+}
+
+.dark-mode .stat-value {
+  color: var(--results-text-primary);
+}
+
+.dark-mode .stat-label {
+  color: var(--results-text-tertiary);
+}
+
+.dark-mode .simulation-stats h4 {
+  color: var(--results-text-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .simulation-tab {
+    gap: 20px;
+  }
+
+  .simulation-section {
+    padding: 16px;
+  }
+
+  .tips-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .simulation-header {
+    padding: 16px;
+  }
+
+  .simulation-header h3 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .no-simulation-data,
+  .single-algorithm-notice,
+  .no-algorithms-notice {
+    padding: 24px 16px;
+  }
+}
+
+/* ResultsViewer.css dosyasının sonuna ekleyin: */
+
+/* =============================================== */
+/* MULTIPLE TRAINING ANIMATIONS */
+/* =============================================== */
+
+.training-animations-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  overflow-y: auto;
+  max-height: 80vh; /* Çok fazla algoritma varsa scroll */
+}
+
+.single-training-animation {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.single-training-animation:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.animation-title {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.animation-title h5 {
+  margin: 0 0 8px 0;
+  color: var(--results-text-primary);
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.animation-title p {
+  margin: 0;
+  color: var(--results-text-tertiary);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* TrainingAnimation container için özel düzenlemeler */
+.single-training-animation .training-animation-container {
+  margin: 0; /* TrainingAnimation'daki default margin'i kaldır */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Responsive Design - Multiple Animations */
+@media (max-width: 1200px) {
+  .training-animations-container {
+    gap: 20px;
+  }
+
+  .single-training-animation {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .training-animations-container {
+    gap: 16px;
+    max-height: 70vh;
+  }
+
+  .single-training-animation {
+    padding: 12px;
+  }
+
+  .animation-title h5 {
+    font-size: 1rem;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .animation-title p {
+    font-size: 0.8rem;
+  }
+}
+
+/* Dark Mode Adjustments */
+.dark-mode .single-training-animation {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .single-training-animation:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .animation-title h5 {
+  color: var(--results-text-primary);
+}
+
+.dark-mode .animation-title p {
+  color: var(--results-text-tertiary);
+}
+
+/* Animation Numbering Styles */
+.animation-title h5::before {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+/* Loading State */
+.training-animations-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.1rem;
+  color: var(--results-text-tertiary);
+}
+
+/* Performance indicator */
+.training-animations-container::before {
+  content: "🚀 Pro Tip: Each animation runs independently. You can control them separately!";
+  display: block;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  color: rgba(34, 197, 94, 0.9);
+  text-align: center;
+  font-style: italic;
+}
+
+
+/* ResultsViewer.css dosyasının sonuna ekleyin: */
+
+/* =============================================== */
+/* ENHANCED SIMULATION TAB STYLES */
+/* =============================================== */
+
+/* Tips grid enhancement for 6 cards */
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Better responsive behavior for tips */
+@media (max-width: 1400px) {
+  .tips-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1000px) {
+  .tips-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .tips-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Section spacing improvements */
+.simulation-section {
+  margin-bottom: 40px;
+}
+
+.simulation-section:last-of-type {
+  margin-bottom: 20px;
+}
+
+/* Animation canvas containers */
+.simulation-section canvas {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+/* Interactive elements highlighting */
+.simulation-section button:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading states for animations */
+.animation-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+}
+
+.animation-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-left: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Algorithm-specific styling */
+.algorithm-neural .section-header h4::before {
+  content: "🧠 ";
+}
+
+.algorithm-tree .section-header h4::before {
+  content: "🌳 ";
+}
+
+.algorithm-svm .section-header h4::before {
+  content: "⚡ ";
+}
+
+/* Enhanced notification boxes */
+.single-algorithm-notice,
+.no-algorithms-notice,
+.no-simulation-data {
+  position: relative;
+  overflow: hidden;
+}
+
+.single-algorithm-notice::before,
+.no-algorithms-notice::before,
+.no-simulation-data::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Chart containers with glassmorphism */
+.chart-container,
+.network-canvas-container,
+.tree-canvas-container {
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Improved section headers */
+.section-header {
+  position: relative;
+  padding: 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, white, transparent);
+  border-radius: 2px;
+}
+
+/* Animation title improvements */
+.animation-title {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Performance indicators */
+.performance-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* Interactive hover effects */
+.simulation-section:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.simulation-section:hover .section-header::after {
+  width: 80px;
+  transition: width 0.3s ease;
+}
+
+/* Accessibility improvements */
+.simulation-tab button:focus,
+.simulation-tab input:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .simulation-tab {
+    background: white !important;
+    color: black !important;
+  }
+
+  .simulation-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .animation-controls {
+    display: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .simulation-section {
+    border: 2px solid white;
+  }
+
+  .section-header {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}

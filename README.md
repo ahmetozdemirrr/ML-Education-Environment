@@ -1,7 +1,7 @@
 ++ küçük-büyük dataset ayrımı için mnist'in subsample'ı ve tamamı
 ++ feeature scaling bazı modellerde etki etmezken bazılaruında baya etkiliyor, o yüzden bunu global ayarlarda seçenek olarak alalım.
 ++ cache'leme olunca sonuçlar kayboluyor
-- grafiklerde eksiklik var (roc auc ve confusion matrix yok)
+++ grafiklerde eksiklik var (roc auc ve confusion matrix yok)
 ++ bazı yerlerde renk değiştirmemiz gerekiyor
 ++ grafiklerin altına açıklama eklemeliyiz
 
@@ -11,5 +11,6 @@
 - analysis kısmını iyileştir
 ++ LLM yorumlarını detaylandırabiliriz.
 - tüm konfigürasyonlar için sunucuya istek atan bir `curl` veya `postman` falan yaz (shell script olabiliir)
-- kullanıcılar kullandıkları modellerin source codelarını görebilecekleri bir sayfaya gidebilsin
-- tüm sistemin kaynak koduna giden bir link koy anasayfaya
+++ kullanıcılar kullandıkları modellerin source codelarını görebilecekleri bir sayfaya gidebilsin
+- aynı model birden fazla defa seçildiğinde ayırt edici bir isim vs olmuyor result kısmında
+s

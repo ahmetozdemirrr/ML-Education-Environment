@@ -403,7 +403,6 @@ def validate_response_for_json(response_payload):
             }
         }
 
-# Update the create_enhanced_evaluation_response function
 def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_results, from_cache=False):
     """Create enhanced evaluation response with additional metadata and insights"""
 

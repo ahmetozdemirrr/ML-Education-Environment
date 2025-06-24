@@ -17,9 +17,15 @@ import {
 } from 'chart.js';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import MetricsChart from './MetricsChart';
-import { PerformanceChart, ConfusionMatrix, ComparisonTable } from './MetricsChart';
+import { PerformanceChart, ConfusionMatrix, ComparisonTable, ROCCurveChart } from './MetricsChart';
 import { MarkdownRenderer } from '../utils/markdownUtils'; // YENİ IMPORT
 import CodeViewer from './CodeViewer'; // YENİ IMPORT - CODE VIEWER
+import TrainingAnimation from './TrainingAnimation'; // YENİ
+import AlgorithmRace from './AlgorithmRace'; // YENİ
+
+import DatasetExplorationAnimation from './animations/DatasetExplorationAnimation';
+import NeuralNetworkAnimation from './animations/NeuralNetworkAnimation';
+import DecisionTreeAnimation from './animations/DecisionTreeAnimation';
 
 import './ResultsViewer.css';
 
@@ -569,6 +575,9 @@ const renderDetailedMetrics = (result) => {
           <div key={`performance-chart-${filteredResults.length}`}>
             <PerformanceChart results={filteredResults} isDarkMode={isDarkMode} />
           </div>
+          <div key={`roc-curve-${filteredResults.length}`}>
+            <ROCCurveChart results={filteredResults} isDarkMode={isDarkMode} />
+          </div>
           <div key={`confusion-matrix-${filteredResults.length}`}>
             <ConfusionMatrix results={filteredResults} isDarkMode={isDarkMode} />
           </div>
@@ -789,6 +798,266 @@ const renderDetailedMetrics = (result) => {
     );
   };
 
+  const renderSimulationTab = () => {
+    const filteredResults = getFilteredResults();
+
+    // Get unique algorithms and datasets from results
+    const uniqueAlgorithms = [...new Set(filteredResults.map(r => r.modelName))].filter(Boolean);
+    const uniqueDatasets = [...new Set(filteredResults.map(r => r.datasetName))].filter(Boolean);
+
+    // Her algoritma için en iyi result'ı bul
+    const algorithmResults = uniqueAlgorithms.map(algorithm => {
+      const algorithmSpecificResults = filteredResults.filter(r => r.modelName === algorithm);
+      const bestResult = algorithmSpecificResults.reduce((best, current) => {
+        const currentAcc = current.metrics?.accuracy || current.metrics?.Accuracy || 0;
+        const bestAcc = best?.metrics?.accuracy || best?.metrics?.Accuracy || 0;
+        return currentAcc >= bestAcc ? current : best;
+      }, algorithmSpecificResults[0]);
+
+      return {
+        algorithm,
+        result: bestResult,
+        dataset: bestResult?.datasetName || uniqueDatasets[0] || 'Unknown Dataset'
+      };
+    });
+
+    return (
+      <div className="simulation-tab">
+        <div className="simulation-header">
+          <h3>🎬 Interactive ML Simulations</h3>
+          <p>Watch machine learning algorithms learn in real-time!</p>
+        </div>
+
+        {/* 1. DATASET EXPLORATION ANIMATION */}
+        <div className="simulation-section">
+          <div className="section-header">
+            <h4>📊 Dataset Exploration Journey</h4>
+            <p>Watch how we prepare and analyze data before training</p>
+          </div>
+
+          {uniqueDatasets.length > 0 ? (
+            <DatasetExplorationAnimation
+              dataset={uniqueDatasets[0]}
+              algorithm={uniqueAlgorithms[0] || 'Machine Learning'}
+            />
+          ) : (
+            <div className="no-simulation-data">
+              <h5>📝 No Dataset Available</h5>
+              <p>Run some experiments to see dataset exploration!</p>
+            </div>
+          )}
+        </div>
+
+        {/* 2. TRAINING ANIMATION SECTION - HER ALGORİTMA İÇİN */}
+        <div className="simulation-section">
+          <div className="section-header">
+            <h4>🔥 Real-Time Training Animations</h4>
+            <p>Experience how each algorithm learns step by step, even with cached results!</p>
+            <p>📊 Showing animations for <strong>{uniqueAlgorithms.length}</strong> different algorithms</p>
+          </div>
+
+          {algorithmResults.length > 0 ? (
+            <div className="training-animations-container">
+              {algorithmResults.map((item, index) => (
+                <div key={item.algorithm} className="single-training-animation">
+                  <div className="animation-title">
+                    <h5>🎯 Algorithm #{index + 1}: {item.algorithm}</h5>
+                    <p>Dataset: {item.dataset} | Status: {item.result?.from_cache ? '🚀 Cached' : '💻 Computed'}</p>
+                  </div>
+                  <TrainingAnimation
+                    algorithm={item.algorithm}
+                    dataset={item.dataset}
+                    onComplete={() => console.log(`${item.algorithm} animation completed`)}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-simulation-data">
+              <h5>📝 No Results Available</h5>
+              <p>Run some model training or evaluation to see simulations!</p>
+              <p>Go to the main simulation panel and train a model first.</p>
+            </div>
+          )}
+        </div>
+
+        {/* 3. NEURAL NETWORK ARCHITECTURE ANIMATION */}
+        {uniqueAlgorithms.some(alg =>
+          alg.toLowerCase().includes('neural') ||
+          alg.toLowerCase().includes('network') ||
+          alg.toLowerCase().includes('mlp')
+        ) && (
+          <div className="simulation-section">
+            <div className="section-header">
+              <h4>🧠 Neural Network Architecture</h4>
+              <p>Visualize how neural networks process information through layers</p>
+            </div>
+
+            <NeuralNetworkAnimation
+              algorithm={uniqueAlgorithms.find(alg =>
+                alg.toLowerCase().includes('neural') ||
+                alg.toLowerCase().includes('network') ||
+                alg.toLowerCase().includes('mlp')
+              )}
+              layers={[4, 6, 4, 2]} // Input, Hidden1, Hidden2, Output
+            />
+          </div>
+        )}
+
+        {/* 4. DECISION TREE GROWTH ANIMATION */}
+        {uniqueAlgorithms.some(alg =>
+          alg.toLowerCase().includes('tree') ||
+          alg.toLowerCase().includes('forest')
+        ) && (
+          <div className="simulation-section">
+            <div className="section-header">
+              <h4>🌳 Decision Tree Growth</h4>
+              <p>Watch how decision trees split data to make predictions</p>
+            </div>
+
+            <DecisionTreeAnimation
+              algorithm={uniqueAlgorithms.find(alg =>
+                alg.toLowerCase().includes('tree') ||
+                alg.toLowerCase().includes('forest')
+              )}
+              dataset={uniqueDatasets[0] || 'Dataset'}
+            />
+          </div>
+        )}
+
+        {/* 5. ALGORITHM RACE SECTION */}
+        <div className="simulation-section">
+          <div className="section-header">
+            <h4>🏁 Algorithm Learning Race</h4>
+            <p>Watch different algorithms compete to learn the same dataset!</p>
+          </div>
+
+          {uniqueAlgorithms.length >= 2 ? (
+            <AlgorithmRace
+              selectedAlgorithms={uniqueAlgorithms.slice(0, 6)} // Max 6 algorithms for performance
+              dataset={uniqueDatasets[0] || 'Unknown Dataset'}
+            />
+          ) : uniqueAlgorithms.length === 1 ? (
+            <div className="single-algorithm-notice">
+              <h5>🤖 Single Algorithm Detected</h5>
+              <p>Current algorithm: <strong>{uniqueAlgorithms[0]}</strong></p>
+              <p>To see the Algorithm Race, train multiple different algorithms and come back here!</p>
+              <p><strong>Suggested steps:</strong></p>
+              <ol style={{textAlign: 'left', marginLeft: '20px'}}>
+                <li>Go back to main simulation panel</li>
+                <li>Train a <strong>Decision Tree</strong> model</li>
+                <li>Train a <strong>SVM</strong> model</li>
+                <li>Train a <strong>Neural Network</strong> model</li>
+                <li>Come back to see the race!</li>
+              </ol>
+            </div>
+          ) : (
+            <div className="no-algorithms-notice">
+              <h5>🎯 Ready for Algorithm Race!</h5>
+              <p>Train at least 2 different algorithms to see them race against each other.</p>
+              <p>Each algorithm will compete to achieve the highest accuracy fastest!</p>
+            </div>
+          )}
+        </div>
+
+        {/* 6. SIMULATION TIPS */}
+        <div className="simulation-tips">
+          <h4>💡 Simulation Tips</h4>
+          <div className="tips-grid">
+            <div className="tip-card">
+              <h5>📊 Dataset Exploration</h5>
+              <ul>
+                <li>Understand data preparation steps</li>
+                <li>Learn about outliers and scaling</li>
+                <li>See feature correlation patterns</li>
+                <li>Observe train/test splitting</li>
+              </ul>
+            </div>
+
+            <div className="tip-card">
+              <h5>🎯 Training Animation</h5>
+              <ul>
+                <li>Each algorithm has its unique learning pattern</li>
+                <li>Watch how different algorithms converge</li>
+                <li>Notice the difference in learning speeds</li>
+                <li>Compare accuracy vs loss trends across algorithms</li>
+              </ul>
+            </div>
+
+            <div className="tip-card">
+              <h5>🧠 Neural Networks</h5>
+              <ul>
+                <li>Watch forward propagation in action</li>
+                <li>See how activations flow through layers</li>
+                <li>Understand weight importance visualization</li>
+                <li>Learn network architecture effects</li>
+              </ul>
+            </div>
+
+            <div className="tip-card">
+              <h5>🌳 Decision Trees</h5>
+              <ul>
+                <li>Observe how trees grow depth by depth</li>
+                <li>Understand Gini impurity reduction</li>
+                <li>See feature selection in action</li>
+                <li>Learn about pruning and overfitting</li>
+              </ul>
+            </div>
+
+            <div className="tip-card">
+              <h5>🏁 Algorithm Race</h5>
+              <ul>
+                <li>See which algorithm learns fastest</li>
+                <li>Compare final performance levels</li>
+                <li>Understand speed vs accuracy trade-offs</li>
+                <li>Try different datasets for variety</li>
+              </ul>
+            </div>
+
+            <div className="tip-card">
+              <h5>📊 Best Practices</h5>
+              <ul>
+                <li>Run multiple algorithms on same dataset</li>
+                <li>Try various parameter settings</li>
+                <li>Record simulations for later review</li>
+                <li>Share interesting results with classmates</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* 7. SIMULATION STATISTICS */}
+        {filteredResults.length > 0 && (
+          <div className="simulation-stats">
+            <h4>📈 Your Simulation History</h4>
+            <div className="stats-grid">
+              <div className="stat-item">
+                <span className="stat-value">{filteredResults.length}</span>
+                <span className="stat-label">Total Experiments</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">{uniqueAlgorithms.length}</span>
+                <span className="stat-label">Algorithms Tried</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">{uniqueDatasets.length}</span>
+                <span className="stat-label">Datasets Used</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">
+                  {Math.max(...filteredResults.map(r =>
+                    r.metrics?.accuracy || r.metrics?.Accuracy || 0
+                  )).toFixed(3)}
+                </span>
+                <span className="stat-label">Best Accuracy</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="results-viewer loading">
@@ -866,6 +1135,13 @@ const renderDetailedMetrics = (result) => {
         >
           📈 Charts
         </button>
+        {/* YENİ TAB EKLE */}
+        <button
+          className={`tab-button ${activeTab === 'simulation' ? 'active' : ''}`}
+          onClick={() => setActiveTab('simulation')}
+        >
+          🎬 Simulation
+        </button>
         <button
           className={`tab-button ${activeTab === 'comparison' ? 'active' : ''}`}
           onClick={() => setActiveTab('comparison')}
@@ -884,6 +1160,7 @@ const renderDetailedMetrics = (result) => {
         {activeTab === 'overview' && renderOverviewTab()}
         {activeTab === 'details' && renderDetailsTab()}
         {activeTab === 'charts' && renderChartsTab()}
+        {activeTab === 'simulation' && renderSimulationTab()} {/* YENİ SATIR */}
         {activeTab === 'comparison' && renderComparisonTab()}
         {activeTab === 'analysis' && renderAnalysisTab()}
       </div>
