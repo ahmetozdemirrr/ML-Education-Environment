@@ -1,4 +1,4 @@
-# backend/app/cache_manager.py
+# backend/app/cache_manager.py - Enhanced with epoch data support
 
 import hashlib
 import json
@@ -148,7 +148,9 @@ class TrainingCacheManager:
                     "memory_usage_mb": entry.get("memory_usage_mb"),
                     "training_throughput": entry.get("training_throughput"),
                     "convergence_info": entry.get("convergence_info", {}),
-                    "notes": entry.get("notes", [])
+                    "notes": entry.get("notes", []),
+                    "epoch_data": entry.get("epoch_data", {}),  # NEW: Epoch data
+                    "learning_curve": entry.get("learning_curve", {})  # NEW: Learning curve
                 }
 
             print(f"💻 Training Cache MISS: {cache_key[:8]}...")
@@ -189,6 +191,10 @@ class TrainingCacheManager:
                 "convergence_info": training_results.get("convergence_info", {}),
                 "notes": training_results.get("notes", []),
 
+                # NEW: Epoch-based training data
+                "epoch_data": training_results.get("epoch_data", {}),
+                "learning_curve": training_results.get("learning_curve", {}),
+
                 # Metadata
                 "created_at": datetime.now().isoformat(),
                 "last_accessed": datetime.now().isoformat(),
@@ -210,65 +216,60 @@ class TrainingCacheManager:
     def get_cached_evaluation_result(self, cache_key: str, selected_metrics: List[str] = None) -> Optional[Dict[str, Any]]:
         """
         Cache'den evaluation sonucunu getir
-        selected_metrics varsa sadece o metrikleri filtrele
+        Eksik metrikler varsa None döndür (yeniden hesaplama için)
         """
         try:
             eval_cache_key = f"eval_{cache_key}"
             if eval_cache_key in self.cache_data:
                 entry = self.cache_data[eval_cache_key]
+                cached_metrics = entry.get("metrics", {})
+
+                print(f"DEBUG - Cached metrics keys: {list(cached_metrics.keys())}")
+                print(f"DEBUG - Selected metrics from frontend: {selected_metrics}")
+
+                # Eksik metrik kontrolü
+                if selected_metrics:
+                    missing_metrics = self._check_missing_metrics(cached_metrics, selected_metrics)
+
+                    if missing_metrics:
+                        print(f"🔄 Cache'de eksik metrikler bulundu: {missing_metrics}")
+                        print(f"Cache'i partial olarak döndürüyoruz, eksik metrikler hesaplanacak")
+
+                        # Partial cache hit - eksik metriklerle birlikte döndür
+                        return {
+                            "metrics": cached_metrics,
+                            "plot_data": entry.get("plot_data", {}),
+                            "score_time_seconds": entry.get("score_time_seconds"),
+                            "prediction_performance": entry.get("prediction_performance", {}),
+                            "notes": entry.get("notes", []),
+                            "epoch_data": entry.get("epoch_data", {}),
+                            "learning_curve": entry.get("learning_curve", {}),
+                            "_cache_status": "partial",  # YENİ: Cache durumu
+                            "_missing_metrics": missing_metrics,  # YENİ: Eksik metrikler
+                            "_cache_entry": entry  # YENİ: Orijinal cache entry'si güncelleme için
+                        }
 
                 # Hit count'u artır
                 entry["hit_count"] = entry.get("hit_count", 0) + 1
                 entry["last_accessed"] = datetime.now().isoformat()
 
-                print(f"🚀 Evaluation Cache HIT: {cache_key[:8]}... (Hit count: {entry['hit_count']})")
+                print(f"🚀 Evaluation Cache FULL HIT: {cache_key[:8]}... (Hit count: {entry['hit_count']})")
 
-                # Cached metrics'i al
-                cached_metrics = entry.get("metrics", {})
-
-                # DEBUG: Cache'de hangi metrikler var
-                print(f"DEBUG - Cached metrics keys: {list(cached_metrics.keys())}")
-                print(f"DEBUG - Selected metrics from frontend: {selected_metrics}")
-
-                # FIXED: Eğer selected_metrics varsa filtrele
+                # Tam cache hit
                 if selected_metrics:
-                    # Frontend'den gelen metrik adlarını backend format'ına çevir
-                    metric_mapping = {
-                        "Accuracy": "accuracy",
-                        "Precision": "precision",
-                        "Recall": "recall",
-                        "F1-Score": "f1_score",
-                        "ROC AUC": "roc_auc"
-                    }
-
-                    backend_selected = [metric_mapping.get(m, m.lower()) for m in selected_metrics]
-                    print(f"DEBUG - Backend selected metrics: {backend_selected}")
-
-                    # FIXED: Cache'de bulunan tüm metrikleri kontrol et ve eşleşenleri al
-                    filtered_metrics = {}
-                    for backend_metric in backend_selected:
-                        if backend_metric in cached_metrics:
-                            filtered_metrics[backend_metric] = cached_metrics[backend_metric]
-                            print(f"DEBUG - Found cached metric: {backend_metric} = {cached_metrics[backend_metric]}")
-                        else:
-                            print(f"DEBUG - Missing cached metric: {backend_metric}")
-
-                    # FIXED: Eğer filtrelenmiş metrikler boşsa, tüm cache'i döndür
-                    if not filtered_metrics and cached_metrics:
-                        print(f"DEBUG - No filtered metrics found, returning all cached metrics")
-                        filtered_metrics = cached_metrics
-
+                    filtered_metrics = self._filter_metrics(cached_metrics, selected_metrics)
                 else:
                     filtered_metrics = cached_metrics
-
-                print(f"DEBUG - Final filtered metrics: {filtered_metrics}")
 
                 return {
                     "metrics": filtered_metrics,
                     "plot_data": entry.get("plot_data", {}),
                     "score_time_seconds": entry.get("score_time_seconds"),
                     "prediction_performance": entry.get("prediction_performance", {}),
-                    "notes": entry.get("notes", [])
+                    "notes": entry.get("notes", []),
+                    "epoch_data": entry.get("epoch_data", {}),
+                    "learning_curve": entry.get("learning_curve", {}),
+                    "_cache_status": "full"  # YENİ: Cache durumu
                 }
 
             print(f"💻 Evaluation Cache MISS: {cache_key[:8]}...")
@@ -276,9 +277,89 @@ class TrainingCacheManager:
 
         except Exception as e:
             print(f"Evaluation cache okuma hatası: {e}")
-            import traceback
-            traceback.print_exc()
             return None
+
+    def _check_missing_metrics(self, cached_metrics: Dict[str, Any], selected_metrics: List[str]) -> List[str]:
+        """
+        Seçilen metriklerden cache'de olmayan metrikleri bul
+        """
+        metric_mapping = {
+            "Accuracy": ["accuracy", "Accuracy"],
+            "Precision": ["precision", "Precision"],
+            "Recall": ["recall", "Recall"],
+            "F1-Score": ["f1_score", "F1-Score", "f1-score"],
+            "ROC AUC": ["roc_auc", "ROC AUC"]
+        }
+
+        missing_metrics = []
+
+        for selected_metric in selected_metrics:
+            possible_keys = metric_mapping.get(selected_metric, [selected_metric.lower()])
+            metric_found = False
+
+            for key in possible_keys:
+                if key in cached_metrics and cached_metrics[key] != "N/A":
+                    metric_found = True
+                    break
+
+            if not metric_found:
+                missing_metrics.append(selected_metric)
+
+        return missing_metrics
+
+    def _filter_metrics(self, cached_metrics: Dict[str, Any], selected_metrics: List[str]) -> Dict[str, Any]:
+        """
+        Cache'deki metriklerden seçilenleri filtrele
+        """
+        metric_mapping = {
+            "Accuracy": ["accuracy", "Accuracy"],
+            "Precision": ["precision", "Precision"],
+            "Recall": ["recall", "Recall"],
+            "F1-Score": ["f1_score", "F1-Score", "f1-score"],
+            "ROC AUC": ["roc_auc", "ROC AUC"]
+        }
+
+        filtered_metrics = {}
+
+        for selected_metric in selected_metrics:
+            possible_keys = metric_mapping.get(selected_metric, [selected_metric.lower()])
+
+            for key in possible_keys:
+                if key in cached_metrics:
+                    filtered_metrics[key] = cached_metrics[key]
+                    break
+
+        return filtered_metrics if filtered_metrics else cached_metrics
+
+    def update_cached_evaluation_metrics(self, cache_key: str, new_metrics: Dict[str, Any]):
+        """
+        Mevcut cache entry'ye yeni metrikleri ekle
+        """
+        try:
+            eval_cache_key = f"eval_{cache_key}"
+            if eval_cache_key in self.cache_data:
+                entry = self.cache_data[eval_cache_key]
+
+                # Mevcut metriklerle yeni metrikleri birleştir
+                current_metrics = entry.get("metrics", {})
+                current_metrics.update(new_metrics)
+                entry["metrics"] = current_metrics
+
+                # Güncelleme zamanını kaydet
+                entry["last_updated"] = datetime.now().isoformat()
+                entry["update_count"] = entry.get("update_count", 0) + 1
+
+                # Dosyaya kaydet
+                self._save_cache()
+
+                print(f"🔄 Cache güncellendi: {cache_key[:8]}... Yeni metrikler: {list(new_metrics.keys())}")
+                return True
+
+        except Exception as e:
+            print(f"Cache güncelleme hatası: {e}")
+            return False
+
+        return False
 
     def save_evaluation_result(
         self,
@@ -309,6 +390,10 @@ class TrainingCacheManager:
                 "score_time_seconds": evaluation_results.get("score_time_seconds"),
                 "prediction_performance": evaluation_results.get("prediction_performance", {}),
                 "notes": evaluation_results.get("notes", []),
+
+                # NEW: Include epoch data for evaluation too
+                "epoch_data": evaluation_results.get("epoch_data", {}),
+                "learning_curve": evaluation_results.get("learning_curve", {}),
 
                 # Metadata
                 "created_at": datetime.now().isoformat(),

@@ -8,8 +8,9 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
   const [loss, setLoss] = useState(2.0);
   const [learningRate, setLearningRate] = useState(0.001);
   const [batchProgress, setBatchProgress] = useState(0);
-  const [trainingSpeed, setTrainingSpeed] = useState(1000);
+  const [trainingSpeed, setTrainingSpeed] = useState(500);
   const [showMetrics, setShowMetrics] = useState(true);
+  const [useRealData, setUseRealData] = useState(true);
 
   const [accuracyHistory, setAccuracyHistory] = useState([]);
   const [lossHistory, setLossHistory] = useState([]);
@@ -45,42 +46,143 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
       totalInstances: algorithmResults.length,
       fromCache: bestResult?.from_cache || false,
       trainingMetrics: bestResult?.training_metrics || {},
-      configId: bestResult?.configId || 'unknown'
+      configId: bestResult?.configId || 'unknown',
+      // NEW: Extract real epoch data
+      epochData: bestResult?.epoch_data || null,
+      learningCurve: bestResult?.learning_curve || null
     };
   };
 
   const performance = getTrainingPerformance();
 
-  // Generate realistic training curves based on real data
-  const generateTrainingCurve = () => {
-    const maxEpochs = 100;
-    const targetAcc = performance?.targetAccuracy || 0.85;
-    const startingAcc = Math.max(0.1, targetAcc - 0.7);
-    const convergenceRate = performance ? Math.log(targetAcc / startingAcc) / (maxEpochs * 0.7) : 0.05;
+const getRealEpochData = () => {
+    if (!performance?.epochData && !performance?.learningCurve) return null;
 
-    const newAccuracyHistory = [];
-    const newLossHistory = [];
-    const newLrHistory = [];
+    // First try to get epoch data directly from the result
+    let epochData = null;
 
-    for (let i = 0; i <= maxEpochs; i++) {
-      // Realistic accuracy curve with some noise
-      let acc = startingAcc + (targetAcc - startingAcc) * (1 - Math.exp(-convergenceRate * i));
-      acc += (Math.random() - 0.5) * 0.02; // Add noise
-      acc = Math.min(Math.max(acc, 0), 1); // Clamp to [0, 1]
-
-      // Corresponding loss curve
-      let currentLoss = 2.5 * Math.exp(-i * 0.03) + Math.random() * 0.1;
-      currentLoss = Math.max(currentLoss, 0.01);
-
-      // Learning rate schedule (with decay)
-      let currentLr = learningRate * Math.pow(0.95, Math.floor(i / 10));
-
-      newAccuracyHistory.push(acc);
-      newLossHistory.push(currentLoss);
-      newLrHistory.push(currentLr);
+    // Check all results for epoch data
+    for (const result of resultsData) {
+      if (result.epoch_data && result.epoch_data.epochs && result.epoch_data.epochs.length > 0) {
+        epochData = result.epoch_data;
+        console.log(`Found real epoch data for ${algorithm}: ${epochData.epochs.length} epochs`);
+        break;
+      }
     }
 
-    return { newAccuracyHistory, newLossHistory, newLrHistory };
+    // If no epoch data found in results, check performance object
+    if (!epochData && performance.epochData && performance.epochData.epochs) {
+      epochData = performance.epochData;
+      console.log(`Using epoch data from performance: ${epochData.epochs.length} epochs`);
+    }
+
+    // Validate epoch data structure
+    if (!epochData || !epochData.epochs || !epochData.train_accuracy) {
+      console.log("No valid epoch data found, will use synthetic data");
+      return null;
+    }
+
+    // Convert to expected format
+    const realEpochData = {
+      epochs: epochData.epochs || [],
+      trainAccuracy: epochData.train_accuracy || [],
+      valAccuracy: epochData.val_accuracy || epochData.train_accuracy?.map(acc => acc * 0.95) || [],
+      trainLoss: epochData.train_loss || epochData.train_accuracy?.map(acc => 1 - acc) || [],
+      valLoss: epochData.val_loss || epochData.val_accuracy?.map(acc => 1 - acc) || [],
+      learningRates: epochData.learning_rates || epochData.epochs?.map((_, i) => 0.001 * Math.pow(0.95, i)) || [],
+      totalEpochs: epochData.total_epochs || epochData.epochs.length,
+      finalTrainAcc: epochData.final_train_acc || (epochData.train_accuracy?.length > 0 ? epochData.train_accuracy[epochData.train_accuracy.length - 1] : 0.8),
+      finalValAcc: epochData.final_val_acc || (epochData.val_accuracy?.length > 0 ? epochData.val_accuracy[epochData.val_accuracy.length - 1] : 0.8),
+      bestValAcc: epochData.best_val_acc || Math.max(...(epochData.val_accuracy || [0.8])),
+      bestEpoch: epochData.best_epoch || 0,
+      isSynthetic: epochData.is_synthetic === true
+    };
+
+    console.log(`Real epoch data processed: ${realEpochData.totalEpochs} epochs, best val acc: ${realEpochData.bestValAcc.toFixed(3)}, synthetic: ${realEpochData.isSynthetic}`);
+
+    return realEpochData;
+  };
+
+  const realEpochData = getRealEpochData();
+
+const generateTrainingCurve = () => {
+    if (useRealData && realEpochData && !realEpochData.isSynthetic) {
+      console.log("Using REAL epoch data for training animation");
+      return {
+        newAccuracyHistory: realEpochData.trainAccuracy,
+        newValAccuracyHistory: realEpochData.valAccuracy,
+        newLossHistory: realEpochData.trainLoss,
+        newValLossHistory: realEpochData.valLoss,
+        newLrHistory: realEpochData.learningRates,
+        totalEpochs: realEpochData.totalEpochs
+      };
+    } else {
+      console.log("Using synthetic data for training animation");
+      // Enhanced synthetic data generation based on actual performance
+      const maxEpochs = realEpochData?.totalEpochs || 50;
+      const targetAcc = performance?.targetAccuracy || 0.85;
+      const startingAcc = Math.max(0.1, targetAcc - 0.6);
+
+      // Algorithm-specific convergence patterns
+      let convergenceRate = 0.1;
+      let noiseLevel = 0.02;
+
+      if (algorithm.includes('Neural') || algorithm.includes('ANN')) {
+        convergenceRate = 0.08;
+        noiseLevel = 0.03;
+      } else if (algorithm.includes('Tree')) {
+        convergenceRate = 0.15;
+        noiseLevel = 0.015;
+      } else if (algorithm.includes('SVM')) {
+        convergenceRate = 0.12;
+        noiseLevel = 0.01;
+      }
+
+      const newAccuracyHistory = [];
+      const newValAccuracyHistory = [];
+      const newLossHistory = [];
+      const newValLossHistory = [];
+      const newLrHistory = [];
+
+      for (let i = 0; i <= maxEpochs; i++) {
+        // Progressive improvement with algorithm-specific characteristics
+        let acc = startingAcc + (targetAcc - startingAcc) * (1 - Math.exp(-convergenceRate * i));
+        acc += (Math.random() - 0.5) * noiseLevel; // Add noise
+        acc = Math.min(Math.max(acc, 0.1), 1); // Clamp to [0, 1]
+
+        // Validation accuracy (with generalization gap)
+        let valAcc = acc * (0.92 + Math.random() * 0.08);
+        valAcc = Math.min(Math.max(valAcc, 0.1), 1);
+
+        // Corresponding loss curves
+        let currentLoss = Math.max(0.01, 2.5 * Math.exp(-i * 0.05) + Math.random() * 0.1);
+        let valLoss = currentLoss * (1.1 + Math.random() * 0.1);
+
+        // Learning rate schedule
+        let currentLr = learningRate * Math.pow(0.96, Math.floor(i / 10));
+
+        newAccuracyHistory.push(acc);
+        newValAccuracyHistory.push(valAcc);
+        newLossHistory.push(currentLoss);
+        newValLossHistory.push(valLoss);
+        newLrHistory.push(currentLr);
+      }
+
+      // Ensure final accuracy matches target
+      if (newAccuracyHistory.length > 0) {
+        newAccuracyHistory[newAccuracyHistory.length - 1] = targetAcc;
+        newValAccuracyHistory[newValAccuracyHistory.length - 1] = targetAcc * 0.95;
+      }
+
+      return {
+        newAccuracyHistory,
+        newValAccuracyHistory,
+        newLossHistory,
+        newValLossHistory,
+        newLrHistory,
+        totalEpochs: maxEpochs
+      };
+    }
   };
 
   const startTraining = () => {
@@ -92,12 +194,21 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
     setLoss(2.0);
     setBatchProgress(0);
 
-    const { newAccuracyHistory, newLossHistory, newLrHistory } = generateTrainingCurve();
+    const curveData = generateTrainingCurve();
+    const {
+      newAccuracyHistory,
+      newValAccuracyHistory,
+      newLossHistory,
+      newValLossHistory,
+      newLrHistory,
+      totalEpochs
+    } = curveData;
+
     setAccuracyHistory([]);
     setLossHistory([]);
     setLrHistory([]);
 
-    const maxEpochs = 100;
+    const maxEpochs = totalEpochs;
     let currentEpoch = 0;
 
     const interval = setInterval(() => {
@@ -108,16 +219,16 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
         return;
       }
 
-      // Update current metrics
+      // Update current metrics using real or synthetic data
       setEpoch(currentEpoch);
-      setAccuracy(newAccuracyHistory[currentEpoch]);
-      setLoss(newLossHistory[currentEpoch]);
-      setLearningRate(newLrHistory[currentEpoch]);
+      setAccuracy(newAccuracyHistory[currentEpoch] || 0.1);
+      setLoss(newLossHistory[currentEpoch] || 2.0);
+      setLearningRate(newLrHistory[currentEpoch] || 0.001);
 
-      // Update history
-      setAccuracyHistory(prev => [...prev, newAccuracyHistory[currentEpoch]]);
-      setLossHistory(prev => [...prev, newLossHistory[currentEpoch]]);
-      setLrHistory(prev => [...prev, newLrHistory[currentEpoch]]);
+      // Update history for charts
+      setAccuracyHistory(prev => [...prev, newAccuracyHistory[currentEpoch] || 0.1]);
+      setLossHistory(prev => [...prev, newLossHistory[currentEpoch] || 2.0]);
+      setLrHistory(prev => [...prev, newLrHistory[currentEpoch] || 0.001]);
 
       // Simulate batch progress
       setBatchProgress(0);
@@ -149,7 +260,23 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
         borderWidth: 2
       },
       {
-        label: 'Validation Loss',
+        label: 'Validation Accuracy',
+        data: accuracyHistory.map((_, i) => {
+          // Use validation data if available
+          if (useRealData && realEpochData && realEpochData.valAccuracy[i]) {
+            return realEpochData.valAccuracy[i];
+          }
+          return accuracyHistory[i] * 0.95; // Approximate validation accuracy
+        }),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
+        pointRadius: 1,
+        pointHoverRadius: 4,
+        borderWidth: 2
+      },
+      {
+        label: 'Training Loss',
         data: lossHistory.map(loss => loss / 3), // Scale for visualization
         borderColor: '#ef4444',
         backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -183,7 +310,7 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
       },
       title: {
         display: true,
-        text: `${algorithm} Training Progress on ${dataset}`,
+        text: `${algorithm} Training Progress on ${dataset} ${realEpochData && !realEpochData.isSynthetic ? '(Real Data)' : '(Synthetic)'}`,
         font: {
           size: 14,
           weight: 'bold'
@@ -193,7 +320,7 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
         callbacks: {
           label: function(context) {
             const label = context.dataset.label || '';
-            if (label === 'Training Accuracy') {
+            if (label.includes('Accuracy')) {
               return `${label}: ${(context.parsed.y * 100).toFixed(2)}%`;
             } else {
               return `${label}: ${(context.parsed.y * 3).toFixed(4)}`;
@@ -249,9 +376,23 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
       <div className="training-header">
         <h3>🔥 Training Progress</h3>
         <p>
-          Real-time simulation of <strong>{algorithm}</strong> learning <strong>{dataset}</strong>
-          {performance && ` (Target Accuracy: ${(performance.targetAccuracy * 100).toFixed(1)}%)`}
+          {realEpochData && !realEpochData.isSynthetic ? (
+            <>
+              <strong>Real-time simulation</strong> using actual epoch data from <strong>{algorithm}</strong> learning <strong>{dataset}</strong>
+              {performance && ` (Target Accuracy: ${(performance.targetAccuracy * 100).toFixed(1)}%)`}
+            </>
+          ) : (
+            <>
+              <strong>Synthetic simulation</strong> of <strong>{algorithm}</strong> learning <strong>{dataset}</strong>
+              {performance && ` (Target Accuracy: ${(performance.targetAccuracy * 100).toFixed(1)}%)`}
+            </>
+          )}
         </p>
+        {realEpochData && !realEpochData.isSynthetic && (
+          <div className="real-data-badge">
+            ✅ Using Real Training Data ({realEpochData.totalEpochs} epochs recorded)
+          </div>
+        )}
       </div>
 
       {/* Real Performance Metrics */}
@@ -259,12 +400,23 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
         <div className="real-performance-panel">
           <div className="panel-header">
             <h4>🎯 Actual Experiment Data</h4>
-            <button
-              className="toggle-panel-btn"
-              onClick={() => setShowMetrics(!showMetrics)}
-            >
-              {showMetrics ? '🙈 Hide' : '👁️ Show'}
-            </button>
+            <div className="panel-controls">
+              <button
+                className="toggle-panel-btn"
+                onClick={() => setShowMetrics(!showMetrics)}
+              >
+                {showMetrics ? '🙈 Hide' : '👁️ Show'}
+              </button>
+              {realEpochData && (
+                <button
+                  className="toggle-data-type-btn"
+                  onClick={() => setUseRealData(!useRealData)}
+                  disabled={isTraining}
+                >
+                  {useRealData ? '📊 Real Data' : '🎨 Synthetic'}
+                </button>
+              )}
+            </div>
           </div>
           <div className="performance-metrics-grid">
             <div className="metric-card">
@@ -313,6 +465,9 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
           <div className="experiment-summary">
             <strong>Experiment Summary:</strong> {performance.totalInstances} instance{performance.totalInstances !== 1 ? 's' : ''} of {algorithm} tested
             | Config ID: {performance.configId}
+            {realEpochData && !realEpochData.isSynthetic && (
+              <span> | <strong>Real Epoch Data:</strong> {realEpochData.totalEpochs} epochs, Best Val Acc: {(realEpochData.bestValAcc * 100).toFixed(1)}%</span>
+            )}
           </div>
         </div>
       )}
@@ -341,7 +496,7 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
         </div>
 
         <div className="current-metrics">
-          <span>Epoch: <strong>{epoch}/100</strong></span>
+          <span>Epoch: <strong>{epoch}/{realEpochData?.totalEpochs || 100}</strong></span>
           <span>Accuracy: <strong>{(accuracy * 100).toFixed(2)}%</strong></span>
           <span>Loss: <strong>{loss.toFixed(4)}</strong></span>
           <span>LR: <strong>{learningRate.toExponential(2)}</strong></span>
@@ -365,10 +520,10 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
           <div className="progress-bar">
             <div
               className="progress-fill"
-              style={{ width: `${(epoch / 100) * 100}%` }}
+              style={{ width: `${(epoch / (realEpochData?.totalEpochs || 100)) * 100}%` }}
             ></div>
           </div>
-          <div className="progress-text">{epoch}/100</div>
+          <div className="progress-text">{epoch}/{realEpochData?.totalEpochs || 100}</div>
         </div>
       </div>
 
@@ -391,6 +546,16 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
             </small>
           </div>
           <div className="insight-item">
+            <strong>Data Source:</strong>
+            {realEpochData && !realEpochData.isSynthetic ? 'Real Epoch Data' : 'Synthetic Simulation'}
+            <small>
+              {realEpochData && !realEpochData.isSynthetic
+                ? `Animation uses actual training data collected during model training with ${realEpochData.totalEpochs} epochs`
+                : 'Animation uses synthetic data based on final model performance metrics'
+              }
+            </small>
+          </div>
+          <div className="insight-item">
             <strong>Convergence Pattern:</strong>
             {performance && performance.targetAccuracy > 0.9 ? 'Fast Convergence' :
              performance && performance.targetAccuracy > 0.8 ? 'Steady Convergence' : 'Gradual Learning'}
@@ -406,7 +571,7 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
              performance && performance.targetAccuracy > 0.9 ? 'Very Good' :
              performance && performance.targetAccuracy > 0.8 ? 'Good' : 'Needs Improvement'}
             <small>
-              Based on actual experimental results from your simulation
+              Based on {realEpochData && !realEpochData.isSynthetic ? 'real training data' : 'experimental results'} from your simulation
             </small>
           </div>
         </div>
@@ -440,6 +605,17 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
           line-height: 1.5;
         }
 
+        .real-data-badge {
+          margin-top: 12px;
+          padding: 8px 16px;
+          background: rgba(34, 197, 94, 0.2);
+          border: 2px solid rgba(34, 197, 94, 0.5);
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          display: inline-block;
+        }
+
         .real-performance-panel {
           background: rgba(255, 255, 255, 0.1);
           border-radius: 12px;
@@ -461,7 +637,12 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
           font-size: 1.1rem;
         }
 
-        .toggle-panel-btn {
+        .panel-controls {
+          display: flex;
+          gap: 8px;
+        }
+
+        .toggle-panel-btn, .toggle-data-type-btn {
           padding: 4px 8px;
           border: none;
           border-radius: 6px;
@@ -470,6 +651,21 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
           cursor: pointer;
           font-size: 0.8rem;
           font-weight: 600;
+          transition: background-color 0.3s ease;
+        }
+
+        .toggle-data-type-btn {
+          background: rgba(34, 197, 94, 0.2);
+          border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .toggle-panel-btn:hover, .toggle-data-type-btn:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        .toggle-data-type-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         .performance-metrics-grid {
@@ -674,6 +870,11 @@ const TrainingAnimation = ({ algorithm, dataset, resultsData = [], onComplete })
           .training-controls {
             flex-direction: column;
             gap: 12px;
+          }
+
+          .panel-controls {
+            flex-direction: column;
+            gap: 4px;
           }
 
           .current-metrics {

@@ -179,9 +179,9 @@ async def process_training_request(request: Request, simulation_data: Simulation
 async def process_evaluation_request(request: Request, simulation_data: SimulationRequest):
     """
     SADECE TAHMİN BAŞARISI İÇİN:
-    - Cache'den kontrol et, varsa filtreleyip döndür
-    - Yoksa hesapla ve cache'e kaydet (tüm metrikleri)
-    - Enhanced results ile birlikte döndür
+    - Cache'den kontrol et, eksik metrik varsa partial cache hit
+    - Eksik metrikleri hesaplayıp cache'i güncelle
+    - Tam sonucu döndür
     """
     print("--- DEĞERLENDİRME (EVALUATE) İsteği Alındı ---")
 
@@ -197,29 +197,87 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
 
     # Selected metrics'i al
     selected_metrics = simulation_data.params.get("selectedMetrics", [])
+    print(f"İstenen metrikler: {selected_metrics}")
 
     # Cache'den kontrol et
     cached_result = cache_manager.get_cached_evaluation_result(cache_key, selected_metrics)
 
     if cached_result:
-        print(f"🚀 Evaluation cache'den sonuç döndürülüyor! (Seçilen metrikler: {selected_metrics})")
-        unique_run_id = simulation_data.params.get("frontend_config_id", f"eval_cached_{cache_key[:8]}")
+        cache_status = cached_result.get("_cache_status", "unknown")
 
-        response_payload = create_enhanced_evaluation_response(
-            unique_run_id, simulation_data, cached_result, from_cache=True
-        )
-        return response_payload
+        if cache_status == "full":
+            # TAM CACHE HIT
+            print(f"🚀 Full cache hit! Tüm metrikler mevcut")
+            unique_run_id = simulation_data.params.get("frontend_config_id", f"eval_cached_{cache_key[:8]}")
 
-    # Cache'de yok, hesapla
-    print("💻 Evaluation cache'de yok, hesaplanıyor...")
-    log_entry = {
-        "algorithm": simulation_data.algorithm,
-        "dataset_id": simulation_data.dataset,
-        "params": simulation_data.params,
-        "global_settings": simulation_data.global_settings,
-    }
-    print(f"İstek Detayları: {json.dumps(log_entry, indent=2)}")
+            response_payload = create_enhanced_evaluation_response(
+                unique_run_id, simulation_data, cached_result, from_cache=True
+            )
+            return response_payload
 
+        elif cache_status == "partial":
+            # PARTIAL CACHE HIT - Eksik metrikleri hesapla
+            missing_metrics = cached_result.get("_missing_metrics", [])
+            print(f"🔄 Partial cache hit! Eksik metrikler hesaplanacak: {missing_metrics}")
+
+            try:
+                # Veriyi hazırla (sadece eksik metrikler için)
+                prepared_data = data_processor.load_and_prepare_data(
+                    dataset_id=simulation_data.dataset,
+                    data_dir=DATA_DIR,
+                    global_settings=simulation_data.global_settings
+                )
+
+                # SADECE eksik metrikleri hesapla
+                additional_results = calculate_missing_metrics(
+                    algorithm_name=simulation_data.algorithm,
+                    model_params_from_frontend=simulation_data.params,
+                    data_dict=prepared_data,
+                    global_settings=simulation_data.global_settings,
+                    missing_metrics=missing_metrics
+                )
+
+                # Cache'i güncelle
+                if additional_results.get("metrics"):
+                    cache_manager.update_cached_evaluation_metrics(cache_key, additional_results["metrics"])
+
+                # Mevcut cache ile yeni metrikleri birleştir
+                combined_metrics = cached_result["metrics"].copy()
+                if additional_results.get("metrics"):
+                    combined_metrics.update(additional_results["metrics"])
+
+                # Birleştirilmiş sonucu hazırla
+                final_result = cached_result.copy()
+                final_result["metrics"] = combined_metrics
+                final_result["_cache_status"] = "updated"
+
+                # Plot data'yı da güncelle
+                if additional_results.get("plot_data"):
+                    final_result["plot_data"].update(additional_results["plot_data"])
+
+                unique_run_id = simulation_data.params.get("frontend_config_id", f"eval_updated_{cache_key[:8]}")
+
+                response_payload = create_enhanced_evaluation_response(
+                    unique_run_id, simulation_data, final_result, from_cache=True
+                )
+                response_payload["cache_info"] = {
+                    "status": "partial_hit_updated",
+                    "missing_metrics_calculated": missing_metrics,
+                    "cache_updated": True
+                }
+
+                print(f"✅ Partial cache hit tamamlandı! Eksik metrikler hesaplandı: {missing_metrics}")
+                return response_payload
+
+            except Exception as e:
+                print(f"❌ Eksik metrik hesaplama hatası: {e}")
+                # Hata durumunda tam hesaplama yap
+                pass
+
+    # Cache'de yok veya hata oldu, tam hesaplama yap
+    print("💻 Cache'de yok veya tam hesaplama gerekli...")
+
+    # ... (mevcut tam hesaplama kodu)
     if not simulation_data.global_settings:
         raise HTTPException(status_code=400,
                             detail="İstek gövdesinde 'global_settings' alanı eksik.")
@@ -240,8 +298,6 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
             global_settings=simulation_data.global_settings,
             mode="evaluate"
         )
-        # FIX: Debug the ml_results
-        print(f"DEBUG - ML Results metrics before filtering: {ml_results.get('metrics', 'NO_METRICS')}")
 
         # Cache'e kaydet (TÜM metrikleri kaydet)
         cache_manager.save_evaluation_result(
@@ -252,12 +308,9 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
             global_settings=simulation_data.global_settings,
             evaluation_results=ml_results
         )
-        # FIX: Filtering logic - DON'T filter if no metrics exist
-        selected_metrics = simulation_data.params.get("selectedMetrics", [])
 
         # Kullanıcının seçtiği metriklerle filtrelenmiş sonuç döndür
         if selected_metrics and ml_results.get("metrics") and len(ml_results["metrics"]) > 0:
-            # Only filter if we actually have metrics to filter
             metric_mapping = {
                 "Accuracy": ["accuracy", "Accuracy"],
                 "Precision": ["precision", "Precision"],
@@ -274,12 +327,8 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
                         filtered_metrics[key] = ml_results["metrics"][key]
                         break
 
-            if filtered_metrics:  # Only apply filter if we found matching metrics
+            if filtered_metrics:
                 ml_results["metrics"] = filtered_metrics
-            # If no matches found, keep original metrics
-
-        print(f"DEBUG - Final metrics to send: {ml_results.get('metrics', 'NO_METRICS')}")
-
 
         unique_run_id = simulation_data.params.get("frontend_config_id", f"eval_new_{cache_key[:8]}")
 
@@ -287,11 +336,9 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
             unique_run_id, simulation_data, ml_results, from_cache=False
         )
 
-        # FIX: Better status checking
         if not ml_results.get("metrics") or len(ml_results.get("metrics", {})) == 0:
             response_payload["status"] = "warning"
             response_payload["overall_status_message"] = "Model değerlendirildi ancak metrikler hesaplanamadı."
-            print("WARNING: No metrics calculated!")
 
         print(f"Evaluation Başarı Sonuçları: {response_payload['metrics']}")
         print("--- DEĞERLENDİRME İsteği Başarıyla Tamamlandı ---")
@@ -300,11 +347,40 @@ async def process_evaluation_request(request: Request, simulation_data: Simulati
     except Exception as e:
         return handle_error(e, simulation_data)
 
+
+def calculate_missing_metrics(
+    algorithm_name: str,
+    model_params_from_frontend: Dict[str, Any],
+    data_dict: Dict[str, Any],
+    global_settings: Dict[str, Any],
+    missing_metrics: List[str]
+) -> Dict[str, Any]:
+    """
+    Sadece eksik metrikleri hesapla (hızlı hesaplama)
+    """
+    print(f"🔄 Eksik metrikler hesaplanıyor: {missing_metrics}")
+
+    # Geçici olarak sadece eksik metrikleri seçili hale getir
+    temp_params = model_params_from_frontend.copy()
+    temp_params["selectedMetrics"] = missing_metrics
+
+    # Model pipeline'ı çalıştır (sadece evaluate mode)
+    results = model_factory.run_model_pipeline(
+        algorithm_name=algorithm_name,
+        model_params_from_frontend=temp_params,
+        data_dict=data_dict,
+        global_settings=global_settings,
+        mode="evaluate"
+    )
+
+    print(f"✅ Eksik metrikler hesaplandı: {list(results.get('metrics', {}).keys())}")
+
+    return results
+
 # Update the create_enhanced_training_response function
 def create_enhanced_training_response(unique_run_id, simulation_data, ml_results, from_cache=False):
     """Create enhanced training response with additional metadata and insights"""
 
-    # FIXED: f-string içinde backslash kullanımı yerine ternary operator kullanıldı
     cache_message = "cache'den alındı (anında)" if from_cache else "başarıyla eğitildi ve cache'e kaydedildi"
 
     # Base response
@@ -321,7 +397,10 @@ def create_enhanced_training_response(unique_run_id, simulation_data, ml_results
         "convergence_info": ml_results.get("convergence_info", {}),
         "notes_from_model": ml_results.get("notes", []),
         "overall_status_message": f"Model sonuçları {cache_message}.",
-        "from_cache": from_cache
+        "from_cache": from_cache,
+        # NEW: Add epoch data to response
+        "epoch_data": ml_results.get("epoch_data", {}),
+        "learning_curve": ml_results.get("learning_curve", {})
     }
 
     # Add enhanced results if available
@@ -346,7 +425,13 @@ def create_enhanced_training_response(unique_run_id, simulation_data, ml_results
         "mode": "training"
     }
 
-    # FIXED: Validate response for JSON serialization
+    # NEW: Debug epoch data
+    if response_payload["epoch_data"]:
+        epoch_count = len(response_payload["epoch_data"].get("epochs", []))
+        is_synthetic = response_payload["epoch_data"].get("is_synthetic", True)
+        print(f"DEBUG - Training response epoch data: {epoch_count} epochs, synthetic: {is_synthetic}")
+
+    # Validate response for JSON serialization
     validated_response = validate_response_for_json(response_payload)
     return validated_response
 
@@ -406,7 +491,6 @@ def validate_response_for_json(response_payload):
 def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_results, from_cache=False):
     """Create enhanced evaluation response with additional metadata and insights"""
 
-    # FIXED: f-string içinde backslash kullanımı yerine ternary operator kullanıldı
     cache_message = "cache'den alındı (anında)" if from_cache else "başarıyla değerlendirildi ve cache'e kaydedildi"
 
     # FIX: Metrics processing
@@ -424,13 +508,16 @@ def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_resul
         "datasetId": simulation_data.dataset,
         "datasetName": simulation_data.dataset.replace("_", " ").replace("-", " ").title(),
         "status": "success",
-        "metrics": metrics,  # FIX: Make sure this is not empty
+        "metrics": metrics,
         "plotData": ml_results.get("plot_data", {}),
         "score_time_seconds": ml_results.get("score_time_seconds"),
         "prediction_performance": ml_results.get("prediction_performance", {}),
         "notes_from_model": ml_results.get("notes", []),
         "overall_status_message": f"Evaluation sonuçları {cache_message}.",
-        "from_cache": from_cache
+        "from_cache": from_cache,
+        # NEW: Add epoch data to evaluation response too
+        "epoch_data": ml_results.get("epoch_data", {}),
+        "learning_curve": ml_results.get("learning_curve", {})
     }
 
     # Add enhanced results if available
@@ -445,9 +532,15 @@ def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_resul
     if ml_results.get("detailed_metrics"):
         response_payload["detailed_metrics"] = ml_results["detailed_metrics"]
 
-    # FIX: Debug logging
+    # Debug logging
     print(f"DEBUG - Response metrics: {response_payload['metrics']}")
     print(f"DEBUG - Original ml_results metrics: {ml_results.get('metrics', 'NO_METRICS')}")
+
+    # NEW: Debug epoch data
+    if response_payload["epoch_data"]:
+        epoch_count = len(response_payload["epoch_data"].get("epochs", []))
+        is_synthetic = response_payload["epoch_data"].get("is_synthetic", True)
+        print(f"DEBUG - Evaluation response epoch data: {epoch_count} epochs, synthetic: {is_synthetic}")
 
     # Add execution metadata
     response_payload["execution_metadata"] = {
@@ -459,7 +552,7 @@ def create_enhanced_evaluation_response(unique_run_id, simulation_data, ml_resul
         "selected_metrics": simulation_data.params.get("selectedMetrics", [])
     }
 
-    # FIXED: Validate response for JSON serialization
+    # Validate response for JSON serialization
     validated_response = validate_response_for_json(response_payload)
     return validated_response
 
