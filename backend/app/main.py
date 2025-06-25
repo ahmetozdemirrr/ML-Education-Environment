@@ -13,8 +13,10 @@ from app import data_processor
 from app import model_factory
 from app.cache_manager import cache_manager
 from .gemini_service import gemini_service
+from .dataset_api import setup_dataset_routes
 
 app = FastAPI()
+setup_dataset_routes(app)
 
 # CORS settings
 app.add_middleware(

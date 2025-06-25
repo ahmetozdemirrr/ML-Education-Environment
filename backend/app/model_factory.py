@@ -13,12 +13,24 @@ from .ml_models import knn_classifier
 from .ml_models import ann_classifier
 from .model_results_collector import results_collector
 
+def get_data_safely(data_dict, primary_key, fallback_key):
+    """DataFrame'leri güvenli şekilde al"""
+    primary_data = data_dict.get(primary_key)
+    if primary_data is not None and not primary_data.empty:
+        return primary_data
+
+    fallback_data = data_dict.get(fallback_key)
+    if fallback_data is not None and not fallback_data.empty:
+        return fallback_data
+
+    return None
+
 def run_model_pipeline(
     algorithm_name: str,
     model_params_from_frontend: Dict[str, Any],
     data_dict: Dict[str, Any],
     global_settings: Dict[str, Any],
-    mode: str = "evaluate"  # "train" veya "evaluate"
+    mode: str = "evaluate"
 ) -> Dict[str, Any]:
 
     print(f"Model Fabrikası: '{algorithm_name}' için {mode.upper()} modu işlem başlatılıyor...")
@@ -84,19 +96,16 @@ def run_model_pipeline(
     learning_curve_data = {}
 
     try:
-        # Get training data
-        X_train = data_dict.get("X_train")
-        y_train = data_dict.get("y_train")
-        X_full = data_dict.get("X_full")
-        y_full = data_dict.get("y_full")
+        # FIXED: DataFrame'leri güvenli şekilde al
+        X_data = get_data_safely(data_dict, "X_full", "X_train")
+        y_data = get_data_safely(data_dict, "y_full", "y_train")
+        X_test = data_dict.get("X_test")
+        y_test = data_dict.get("y_test")
 
-        # Use appropriate data based on global settings
-        if global_settings.get('useTrainTestSplit') and X_train is not None:
-            X_data, y_data = X_train, y_train
-        elif global_settings.get('useCrossValidation') and X_full is not None:
-            X_data, y_data = X_full, y_full
-        else:
-            X_data, y_data = None, None
+        # Cross validation durumunda X_full ve y_full kullanılmalı
+        if global_settings.get('useCrossValidation') and X_data is not None:
+            X_data = data_dict.get("X_full")
+            y_data = data_dict.get("y_full")
 
         if X_data is not None and y_data is not None and len(X_data) > 50:
             print(f"Collecting real epoch data for {algorithm_name}...")

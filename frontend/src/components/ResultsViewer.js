@@ -17,10 +17,10 @@ import {
 } from 'chart.js';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import MetricsChart from './MetricsChart';
-import { PerformanceChart, ConfusionMatrix, ComparisonTable, ROCCurveChart } from './MetricsChart';
-import { MarkdownRenderer } from '../utils/markdownUtils'; // YENİ IMPORT
-import CodeViewer from './CodeViewer'; // YENİ IMPORT - CODE VIEWER
-import TrainingAnimation from './TrainingAnimation'; // YENİ
+import { PerformanceChart, ConfusionMatrix, ComparisonTable } from './MetricsChart';
+import { MarkdownRenderer } from '../utils/markdownUtils';
+import CodeViewer from './CodeViewer';
+import TrainingAnimation from './TrainingAnimation';
 
 import DatasetExplorationAnimation from './animations/DatasetExplorationAnimation';
 
@@ -680,9 +680,6 @@ const renderDetailedMetrics = (result) => {
           <div key={`performance-chart-${filteredResults.length}`}>
             <PerformanceChart results={filteredResults} isDarkMode={isDarkMode} />
           </div>
-          <div key={`roc-curve-${filteredResults.length}`}>
-            <ROCCurveChart results={filteredResults} isDarkMode={isDarkMode} />
-          </div>
           <div key={`confusion-matrix-${filteredResults.length}`}>
             <ConfusionMatrix results={filteredResults} isDarkMode={isDarkMode} />
           </div>
@@ -896,7 +893,7 @@ const renderDetailedMetrics = (result) => {
     );
   };
 
-  const renderSimulationTab = () => {
+const renderSimulationTab = () => {
     const filteredResults = getFilteredResults();
     const resultsWithUniqueNames = createUniqueModelNames(filteredResults);
 
@@ -1082,12 +1079,12 @@ const renderDetailedMetrics = (result) => {
           <h4>Simulation Tips</h4>
           <div className="tips-grid">
             <div className="tip-card">
-              <h5>📊 Dataset Organization</h5>
+              <h5>📊 Interactive Learning</h5>
               <ul>
-                <li>Each dataset has its own simulation section</li>
-                <li>Compare algorithms within the same dataset</li>
-                <li>Real vs synthetic training data indicators</li>
-                <li>Cache hit status for quick experimentation</li>
+                <li>Use the algorithm simulations above to understand ML concepts</li>
+                <li>Adjust parameters to see real-time effects</li>
+                <li>Compare different algorithms side by side</li>
+                <li>Watch step-by-step learning processes</li>
               </ul>
             </div>
 
@@ -1128,6 +1125,16 @@ const renderDetailedMetrics = (result) => {
                 <li>Multiple algorithms per dataset for comparison</li>
                 <li>Real-time performance indicators</li>
                 <li>Historical experiment tracking</li>
+              </ul>
+            </div>
+
+            <div className="tip-card">
+              <h5>🧠 Algorithm Visualizations</h5>
+              <ul>
+                <li>Explore how each ML algorithm works internally</li>
+                <li>Interactive controls to understand parameters</li>
+                <li>See decision boundaries and training process</li>
+                <li>Compare different algorithm behaviors</li>
               </ul>
             </div>
           </div>

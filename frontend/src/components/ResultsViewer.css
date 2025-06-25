@@ -4086,3 +4086,51 @@
     padding: 16px;
   }
 }
+
+.simulation-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+  z-index: 0;
+}
+
+.simulation-divider h2 {
+  position: relative;
+  display: inline-block;
+  background-color: var(--results-bg-primary);
+  padding: 0 30px;
+  color: var(--results-text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+  z-index: 1;
+}
+
+/* Dark mode support */
+.dark-mode .model-simulations-section {
+  background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%);
+}
+
+.dark-mode .simulation-divider::before {
+  background: linear-gradient(90deg, transparent, #4b5563, transparent);
+}
+
+.dark-mode .simulation-divider h2 {
+  background-color: var(--results-bg-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .model-simulations-section {
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+
+  .simulation-divider h2 {
+    font-size: 1.2rem;
+    padding: 0 20px;
+  }
+}
