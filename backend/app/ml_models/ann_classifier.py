@@ -271,11 +271,7 @@ def train_and_evaluate_ann(
             if "Recall" in selected_metrics_frontend_names: cv_scoring_map['recall_macro_cv'] = make_scorer(recall_score, average='macro', zero_division=0)
             if "F1-Score" in selected_metrics_frontend_names: cv_scoring_map['f1_macro_cv'] = make_scorer(f1_score, average='macro', zero_division=0)
             if "ROC AUC" in selected_metrics_frontend_names:
-                num_classes = len(np.unique(y_full_series))
-                if num_classes == 2:
-                    cv_scoring_map['roc_auc_cv'] = 'roc_auc'
-                else:
-                    cv_scoring_map['roc_auc_ovr_weighted_cv'] = make_scorer(roc_auc_score, average='weighted', multi_class='ovr', needs_proba=True)
+                print("Uyarı: ROC AUC Cross Validation'da şu anda desteklenmiyor, atlanıyor.")
 
             if not cv_scoring_map:
                 cv_scoring_map['accuracy_cv'] = 'accuracy'

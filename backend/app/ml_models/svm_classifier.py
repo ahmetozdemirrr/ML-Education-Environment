@@ -146,10 +146,7 @@ def train_and_evaluate_svm(
             y_pred_test = model_instance.predict(X_test_df)
             y_pred_proba_test = None
             if "ROC AUC" in selected_metrics_frontend_names:
-                try:
-                    y_pred_proba_test = model_instance.predict_proba(X_test_df)
-                except AttributeError:
-                    results_log.append("ROC AUC için olasılık tahmini (predict_proba) alınamadı.")
+                print("Uyarı: ROC AUC Cross Validation'da şu anda desteklenmiyor, atlanıyor.")
 
             output_results["score_time_seconds"] = round(time.time() - start_score_time, 4)
 
