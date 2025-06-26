@@ -1,4 +1,4 @@
-/* ./frontend/src/GlobalSettingsPanel.js - Fixed version */
+/* ./frontend/src/GlobalSettingsPanel.js - Cross Validation Removed */
 
 import React from 'react';
 import './App.css';
@@ -7,23 +7,6 @@ function GlobalSettingsPanel({ settings, onChange }) {
   const handleCheckboxChange = (event) => {
     const { name, checked } = event.target;
     onChange(name, checked);
-
-    // Mutual exclusive logic: sadece biri seçilebilir
-    if (name === 'useCrossValidation' && checked) {
-      onChange('useTrainTestSplit', false);
-    }
-    if (name === 'useTrainTestSplit' && checked) {
-      onChange('useCrossValidation', false);
-    }
-
-    // Eğer ikisi de kapalıysa, Train/Test Split'i otomatik aç
-    if (!checked) {
-      setTimeout(() => {
-        if (!settings.useCrossValidation && !settings.useTrainTestSplit) {
-          onChange('useTrainTestSplit', true);
-        }
-      }, 0);
-    }
   };
 
   const handleValueChange = (event) => {
@@ -37,7 +20,6 @@ function GlobalSettingsPanel({ settings, onChange }) {
       let processedValue = val;
       if (type === 'number') {
         processedValue = val === '' ? '' : parseFloat(val);
-        if (name === 'cvFolds' && processedValue !== '' && processedValue < 2) processedValue = 2;
         if (name === 'testSplitRatio' && processedValue !== '') {
           if (processedValue < 0.01) processedValue = 0.01;
           if (processedValue > 0.99) processedValue = 0.99;
@@ -54,53 +36,14 @@ function GlobalSettingsPanel({ settings, onChange }) {
       <h2>Global Settings</h2>
       <div className="settings-list">
 
-        {/* Evaluation Method */}
+        {/* Data Split Settings */}
         <div className="setting-group">
           <div className="setting-group-title full-width">
-            <span>Evaluation Method</span>
+            <span>Data Split Settings</span>
           </div>
 
           <div className="setting-item visible">
-            <label>Method:</label>
-            <div className="radio-group">
-              <label>
-                <input
-                  type="radio"
-                  name="evaluation-method"
-                  checked={settings.useCrossValidation}
-                  onChange={() => onChange('useCrossValidation', true)}
-                />
-                Cross-Validation
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="evaluation-method"
-                  checked={settings.useTrainTestSplit}
-                  onChange={() => onChange('useTrainTestSplit', true)}
-                />
-                Train/Test Split
-              </label>
-            </div>
-          </div>
-
-          {/* Cross-Validation specific settings */}
-          <div className={`setting-item indented ${settings.useCrossValidation ? 'visible' : 'hidden'}`}>
-            <label htmlFor="cv-folds">CV Folds:</label>
-            <input
-              type="number"
-              id="cv-folds"
-              value={settings.cvFolds}
-              min="2"
-              max="20"
-              onChange={(e) => onChange('cvFolds', parseInt(e.target.value, 10))}
-              disabled={!settings.useCrossValidation}
-            />
-          </div>
-
-          {/* Train/Test Split specific settings */}
-          <div className={`setting-item indented ${settings.useTrainTestSplit ? 'visible' : 'hidden'}`}>
-            <label htmlFor="test-split-ratio">Test Size:</label>
+            <label htmlFor="test-split-ratio">Test Size Ratio:</label>
             <input
               type="number"
               id="test-split-ratio"
@@ -109,8 +52,8 @@ function GlobalSettingsPanel({ settings, onChange }) {
               max="0.5"
               step="0.05"
               onChange={(e) => onChange('testSplitRatio', parseFloat(e.target.value))}
-              disabled={!settings.useTrainTestSplit}
             />
+            <small>Proportion of data</small>
           </div>
         </div>
 
@@ -162,7 +105,7 @@ function GlobalSettingsPanel({ settings, onChange }) {
           </div>
 
           <div className="setting-item visible">
-            <label>Seed Type:</label>
+            <label>Random Seed:</label>
             <div className="radio-group">
               <label>
                 <input
@@ -185,6 +128,20 @@ function GlobalSettingsPanel({ settings, onChange }) {
                 Random
               </label>
             </div>
+          </div>
+
+          <div className={`setting-item indented ${settings.randomSeedType === 'fixed' ? 'visible' : 'hidden'}`}>
+            <label htmlFor="random-seed">Seed Value:</label>
+            <input
+              type="number"
+              id="random-seed"
+              value={settings.randomSeed || 42}
+              min="0"
+              max="9999"
+              onChange={(e) => onChange('randomSeed', parseInt(e.target.value, 10))}
+              disabled={settings.randomSeedType !== 'fixed'}
+            />
+            <small>Default: 42</small>
           </div>
         </div>
 
